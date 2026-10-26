@@ -28,7 +28,7 @@ under [Issues](https://github.com/ericalnemar/rita-oversiktsplan/issues).
   myndighetens id skiljer sig mellan lagren; där inget id finns (till exempel turism och rörligt friluftsliv)
   känns objekten igen på värde och geometri vid en ny hämtning. Påverkansområden, buller- och hinderytor hämtas inte.
   Hämtningen är provad mot Boverkets riktiga tjänst för ett område kring Lidköping, men inte i en riktig QGIS.
-- **Kommunens yta** i Ny översiktsplan hämtas från Lantmäteriets kommunytor via länsstyrelsernas nationella visningstjänst (lager och fält inskrivna i pluginet). Byter länsstyrelserna tjänst slutar det fungera tills pluginet uppdateras; då ritar man plangeometrin själv. Provat mot tjänsten för Lidköping, Munkfors och Stockholm, inte i en riktig QGIS.
+- **Kommunens yta** i Ny översiktsplan är SCB:s statistikområden (DeSO 2025) med kommunens kod, sammanslagna. De följer kommungränsen men är SCB:s, inte Lantmäteriets, gräns; ytorna stämde för Lidköping, Munkfors och Stockholm med Lantmäteriets kommunytor (provat 2026-10-24). Byter SCB skikt eller tjänst slutar det fungera tills pluginet uppdateras; då ritar man plangeometrin själv. Tidigare källa, länsstyrelsernas nationella visningstjänst, svarar sedan 2026-10-24 med 403 (förbjuden).
 - **Kommunens ställningstagande** kopplas till sitt riksintresse med *berör annat innehåll*. Det är pluginets
   tolkning: Lantmäteriets specifikation säger inte hur ett ställningstagande ska peka på riksintresset.
 - **Leverans till NGP är inte provad mot Lantmäteriet.** Klienten är kopierad från Rita Detaljplan och testad mot en
@@ -40,10 +40,14 @@ under [Issues](https://github.com/ericalnemar/rita-oversiktsplan/issues).
   tidsstämpel, vad den avser) säger schemat inte, se `core/export_lm.py`. Länkar till dokument tas bara med om de är
   webbadresser. Riksintressets id blir en extern referens med samma värde som identitet och producentens
   identitet, och tidsstämpeln är *hämtat datum* (eller innehållets versionsdatum): det är tolkningar.
-- **Arkivpaketet** följer Boverkets mallar, som avviker från PREMIS egen schemafil; paketet är inte validerat mot
-  schemat. Planens uppgifter ligger i en `objectCharacteristicsExtension` (Boverket anger inte hur). Datum skrivs som i
-  mallarna. Pluginet gör inga filer till PDF/A och kontrollerar dem inte. Paketet sparas som en mapp, inte i ett
-  e-arkiv.
+- **Arkivpaketet.** `metadata/PREMIS.xml` är giltig mot Library of Congress schema för PREMIS 3.0 och följer Boverkets
+  dataelementkatalog (maj 2026), men inte Boverkets exempelfiler, som inte är giltiga mot schemat. Den är inte provad
+  mot något e-arkiv. Planens uppgifter ligger i `significantProperties` på planen (i ett eget namnrymd): katalogen vill
+  ha dem i `objectCharacteristics`, men PREMIS tillåter inte det för en plan som helhet, och vilka uppgifter som ska
+  med anger Boverket inte (pluginets val). Paketet är inget E-ARK-/FGS-paket (ingen `METS.xml`), så en kommun med
+  e-arkiv får lägga PREMIS-filen i sitt eget paketeringsflöde. Formaten saknar registernyckel (PRONOM) och
+  metadatafilen har ingen egen kontrollsumma. Pluginet gör inga filer till PDF/A och kontrollerar dem inte. Paketet
+  sparas som en mapp.
 - **Planhandlingen** delas in i avsnitt efter rubrikformaten. Text utan rubrik ovanför och delar av ett avsnitt kan inte
   få egna bokmärken, och flera avsnitt kan inte slås ihop till ett bokmärke. Ett dokument åt gången är öppet i Skapa
   bokmärken i planhandling (flera går, men de hålls isär efter filnamn). Det finns ingen granskningskopia med kommentarer, som i

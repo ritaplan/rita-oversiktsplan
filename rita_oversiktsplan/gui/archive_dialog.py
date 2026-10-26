@@ -51,8 +51,8 @@ def _text(value) -> str:
 
 
 def plan_metadata(group) -> dict[str, str]:
-    """Planens uppgifter till ``oversiktsplan.xml``: titel, kommun, planhändelse och datum, och antagandebeslutets
-    diarienummer och datum för laga kraft. Bara det som är ifyllt tas med (tolkning: Boverket anger inte vad den
+    """Planens uppgifter till planens post i ``PREMIS.xml`` (``significantProperties``): titel, kommun, planhändelse
+    och datum, och antagandebeslutets diarienummer och datum för laga kraft. Bara det som är ifyllt tas med (tolkning: Boverket anger inte vad den
     generella metadatan ska innehålla)."""
     found: dict[str, str] = {}
     plan = plan_feature(group)

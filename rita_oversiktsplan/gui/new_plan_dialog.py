@@ -117,10 +117,10 @@ class NewPlanDialog(QDialog):
         form.addRow("", self.postgis_box)
         form.addRow("Koordinatsystem", self.crs)
         form.addRow("Påbörjad", self.paborjad)
-        self.municipality_area = QCheckBox("Hämta kommunens hela yta från Lantmäteriet")
+        self.municipality_area = QCheckBox("Hämta kommunens hela yta (från SCB)")
         self.municipality_area.setChecked(True)
         self.municipality_area.setToolTip(
-            "Kommunens yta (Lantmäteriets kommunytor) blir planens plangeometri direkt. Kryssa ur om planen gäller en "
+            "Kommunens yta (SCB:s statistikområden DeSO, sammanslagna) blir planens plangeometri direkt. Kryssa ur om planen gäller en "
             "mindre del av kommunen: då ritar du plangeometrin själv.")
         form.addRow("Plangeometri", self.municipality_area)
 

@@ -66,15 +66,15 @@ ställningstagande för markerade riksintressen** (se nedan) och
    - **Koordinatsystem**: SWEREF 99 TM (förvalt) eller en av de tolv lokala SWEREF 99-zonerna. Lantmäteriets
      specifikation tillåter alla tretton; Boverkets GIS-databasmodell använder SWEREF 99 TM. Det går inte att
      ändra efteråt, och i en databas delar alla planer i samma schema koordinatsystem.
-   - **Plangeometri: Hämta kommunens hela yta från Lantmäteriet** (ikryssad från början). Kommunens yta blir planens
+   - **Plangeometri: Hämta kommunens hela yta (från SCB)** (ikryssad från början). Kommunens yta blir planens
      plangeometri direkt. Gäller planen en mindre del av kommunen kryssar du ur rutan och ritar plangeometrin själv.
 3. Klicka **Skapa**.
 
 Pluginet skapar en GeoPackage-fil (en databas i en enda fil) med samma tabeller som Boverkets GIS-databasmodell för
 ÖP-modellen, och lägger till planen överst i lagerpanelen i gruppen **Översiktsplan – *titeln***.
 
-Kommunens yta hämtas från Lantmäteriets kommunytor via länsstyrelsernas nationella visningstjänst, efter
-kommunkoden. Går den inte att hämta (till exempel utan internet) skapas planen ändå, utan plangeometri, och ett
+Kommunens yta hämtas från SCB:s öppna geodata: alla statistikområden (DeSO) med kommunens kod, sammanslagna
+till en yta. De följer kommungränsen. Går den inte att hämta (till exempel utan internet) skapas planen ändå, utan plangeometri, och ett
 meddelande säger det.
 
 **Projektfilen sparas direkt** (som i Rita Detaljplan): har du inte sparat QGIS-projektet förut sparas det som
@@ -481,10 +481,16 @@ på samma mottagning hos Lantmäteriet.
 **Skapa arkivpaket** (i dialogen eller *Skapa arkivpaket…* i menyn) samlar planen och handlingarna i en mapp med bevarandemetadata enligt
 Boverkets specifikation *Långtidsbevarande och arkivering av översiktsplan och detaljplan*:
 
-- `oversiktsplan.xml`: planens uppgifter (titel, kommun, planhändelse, diarienummer, datum),
-- `metadata/PREMIS.xml`: varje fil med id, kontrollsumma (SHA-256), storlek, format och program, och vad som hänt
-  (paketet skapades, av vem),
+- `metadata/PREMIS.xml`: all bevarandemetadata i en enda fil: planen som helhet med dess uppgifter (titel, kommun,
+  planhändelse, diarienummer, datum), varje fil med id, kontrollsumma (SHA-256), storlek, format och program, och vad
+  som hänt (paketet skapades, av vem),
 - `content/`: filerna.
+
+`PREMIS.xml` är giltig mot Library of Congress schema för PREMIS 3.0 och hänger ihop av sig själv: varje id den
+hänvisar till finns i den, och alla kopplingar går åt båda hållen (planen har filerna som delar och varje fil hör till
+planen; händelser, filer och aktörer pekar på varandra). Den följer Boverkets värdelistor och obligatoriska uppgifter
+men inte Boverkets exempelfiler, som inte är giltiga mot schemat. Samma ändring gjordes i Rita Detaljplan 0.1.60, efter en
+[revision av arkivpaketet](https://github.com/ericalnemar/rita-detaljplan/blob/main/docs/arkivpaket-revision.md).
 
 Välj vad som ska med: planens **GeoPackage** (bara för en plan i en fil; en plan i en databas checkar du ut först, eller
 nöjer dig med exportfilen), **exportfilen** i Lantmäteriets format, **planhandlingen** med bokmärken och dess
@@ -494,6 +500,8 @@ kontrollera dem med en PDF/A-validerare (till exempel veraPDF). Pluginet påpeka
 PDF/A. Avsluta redigeringen först, så att det du ritat är sparat.
 
 **Kontrollera arkivpaket…** i menyn räknar om kontrollsummorna och säger om någon fil ändrats, saknas eller tillkommit.
+Den kontrollerar också att metadatans kopplingar hänger ihop, och säger till om paketet är skapat med en äldre version
+(0.1.1–0.1.7, med en egen `oversiktsplan.xml` och metadata som inte är giltig mot PREMIS schema). Den ändrar ingenting.
 
 ## Spara
 

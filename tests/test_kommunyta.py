@@ -1,5 +1,5 @@
-"""Kommunens yta som plangeometri när en ny översiktsplan skapas: frågan till Lantmäteriets kommunytor, att ytan skrivs
-in i planen, och valet i dialogen Ny översiktsplan. Nätverket byts mot en låtsasfunktion."""
+"""Kommunens yta som plangeometri när en ny översiktsplan skapas: frågan till SCB:s DeSO, sammanslagningen, att ytan
+skrivs in i planen, och valet i dialogen Ny översiktsplan. Nätverket byts mot en låtsasfunktion."""
 import datetime
 import json
 import sqlite3
@@ -29,29 +29,43 @@ from test_plugin import FakeIface  # noqa: E402
 from test_riksintressen import feature, polygon  # noqa: E402
 
 AREA = polygon(0, 0, 100, 100)
+DESO = (polygon(0, 0, 100, 50), polygon(0, 50, 100, 100))  # två DeSO som tillsammans är AREA
 PLAN = geopackage.NewPlan("1494", "Lidköping", "ÖP 2045", datetime.date(2027, 1, 1))
 
 
-def fake_service(area=AREA):
-    """Svarar på kommunfrågan med ``area`` för kommunkoden 1494."""
+def fake_service(shapes=DESO):
+    """Svarar som SCB:s WFS med kommunens DeSO-ytor för kommunkoden 1494."""
     urls = []
 
     def get(url):
         urls.append(url)
-        where = dict(urllib.parse.parse_qsl(url.split("?", 1)[1]))["where"]
+        where = dict(urllib.parse.parse_qsl(url.split("?", 1)[1]))["cql_filter"]
         return json.dumps({"type": "FeatureCollection",
-                           "features": [feature(area, KOMMUNKOD="1494")] if "1494" in where else []})
+                           "features": [feature(s, kommunkod="1494") for s in shapes] if "1494" in where else []})
     get.urls = urls
     return get
 
 
 class FetchTests(unittest.TestCase):
-    def test_the_municipality_is_asked_for_by_its_code(self):
+    def test_the_municipality_is_its_deso_areas_merged(self):
+        from qgis.core import QgsGeometry, QgsJsonUtils
         get = fake_service()
-        self.assertEqual(kommunyta.fetch_municipality(get, "1494", 3006), [AREA])
-        self.assertIn("KOMMUNKOD%3D%271494%27", get.urls[0])
-        self.assertIn("LM_Admin_granser_EXT/MapServer/0/query", get.urls[0])
-        self.assertNotIn("geometry=", get.urls[0])  # hela kommunen, inget utsnitt
+        (shape,) = kommunyta.fetch_municipality(get, "1494", 3006)
+        merged = QgsJsonUtils.geometryFromGeoJson(json.dumps(shape))
+        self.assertAlmostEqual(merged.area(), 10_000)
+        self.assertEqual(len(merged.asGeometryCollection()), 1)  # en yta, inga inre gränser
+        square = QgsGeometry.fromWkt("POLYGON((0 0, 100 0, 100 100, 0 100, 0 0))")
+        self.assertAlmostEqual(merged.symDifference(square).area(), 0)  # samma område som kommunen
+        params = dict(urllib.parse.parse_qsl(get.urls[0].split("?", 1)[1]))
+        self.assertTrue(get.urls[0].startswith("https://geodata.scb.se/geoserver/stat/wfs?"))
+        self.assertEqual((params["typeNames"], params["cql_filter"], params["srsName"]),
+                         ("stat:DeSO_2025", "kommunkod='1494'", "EPSG:3006"))
+
+    def test_a_plan_in_a_local_zone_gets_the_area_in_its_own_coordinates(self):
+        far = (polygon(400000, 6500000, 401000, 6501000),)
+        (shape,) = kommunyta.fetch_municipality(fake_service(far), "1494", 3007)
+        x = shape["coordinates"][0][0][0]
+        self.assertNotAlmostEqual(x, 400000, delta=1000)  # omräknad från SWEREF 99 TM
 
     def test_an_unknown_or_malformed_code_is_reported(self):
         with self.assertRaisesRegex(riksintressen.FetchError, "Hittade ingen kommun med koden 9999"):

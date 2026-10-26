@@ -7,6 +7,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest import mock
 
+try:
+    from lxml import etree as LXML
+except ImportError:  # pragma: no cover
+    LXML = None
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -41,12 +46,14 @@ class ArchivePlanTests(ToolCase):
         package = build_archive(self.group, self.options(), APP, NOW)
         names = sorted(Path(r.path).name for r in package.records)
         self.assertEqual(names, ["ÖP_2040.gpkg", "ÖP_2040.json"])
-        self.assertTrue((package.folder / "oversiktsplan.xml").is_file())
-        self.assertTrue((package.folder / "metadata" / "PREMIS.xml").is_file())
-        general = package.general.read_text(encoding="utf-8")
+        self.assertFalse((package.folder / "oversiktsplan.xml").exists(), "allt ligger i PREMIS.xml")
+        premis = package.premis.read_text(encoding="utf-8")
         for expected in ("ÖP 2040", "Eskilstuna", "0484", "KS 2027/1", "2027-06-01", "Översiktsplan"):
-            self.assertIn(expected, general)
-        ET.fromstring(general)  # välformad
+            self.assertIn(expected, premis)
+        self.assertEqual(archive.link_problems(ET.fromstring(premis)), [])
+        if LXML is not None:  # planens riktiga uppgifter ska också vara giltiga mot LoC:s schema
+            schema = LXML.XMLSchema(LXML.parse(str(ROOT / "tests" / "data" / "premis-v3-0.xsd")))
+            self.assertTrue(schema.validate(LXML.parse(str(package.premis))), schema.error_log)
         exported = json.loads((package.folder / "content" / "ÖP_2040.json").read_text(encoding="utf-8"))
         self.assertEqual(exported["feature:mediatyp"], export_lm.MEDIATYP)
         self.assertTrue(archive.verify_package(package.folder).clean)

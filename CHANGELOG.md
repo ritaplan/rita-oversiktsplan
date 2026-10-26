@@ -4,6 +4,26 @@ Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versi
 
 ## Ej utgivet
 
+## [0.1.8] – kommunens yta från SCB, arkivpaketet följer PREMIS schema
+
+- **Kommunens yta i Ny översiktsplan hämtas från SCB** i stället för från länsstyrelsernas nationella
+  visningstjänst, som sedan 2026-10-24 svarar *403 (förbjuden)* på alla frågor. Ytan är SCB:s statistikområden (DeSO
+  2025) med kommunens kod, sammanslagna; de följer kommungränsen. För en plan i en lokal SWEREF 99-zon räknas ytan
+  om till planens koordinatsystem.
+- **Arkivpaketets metadata är giltig mot PREMIS schema.** Samma ändring som i Rita Detaljplan 0.1.60: Boverkets
+  exempelfiler, som pluginet följde, är inte giltiga mot Library of Congress schema för PREMIS 3.0. Värdena var redan
+  de rätta; det som ändras är strukturen.
+  - Varje objekt har `xsi:type` (`premis:file`, `premis:representation`) i stället för ett `objectCategory`-element,
+    elementen står i schemats ordning och schemaadressen pekar på slutversionen, inte utkastet.
+  - **En enda fil:** planen beskrivs i `metadata/PREMIS.xml` tillsammans med filerna, händelserna och aktörerna. Den
+    separata `oversiktsplan.xml` i paketets rot försvinner. Planens uppgifter ligger i `significantProperties`, i ett
+    eget namnrymd (`https://ritaplan.xyz/ns/oversiktsplan/1`).
+  - **Kopplingar åt båda hållen:** filerna hör till planen (`is Part Of`), aktörerna pekar tillbaka på händelserna,
+    programmets version står i `agentVersion` och händelserna har ett utfall.
+  - **Kontrollera arkivpaket** kontrollerar också att kopplingarna hänger ihop och säger till om ett paket är skapat
+    med en äldre version (0.1.1–0.1.7). Äldre paket kontrolleras som förut.
+  - Testerna validerar paketet mot schemat (`tests/data/premis-v3-0.xsd`).
+
 ## [0.1.7] – okända värden syns, plangeometrin i vägen
 
 - **Objekt med ett värde som inte finns i planens lista ritas igen**, som *Innehållstyp ej vald* (orange). Sedan 0.1.5
