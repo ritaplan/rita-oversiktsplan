@@ -9,7 +9,7 @@ Ett QGIS-plugin för att **rita översiktsplaner** enligt Boverkets föreskrifte
 [ÖP-modell](https://www.boverket.se/sv/PBL-kunskapsbanken/oversiktsplan/op-modell/) (ÖP-katalogen och GIS-databasmodellen)
 och Lantmäteriets [nationella specifikation för översiktsplan](https://www.lantmateriet.se/sv/nationella-geodataplattformen/datamangder/oversiktsplan/)
 (testversion), och för att förbereda planen för arkivering. Målgrupp: översiktsplanerare och GIS-ingenjörer hos
-kommuner. Syskonplugin till [Rita Detaljplan](https://github.com/ericalnemar/rita-detaljplan).
+kommuner. Syskonplugin till [Rita Detaljplan](https://github.com/ritaplan/rita-detaljplan).
 
 En översiktsplan som påbörjas 1 januari 2027 eller senare ska kunna tillgängliggöras och behandlas digitalt
 (plan- och byggförordningen 2 kap. 5 a §). Pluginet gör det arbetet lättare i QGIS.
@@ -50,7 +50,7 @@ En översiktsplan som påbörjas 1 januari 2027 eller senare ska kunna tillgäng
 
 Kräver **QGIS 4.0 eller senare** (testat med 4.2.2 på Windows).
 
-1. Ladda ned `rita_oversiktsplan-<version>.zip` från [Releases](https://github.com/ericalnemar/rita-oversiktsplan/releases).
+1. Ladda ned `rita_oversiktsplan-<version>.zip` från [Releases](https://github.com/ritaplan/rita-oversiktsplan/releases).
 2. Starta QGIS och välj **Tillägg → Hantera och installera tillägg… → Installera från ZIP**.
 3. Peka ut zip-filen och klicka **Installera tillägg**.
 4. Under **Installerade** ska *Rita Översiktsplan* vara ikryssat. Verktygsfältet **Rita Översiktsplan** och menyn
@@ -60,7 +60,7 @@ Kräver **QGIS 4.0 eller senare** (testat med 4.2.2 på Windows).
 
 1. Välj **Tillägg → Hantera och installera tillägg… → Inställningar** och klicka **Lägg till…** under *Pluginkällor*.
 2. Ange valfritt namn och som URL
-   `https://raw.githubusercontent.com/ericalnemar/rita-oversiktsplan/main/plugins.xml`.
+   `https://raw.githubusercontent.com/ritaplan/rita-oversiktsplan/main/plugins.xml`.
 3. Kryssa i **Visa experimentella tillägg**, gå till **Alla** och installera *Rita Översiktsplan*.
 
 Vill du köra direkt från källkoden, se [Utveckling](docs/utveckling.md).
@@ -88,7 +88,7 @@ Fler detaljer: [Användarhandledning](docs/anvandning.md).
 
 ## Bidra
 
-Fel, önskemål och frågor tas emot under [Issues](https://github.com/ericalnemar/rita-oversiktsplan/issues). Vill du
+Fel, önskemål och frågor tas emot under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues). Vill du
 bidra med kod, läs [CONTRIBUTING](CONTRIBUTING.md). Säkerhetsfrågor: se [SECURITY](SECURITY.md).
 
 ## Licens och källor

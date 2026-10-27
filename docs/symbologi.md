@@ -1,7 +1,7 @@
 # Symbologi – Rita Översiktsplan
 
 > **Pågående arbete.** Arbete pågår med hur planen visas i kartan: symbologin (färger, kantlinjer och punktsymboler per innehållstyp) och presentationen i övrigt kommer att ändras. Synpunkter tas gärna emot under
-> [Issues](https://github.com/ericalnemar/rita-oversiktsplan/issues).
+> [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues).
 
 Boverkets föreskrifter om översiktsplan, ÖP-modellen och Lantmäteriets specifikation anger **inte** hur en
 översiktsplan ska visas. Det är upp till kommunen. Symbolerna i pluginet är alltså **pluginets eget förslag**, inte

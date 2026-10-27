@@ -4,6 +4,17 @@ Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versi
 
 ## Ej utgivet
 
+## [0.1.9] – projektet har flyttat till organisationen Rita Plan
+
+- **Ny adress på GitHub.** Rita Översiktsplan ligger nu hos organisationen *ritaplan*: `github.com/ritaplan/rita-oversiktsplan` (förut under
+  ett personligt konto). Adresserna i pluginets metadata, i README och dokumentationen, i ärendemallen och i
+  tilläggskällan är bytta. **De gamla adresserna fungerar fortfarande**: GitHub vidarebefordrar dem, så den som redan har
+  lagt till den gamla tilläggskällan får uppdateringar som förut. Ny adress till tilläggskällan:
+  `https://raw.githubusercontent.com/ritaplan/rita-oversiktsplan/main/plugins.xml`.
+- **Arkivpaketets program-id är låst.** Id:t för pluginet som aktör räknades ut ur projektets adress. Det räknas fortfarande
+  ut ur den gamla adressen, så att paket skapade före och efter flytten pekar på samma aktör.
+
+
 ## [0.1.8] – kommunens yta från SCB, arkivpaketet följer PREMIS schema
 
 - **Kommunens yta i Ny översiktsplan hämtas från SCB** i stället för från länsstyrelsernas nationella

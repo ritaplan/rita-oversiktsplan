@@ -81,5 +81,5 @@ docs/images/marken/    Rita-svitens märken: R (sviten), D (Rita Detaljplan), Ö
 ```
 
 Datamodellen och var den avviker från Boverkets mall står i [Datamodell](datamodell.md). Delar av koden är hämtade
-från syskonpluginet [Rita Detaljplan](https://github.com/ericalnemar/rita-detaljplan) genom kopiering, inte som ett
+från syskonpluginet [Rita Detaljplan](https://github.com/ritaplan/rita-detaljplan) genom kopiering, inte som ett
 gemensamt bibliotek.

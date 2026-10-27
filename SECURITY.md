@@ -18,7 +18,7 @@ Så hanterar pluginet det som kan vara känsligt:
 ## Rapportera en säkerhetsbrist
 
 Beskriv inte säkerhetsbrister i ett öppet ärende. Använd i stället GitHubs
-[privata rapportering](https://github.com/ericalnemar/rita-oversiktsplan/security/advisories/new) (fliken *Security* →
+[privata rapportering](https://github.com/ritaplan/rita-oversiktsplan/security/advisories/new) (fliken *Security* →
 *Report a vulnerability*). Du får svar så snart det går; pluginet underhålls av en enskild person på fritiden.
 
 ## Stödda versioner

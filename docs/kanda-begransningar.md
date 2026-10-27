@@ -1,7 +1,7 @@
 # Kända begränsningar – Rita Översiktsplan
 
 Pluginet är under utveckling. Här står vad som saknas och vad som inte är provat. Rapportera gärna vad du upptäcker
-under [Issues](https://github.com/ericalnemar/rita-oversiktsplan/issues).
+under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues).
 
 ## Vad som saknas
 

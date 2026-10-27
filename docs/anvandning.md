@@ -490,7 +490,7 @@ Boverkets specifikation *Långtidsbevarande och arkivering av översiktsplan och
 hänvisar till finns i den, och alla kopplingar går åt båda hållen (planen har filerna som delar och varje fil hör till
 planen; händelser, filer och aktörer pekar på varandra). Den följer Boverkets värdelistor och obligatoriska uppgifter
 men inte Boverkets exempelfiler, som inte är giltiga mot schemat. Samma ändring gjordes i Rita Detaljplan 0.1.60, efter en
-[revision av arkivpaketet](https://github.com/ericalnemar/rita-detaljplan/blob/main/docs/arkivpaket-revision.md).
+[revision av arkivpaketet](https://github.com/ritaplan/rita-detaljplan/blob/main/docs/arkivpaket-revision.md).
 
 Välj vad som ska med: planens **GeoPackage** (bara för en plan i en fil; en plan i en databas checkar du ut först, eller
 nöjer dig med exportfilen), **exportfilen** i Lantmäteriets format, **planhandlingen** med bokmärken och dess

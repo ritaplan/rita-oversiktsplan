@@ -515,7 +515,7 @@ class AboutDialogTests(unittest.TestCase):
         self.assertIn(metadata()["version"], dialog.version.text())
         self.assertIn("översiktsplaner", dialog.tagline.text())
         self.assertEqual(dialog.docs_url(),
-                         "https://github.com/ericalnemar/rita-oversiktsplan/blob/main/docs/anvandning.md")
+                         "https://github.com/ritaplan/rita-oversiktsplan/blob/main/docs/anvandning.md")
         self.assertEqual(dialog.homepage, "https://ritaplan.xyz")
         self.assertFalse(dialog.website.isHidden())
 

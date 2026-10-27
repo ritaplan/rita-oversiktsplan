@@ -5,7 +5,7 @@ Tack för att du vill hjälpa till! Pluginet är ungt och all återkoppling är 
 
 ## Rapportera fel eller önska något
 
-Öppna ett ärende under [Issues](https://github.com/ericalnemar/rita-oversiktsplan/issues) och välj mall. Ange gärna
+Öppna ett ärende under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues) och välj mall. Ange gärna
 QGIS-version, operativsystem, vad du gjorde och vad som hände. **Bifoga aldrig en plan med uppgifter du inte får dela.**
 Skärmbilder av felmeddelanden hjälper mycket.
 
