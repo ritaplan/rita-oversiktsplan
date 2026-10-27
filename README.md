@@ -22,6 +22,10 @@ En översiktsplan som påbörjas 1 januari 2027 eller senare ska kunna tillgäng
 >
 > Arbete pågår med hur planen visas i kartan: symbologin (färger, kantlinjer och punktsymboler per innehållstyp) och presentationen i övrigt kommer att ändras.
 
+<p align="center">
+  <img src="docs/images/skarmbild.png" alt="Rita Översiktsplan i QGIS: planens verktygsfält och en karta över Lidköping och Vänern med utvecklingsinriktning för bebyggelse, grönstruktur och kommunikation" width="720">
+</p>
+
 ## Vad pluginet gör
 
 - **Ritar planen:** *Ny översiktsplan* skapar en GeoPackage med Boverkets GIS-databasmodell (0.3) och värden ur
