@@ -4,6 +4,13 @@ Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versi
 
 ## Ej utgivet
 
+## [0.1.10] – ny kontaktadress och nya bilder
+
+- **Kontaktadressen** i pluginets metadata (visas i QGIS under Tillägg) är nu `hej@ritaplan.xyz`, samma som på webbsidan
+  [ritaplan.xyz](https://ritaplan.xyz). Förut var det ett personligt konto.
+- **Bannern och socialbilden** (`docs/images/banner-mork.svg`, `social-preview.png`) visar den nya GitHub-adressen
+  `github.com/ritaplan/rita-oversiktsplan`. Övriga bilder och märket är oförändrade.
+
 ## [0.1.9] – projektet har flyttat till organisationen Rita Plan
 
 - **Ny adress på GitHub.** Rita Översiktsplan ligger nu hos organisationen *ritaplan*: `github.com/ritaplan/rita-oversiktsplan` (förut under
