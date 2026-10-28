@@ -484,13 +484,22 @@ Boverkets specifikation *Långtidsbevarande och arkivering av översiktsplan och
 - `metadata/PREMIS.xml`: all bevarandemetadata i en enda fil: planen som helhet med dess uppgifter (titel, kommun,
   planhändelse, diarienummer, datum), varje fil med id, kontrollsumma (SHA-256), storlek, format och program, och vad
   som hänt (paketet skapades, av vem),
+- `schemas/`: XML-scheman, PREMIS 3.0 och schemat för planens uppgifter,
 - `content/`: filerna.
 
 `PREMIS.xml` är giltig mot Library of Congress schema för PREMIS 3.0 och hänger ihop av sig själv: varje id den
 hänvisar till finns i den, och alla kopplingar går åt båda hållen (planen har filerna som delar och varje fil hör till
-planen; händelser, filer och aktörer pekar på varandra). Den följer Boverkets värdelistor och obligatoriska uppgifter
-men inte Boverkets exempelfiler, som inte är giltiga mot schemat. Samma ändring gjordes i Rita Detaljplan 0.1.60, efter en
+planen; händelser, filer och aktörer pekar på varandra). Planen är en *intellektuell entitet* i PREMIS och filerna är
+filer som den har som delar. Den följer Boverkets värdelistor och obligatoriska uppgifter men inte Boverkets
+exempelfiler, som inte är giltiga mot schemat. Samma ändring gjordes i Rita Detaljplan 0.1.60, efter en
 [revision av arkivpaketet](https://github.com/ritaplan/rita-detaljplan/blob/main/docs/arkivpaket-revision.md).
+
+I `schemas/` ligger **PREMIS-schemat** (`premis-v3-0.xsd`, oförändrad kopia från Library of Congress) och **schemat för
+planens uppgifter** (`oversiktsplan-1.xsd`, pluginets eget, eftersom planens uppgifter ligger i ett eget namnrymd,
+`https://ritaplan.xyz/ns/oversiktsplan/1`). Med dem kan `PREMIS.xml` och planens uppgifter valideras utan internet.
+`PREMIS.xml` pekar på PREMIS-schemats officiella adress och på det egna schemat med en sökväg i paketet (det saknar
+publik adress). Schemat för planens uppgifter följer med bara när planen har uppgifter. Schemafilerna beskrivs inte i
+PREMIS (de är inte planens innehåll) och kontrollen av paketet hoppar över mappen.
 
 Välj vad som ska med: planens **GeoPackage** (bara för en plan i en fil; en plan i en databas checkar du ut först, eller
 nöjer dig med exportfilen), **exportfilen** i Lantmäteriets format, **planhandlingen** med bokmärken och dess

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:op="https://ritaplan.xyz/ns/oversiktsplan/1"
+           targetNamespace="https://ritaplan.xyz/ns/oversiktsplan/1"
+           elementFormDefault="qualified" version="1">
+
+  <xs:annotation>
+    <xs:documentation xml:lang="sv">
+      Planens uppgifter i ett arkivpaket från Rita Översiktsplan. Elementet oversiktsplan ligger i PREMIS-filens
+      significantProperties/significantPropertiesExtension på planens post (en intellektuell entitet).
+      Elementen motsvarar uppgifter ur Lantmäteriets Översiktsplan 2.0 (klasserna oversiktsplan och beslutOP) och
+      Boverkets GIS-databasmodell: planens titel, kommun, planhändelse, datum och antagandebeslutets diarienummer och
+      datum. Bara det som är ifyllt tas med. Elementen står i den ordning de har här.
+    </xs:documentation>
+  </xs:annotation>
+
+  <xs:element name="oversiktsplan" type="op:OversiktsplanType"/>
+
+  <xs:complexType name="OversiktsplanType">
+    <xs:sequence>
+      <xs:element name="objektidentitet" type="xs:string" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Planens objektidentitet (UUID).</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="namn" type="xs:string" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Planens titel.</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="typ" type="xs:string" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Plantyp, alltid Översiktsplan.</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="kommun" type="xs:string" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Kommunens namn (kommunnamn).</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="kommunkod" type="op:Kommunkod" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Kommunens fyrsiffriga kod (SCB).</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="planhandelse" type="xs:string" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Planens planhändelse, ett värde ur ÖP-katalogen.</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="datumPlanhandelse" type="xs:date" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Datum för planhändelsen, ÅÅÅÅ-MM-DD.</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="datumPaborjat" type="xs:date" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Datum för kommunens beslut att påbörja översiktsplanen, ÅÅÅÅ-MM-DD.</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="diarienummer" type="xs:string" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Antagandebeslutets diarienummer.</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="datumAntagen" type="xs:date" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Datum då planen antogs (beslutets datum), ÅÅÅÅ-MM-DD.</xs:documentation></xs:annotation>
+      </xs:element>
+      <xs:element name="datumLagakraft" type="xs:date" minOccurs="0">
+        <xs:annotation><xs:documentation xml:lang="sv">Datum då beslutet fick laga kraft, ÅÅÅÅ-MM-DD.</xs:documentation></xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="Kommunkod">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9]{4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

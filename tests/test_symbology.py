@@ -472,5 +472,44 @@ class ExportSldTests(unittest.TestCase):
         self.assertTrue((folder / (MVA + ".sld")).is_file())
 
 
+class DashPatternTests(unittest.TestCase):
+    """Streckmönstren ska vara korta och utan luckor nära noll: i en PDF med vektorutskrift skriver QGIS dem som en
+    strecksats, och Acrobat godtar inte en sats med värden nära noll eller en lång, utrullad sats (felet "Streckargument är
+    ogiltiga", som Rita Detaljplan fick av streckmönster som passades in mot linjens längd)."""
+
+    @staticmethod
+    def dashes():
+        found = set()
+
+        def walk(value, depth=0):
+            if isinstance(value, styles.Group):
+                found.add(value.dash)
+            elif isinstance(value, dict) and depth < 4:
+                for item in value.values():
+                    walk(item, depth + 1)
+            elif isinstance(value, (list, tuple)) and depth < 4:
+                for item in value:
+                    walk(item, depth + 1)
+
+        for name in dir(styles):
+            walk(getattr(styles, name))
+        found.add(styles.STAGE_DASH)
+        return sorted(d for d in found if d)
+
+    def test_every_dash_pattern_is_short_and_has_no_part_near_zero(self):
+        patterns = self.dashes()
+        self.assertGreater(len(patterns), 5)
+        for dash in patterns:
+            values = [float(v) for v in dash.split(";")]
+            self.assertLessEqual(len(values), 8, dash)
+            self.assertGreaterEqual(min(values), 0.05, dash)
+
+    def test_the_lines_are_not_fitted_to_the_length_of_the_line(self):
+        for dash in self.dashes():
+            line = symbology._stroke((0, 0, 0), styles.Group(dash, 0.5, "circle"))
+            self.assertFalse(line.alignDashPattern(), dash)
+            self.assertFalse(line.tweakDashPatternOnCorners(), dash)
+
+
 if __name__ == "__main__":
     unittest.main()

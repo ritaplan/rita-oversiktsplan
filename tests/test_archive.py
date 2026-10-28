@@ -28,11 +28,15 @@ _spec.loader.exec_module(archive)
 
 NS = {"p": archive.PREMIS_NS, "op": archive.OVERSIKTSPLAN_NS}
 XSI_TYPE = f"{{{archive.XSI_NS}}}type"
-XSD = ROOT / "tests" / "data" / "premis-v3-0.xsd"  # Library of Congress PREMIS 3.0, oförändrad
+SCHEMAS = ROOT / "rita_oversiktsplan" / "data" / "schemas"
+XSD = SCHEMAS / "premis-v3-0.xsd"  # Library of Congress PREMIS 3.0, oförändrad
+OP_XSD = SCHEMAS / "oversiktsplan-1.xsd"  # schemat för planens uppgifter (vårt eget)
 APP = archive.App("Rita Översiktsplan", "0.1.1", "https://github.com/ritaplan/rita-oversiktsplan")
 NOW = datetime(2026, 10, 15, 14, 3, 22)
-PLAN = {"beteckning": "ÖP 2040", "namn": "Översiktsplan 2040", "status": "Antagen", "typ": "Översiktsplan",
-        "datumLagakraft": "2026-09-01", "kommun": "Eskilstuna", "kommunkod": "0482"}
+PLAN = {"objektidentitet": "0b6d1f0e-5a8e-4c3b-9d1c-2f6a7b8c9d10", "namn": "Översiktsplan 2040", "typ": "Översiktsplan",
+        "kommun": "Eskilstuna", "kommunkod": "0482", "planhandelse": "Antagande", "datumPlanhandelse": "2026-08-20",
+        "datumPaborjat": "2024-01-15", "diarienummer": "KS 2024/123", "datumAntagen": "2026-08-20",
+        "datumLagakraft": "2026-09-01"}
 
 
 def make_pdf(path: Path, version: str = "1.7", pdfa: str = "", info: str = "") -> Path:
@@ -98,8 +102,8 @@ class ArchiveCase(unittest.TestCase):
     def file_objects(self, root):
         return [o for o in root.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:file"]
 
-    def representations(self, root):
-        return [o for o in root.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:representation"]
+    def entities(self, root):
+        return [o for o in root.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:intellectualEntity"]
 
 
 class PackageTests(ArchiveCase):
@@ -108,7 +112,8 @@ class PackageTests(ArchiveCase):
         self.assertEqual(package.folder, self.out / "Lärkan_1_1_arkivpaket_2026-10-15")
         found = sorted(p.relative_to(package.folder).as_posix() for p in package.folder.rglob("*") if p.is_file())
         self.assertEqual(found, ["content/plan.gpkg", "content/plan.json", "content/planbeskrivning.docx",
-                                 "content/planbeskrivning.pdf", "content/plankarta.pdf", "metadata/PREMIS.xml"])
+                                 "content/planbeskrivning.pdf", "content/plankarta.pdf", "metadata/PREMIS.xml",
+                                 "schemas/oversiktsplan-1.xsd", "schemas/premis-v3-0.xsd"])
         self.assertEqual(package.premis, package.folder / "metadata" / "PREMIS.xml")
 
     def test_the_originals_are_left_alone(self):
@@ -229,22 +234,24 @@ class PremisTests(ArchiveCase):
 
     def test_the_category_is_given_by_xsi_type_and_there_is_no_objectcategory_element(self):
         types = [o.get(XSI_TYPE) for o in self.root_el.findall("p:object", NS)]
-        self.assertEqual(types, ["premis:representation"] + ["premis:file"] * 5)
+        self.assertEqual(types, ["premis:intellectualEntity"] + ["premis:file"] * 5)
         self.assertEqual(self.root_el.findall(".//p:objectCategory", NS), [], "finns inte i XML-schemat")
 
-    def test_the_plan_is_one_representation_with_every_file_as_a_part(self):
-        reps = self.representations(self.root_el)
+    def test_the_plan_is_one_intellectual_entity_with_every_file_as_a_part(self):
+        reps = self.entities(self.root_el)
         self.assertEqual(len(reps), 1)
+        self.assertEqual([o for o in self.root_el.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:representation"], [],
+                         "ingen mellannivå: planen och filerna")
         relation = reps[0].find("p:relationship", NS)
         self.assertEqual(relation.findtext("p:relationshipType", namespaces=NS), "structural")
         self.assertEqual(relation.findtext("p:relationshipSubType", namespaces=NS), "has Part")
         parts = {v.text for v in relation.findall("p:relatedObjectIdentifier/p:relatedObjectIdentifierValue", NS)}
         self.assertEqual(parts, {r.id for r in self.package.records})
         self.assertEqual(reps[0].findtext("p:originalName", namespaces=NS), "Lärkan 1:1")
-        self.assertIsNone(reps[0].find("p:objectCharacteristics", NS), "en representation får inte ha det")
+        self.assertIsNone(reps[0].find("p:objectCharacteristics", NS), "en entitet har inga filegenskaper")
 
     def test_every_file_points_back_at_the_plan_with_is_part_of(self):
-        plan_id = self.representations(self.root_el)[0].findtext("p:objectIdentifier/p:objectIdentifierValue", namespaces=NS)
+        plan_id = self.entities(self.root_el)[0].findtext("p:objectIdentifier/p:objectIdentifierValue", namespaces=NS)
         for box in self.file_objects(self.root_el):
             relation = box.find("p:relationship", NS)
             self.assertEqual(relation.findtext("p:relationshipType", namespaces=NS), "structural")
@@ -371,7 +378,7 @@ class PremisTests(ArchiveCase):
 
 
 class PlanDetailsTests(ArchiveCase):
-    """Planens uppgifter ligger i ``significantProperties`` på planen: en representation får inte ha ``objectCharacteristics``."""
+    """Planens uppgifter ligger i ``significantProperties`` på planen (en intellektuell entitet har inga ``objectCharacteristics``)."""
 
     def details(self, package):
         return self.tree(package).find(
@@ -397,11 +404,11 @@ class PlanDetailsTests(ArchiveCase):
         self.assertTrue(text.startswith('<?xml version="1.0" encoding="UTF-8"?>'))
         self.assertIn("Översiktsplan 2040</op:namn>", text)
 
-    def test_the_representation_is_linked_to_the_creation_event_that_lists_it_as_the_outcome(self):
+    def test_the_entity_is_linked_to_the_creation_event_that_lists_it_as_the_outcome(self):
         package = self.build()
         root = self.tree(package)
-        box = self.representations(root)[0]
-        representation = box.findtext("p:objectIdentifier/p:objectIdentifierValue", namespaces=NS)
+        box = self.entities(root)[0]
+        entity = box.findtext("p:objectIdentifier/p:objectIdentifierValue", namespaces=NS)
         event_id = box.findtext("p:linkingEventIdentifier/p:linkingEventIdentifierValue", namespaces=NS)
         events = {e.findtext("p:eventIdentifier/p:eventIdentifierValue", namespaces=NS): e for e in root.findall("p:event", NS)}
         event = events[event_id]
@@ -409,7 +416,7 @@ class PlanDetailsTests(ArchiveCase):
         outcome = [link.findtext("p:linkingObjectIdentifierValue", namespaces=NS)
                    for link in event.findall("p:linkingObjectIdentifier", NS)
                    if link.findtext("p:linkingObjectRole", namespaces=NS) == "outcome"]
-        self.assertEqual(outcome, [representation])
+        self.assertEqual(outcome, [entity])
 
 
 class LinkProblemTests(ArchiveCase):
@@ -479,9 +486,95 @@ class SchemaTests(ArchiveCase):
 
     def test_a_missing_xsi_type_makes_it_invalid(self):
         package = self.build()
-        text = package.premis.read_text(encoding="utf-8").replace(' xsi:type="premis:representation"', "", 1)
+        text = package.premis.read_text(encoding="utf-8").replace(' xsi:type="premis:intellectualEntity"', "", 1)
         package.premis.write_text(text, encoding="utf-8")
         self.assertTrue(any("abstract" in e for e in self.errors(package.premis)))
+
+
+class SchemasFolderTests(ArchiveCase):
+    """Schemana som följer med i paketet (``schemas/``), så att det går att validera utan internet."""
+
+    def test_the_premis_schema_and_the_schema_for_the_plans_details_are_in_the_package(self):
+        package = self.build()
+        found = sorted(p.name for p in (package.folder / "schemas").iterdir())
+        self.assertEqual(found, ["oversiktsplan-1.xsd", "premis-v3-0.xsd"])
+        for name in found:
+            self.assertEqual((package.folder / "schemas" / name).read_bytes(), (SCHEMAS / name).read_bytes(),
+                             "oförändrade kopior av pluginets scheman")
+
+    def test_without_plan_details_only_the_premis_schema_follows(self):
+        package = self.build(plan={})
+        self.assertEqual(sorted(p.name for p in (package.folder / "schemas").iterdir()), ["premis-v3-0.xsd"])
+
+    def test_the_schema_location_names_the_final_premis_schema_and_our_own_schema_by_a_path_inside_the_package(self):
+        package = self.build()
+        location = self.tree(package).get(f"{{{archive.XSI_NS}}}schemaLocation").split()
+        self.assertEqual(location[:2], [archive.PREMIS_NS, "http://www.loc.gov/standards/premis/v3/premis-v3-0.xsd"])
+        self.assertEqual(location[2], archive.OVERSIKTSPLAN_NS)
+        self.assertTrue((package.premis.parent / location[3]).resolve().is_file(), "sökvägen leder till schemat i paketet")
+
+    def test_no_schema_for_the_details_is_named_when_there_are_none(self):
+        package = self.build(plan={})
+        self.assertEqual(len(self.tree(package).get(f"{{{archive.XSI_NS}}}schemaLocation").split()), 2)
+
+    def test_the_schemas_folder_is_not_reported_as_extra_but_other_extra_files_still_are(self):
+        package = self.build()
+        (package.folder / "content" / "ny.txt").write_text("hej", encoding="utf-8")
+        self.assertEqual(archive.verify_package(package.folder).extra, ["content/ny.txt"])
+
+    def test_a_package_without_the_schemas_folder_from_an_earlier_version_is_still_clean(self):
+        package = self.build()
+        archive.shutil.rmtree(package.folder / "schemas")
+        self.assertTrue(archive.verify_package(package.folder).clean)
+
+
+@unittest.skipUnless(LXML is not None and OP_XSD.is_file(), "kräver lxml och schemat för planens uppgifter")
+class OversiktsplanSchemaTests(ArchiveCase):
+    """Schemat för planens uppgifter (``oversiktsplan-1.xsd``) och att det stämmer med det pluginet skriver."""
+
+    @classmethod
+    def schema(cls):
+        if not hasattr(cls, "_schema"):
+            cls._schema = LXML.XMLSchema(LXML.parse(str(OP_XSD)))
+        return cls._schema
+
+    def details(self, package):
+        tree = LXML.parse(str(package.premis))
+        found = tree.xpath("//op:oversiktsplan", namespaces={"op": archive.OVERSIKTSPLAN_NS})
+        self.assertEqual(len(found), 1)
+        return found[0]
+
+    def test_the_plan_details_the_plugin_writes_are_valid_against_the_schema(self):
+        package = self.build()
+        self.assertTrue(self.schema().validate(self.details(package)), self.schema().error_log)
+
+    def test_every_field_the_plugin_can_write_is_valid_against_the_schema(self):
+        package = self.build(plan=dict(PLAN))
+        self.assertTrue(self.schema().validate(self.details(package)), self.schema().error_log)
+
+    def test_the_elements_come_in_the_schemas_order_whatever_order_they_were_given_in(self):
+        scrambled = dict(reversed(list(PLAN.items())))
+        package = self.build(plan=scrambled)
+        names = [child.tag.split("}")[1] for child in self.details(package)]
+        self.assertEqual(names, list(PLAN))
+        self.assertTrue(self.schema().validate(self.details(package)), self.schema().error_log)
+
+    def test_a_date_that_is_not_an_iso_date_is_refused(self):
+        package = self.build(plan=dict(PLAN, datumAntagen="PyQt6.QtCore.QDate(2026, 9, 1)"))
+        self.assertFalse(self.schema().validate(self.details(package)))
+        self.assertIn("datumAntagen", str(self.schema().error_log))
+
+    def test_a_municipality_code_must_have_four_digits(self):
+        package = self.build(plan=dict(PLAN, kommunkod="12"))
+        self.assertFalse(self.schema().validate(self.details(package)))
+
+    def test_an_element_the_schema_does_not_know_is_refused(self):
+        package = self.build(plan=dict(PLAN, okant="x"))
+        self.assertFalse(self.schema().validate(self.details(package)))
+
+    def test_a_plan_with_only_a_name_is_valid_since_every_element_is_optional(self):
+        package = self.build(plan={"namn": "Bara namn"})
+        self.assertTrue(self.schema().validate(self.details(package)), self.schema().error_log)
 
 
 class VerifyTests(ArchiveCase):

@@ -4,6 +4,25 @@ Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versi
 
 ## Ej utgivet
 
+## [0.1.11] – arkivpaketet: planen som intellektuell entitet och en schemas-mapp
+
+Samma ändring som i Rita Detaljplan 0.1.63, efter en granskning av en PREMIS-expert (som bekräftade att metadatan nu
+validerar mot rätt schema):
+
+- **Planen är en intellektuell entitet** (`premis:intellectualEntity`) i stället för en representation, och filerna är filer
+  som den har som delar (`has Part`/`is Part Of`, som förut). Allt pluginet skriver på planen är tillåtet på en entitet,
+  så metadatan är fortfarande giltig mot PREMIS-schemat. Boverkets exempel använder *representation*; hur det ska
+  modelleras är en öppen fråga.
+- **En `schemas`-mapp i paketet** med PREMIS 3.0-schemat (oförändrad kopia) och ett **nytt schema för planens uppgifter**
+  (`oversiktsplan-1.xsd`, som beskriver de element pluginet skriver i `significantProperties`: objektidentitet, titel,
+  typ, kommun, kommunkod, planhändelse, datum för planhändelse och påbörjad plan, diarienummer, datum antagen och laga
+  kraft). Paketet kan då valideras utan internet. `PREMIS.xml` pekar på det egna schemat med en sökväg i paketet.
+  *Kontrollera arkivpaket* hoppar över mappen. Planens element skrivs alltid i den ordning schemat kräver.
+- Paket från 0.1.8–0.1.10 (utan `schemas/`, med representation) kontrolleras som förut.
+- **Streckade linjer i en PDF.** Rita Detaljplan 0.1.63 rättade att plankartans PDF inte gick att spara som bild i Acrobat
+  ("Streckargument är ogiltiga"). Rita Översiktsplans streckmönster har inte det felet (de passas inte in mot linjens längd
+  och har inga luckor nära noll; kontrollerat i en PDF med vektorutskrift), men två nya tester vaktar att det förblir så.
+
 ## [0.1.10] – ny kontaktadress och nya bilder
 
 - **Kontaktadressen** i pluginets metadata (visas i QGIS under Tillägg) är nu `hej@ritaplan.xyz`, samma som på webbsidan

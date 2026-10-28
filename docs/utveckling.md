@@ -75,8 +75,8 @@ rita_oversiktsplan/    pluginet (det som installeras)
   data/                ÖP-katalogen och kommunlistan
 tools/                 byggskript, hämtning av ÖP-katalogen, utkastet till planhandling, märket
 exempel/               utkastet till planhandling (följer inte med zip-filen)
-tests/                 enhetstester; tests/data/premis-v3-0.xsd är Library of Congress PREMIS 3.0-schema,
-                       oförändrat, och används för att validera arkivpaketet (kräver lxml, som finns i QGIS Python)
+tests/                 enhetstester; PREMIS 3.0-schemat (rita_oversiktsplan/data/schemas/premis-v3-0.xsd) är Library of
+                       Congress schema, oförändrat, och används för att validera arkivpaketet (kräver lxml, som finns i QGIS Python)
 docs/images/marken/    Rita-svitens märken: R (sviten), D (Rita Detaljplan), Ö (Rita Översiktsplan)
 ```
 

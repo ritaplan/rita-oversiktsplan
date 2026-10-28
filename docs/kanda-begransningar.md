@@ -42,9 +42,11 @@ under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues).
   identitet, och tidsstämpeln är *hämtat datum* (eller innehållets versionsdatum): det är tolkningar.
 - **Arkivpaketet.** `metadata/PREMIS.xml` är giltig mot Library of Congress schema för PREMIS 3.0 och följer Boverkets
   dataelementkatalog (maj 2026), men inte Boverkets exempelfiler, som inte är giltiga mot schemat. Den är inte provad
-  mot något e-arkiv. Planens uppgifter ligger i `significantProperties` på planen (i ett eget namnrymd): katalogen vill
-  ha dem i `objectCharacteristics`, men PREMIS tillåter inte det för en plan som helhet, och vilka uppgifter som ska
-  med anger Boverket inte (pluginets val). Paketet är inget E-ARK-/FGS-paket (ingen `METS.xml`), så en kommun med
+  mot något e-arkiv. Planens uppgifter ligger i `significantProperties` på planen (i ett eget namnrymd med ett eget
+  schema i paketets `schemas/`): katalogen vill ha dem i `objectCharacteristics`, men PREMIS tillåter inte det för en
+  plan som helhet, och vilka uppgifter som ska med anger Boverket inte (pluginets val). Planen är en *intellektuell
+  entitet* och filerna är filer (som en PREMIS-expert föreslagit); Boverkets exempel använder *representation*. Hur det
+  ska modelleras är en öppen fråga, och relationen mellan planen och filerna är `has Part`/`is Part Of`. Paketet är inget E-ARK-/FGS-paket (ingen `METS.xml`), så en kommun med
   e-arkiv får lägga PREMIS-filen i sitt eget paketeringsflöde. Formaten saknar registernyckel (PRONOM) och
   metadatafilen har ingen egen kontrollsumma. Pluginet gör inga filer till PDF/A och kontrollerar dem inte. Paketet
   sparas som en mapp.

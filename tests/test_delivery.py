@@ -52,8 +52,13 @@ class ArchivePlanTests(ToolCase):
             self.assertIn(expected, premis)
         self.assertEqual(archive.link_problems(ET.fromstring(premis)), [])
         if LXML is not None:  # planens riktiga uppgifter ska också vara giltiga mot LoC:s schema
-            schema = LXML.XMLSchema(LXML.parse(str(ROOT / "tests" / "data" / "premis-v3-0.xsd")))
-            self.assertTrue(schema.validate(LXML.parse(str(package.premis))), schema.error_log)
+            schema = LXML.XMLSchema(LXML.parse(str(package.folder / "schemas" / "premis-v3-0.xsd")))
+            document = LXML.parse(str(package.premis))
+            self.assertTrue(schema.validate(document), schema.error_log)
+            details = document.xpath("//op:oversiktsplan", namespaces={"op": archive.OVERSIKTSPLAN_NS})
+            own = LXML.XMLSchema(LXML.parse(str(package.folder / "schemas" / "oversiktsplan-1.xsd")))
+            self.assertEqual(len(details), 1)
+            self.assertTrue(own.validate(details[0]), own.error_log)  # planens riktiga uppgifter mot paketets eget schema
         exported = json.loads((package.folder / "content" / "ÖP_2040.json").read_text(encoding="utf-8"))
         self.assertEqual(exported["feature:mediatyp"], export_lm.MEDIATYP)
         self.assertTrue(archive.verify_package(package.folder).clean)
