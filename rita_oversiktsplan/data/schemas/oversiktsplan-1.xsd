@@ -7,7 +7,7 @@
   <xs:annotation>
     <xs:documentation xml:lang="sv">
       Planens uppgifter i ett arkivpaket från Rita Översiktsplan. Elementet oversiktsplan ligger i PREMIS-filens
-      significantProperties/significantPropertiesExtension på planens post (en intellektuell entitet).
+      significantProperties/significantPropertiesExtension på planens post (en representation).
       Elementen motsvarar uppgifter ur Lantmäteriets Översiktsplan 2.0 (klasserna oversiktsplan och beslutOP) och
       Boverkets GIS-databasmodell: planens titel, kommun, planhändelse, datum och antagandebeslutets diarienummer och
       datum. Bara det som är ifyllt tas med. Elementen står i den ordning de har här.

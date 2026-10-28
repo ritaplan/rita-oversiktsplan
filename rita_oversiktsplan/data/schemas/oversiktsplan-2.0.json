@@ -1,0 +1,575 @@
+{
+  "$id": "https://namespace.lantmateriet.se/distribution/geodatakatalog/oversiktsplan/v2/oversiktsplan-2.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Översiktsplan 2.0",
+  "$ref": "#/$defs/oversiktsplanFeatureCollection",
+  "$defs": {
+    "oversiktsplanFeatureCollection": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://geojson.org/schema/FeatureCollection.json"
+        },
+        {
+          "properties": {
+            "feature:mediatyp": {
+              "const": "application/vnd.lm.oversiktsplan.v2+json"
+            },
+            "features": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/oversiktsplanFeature"
+                  },
+                  {
+                    "$ref": "#/$defs/beslutOPFeature"
+                  },
+                  {
+                    "$ref": "#/$defs/innehallOPFeature"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "feature:mediatyp"
+          ]
+        }
+      ]
+    },
+    "oversiktsplanFeature": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://geojson.org/schema/Feature.json"
+        },
+        {
+          "properties": {
+            "geometry": {
+              "type": "null"
+            },
+            "properties": {
+              "$ref": "#/$defs/oversiktsplan"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "beslutOPFeature": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://geojson.org/schema/Feature.json"
+        },
+        {
+          "properties": {
+            "geometry": {
+              "type": "null"
+            },
+            "properties": {
+              "$ref": "#/$defs/beslutOP"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "innehallOPFeature": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://geojson.org/schema/Feature.json"
+        },
+        {
+          "properties": {
+            "geometry": {
+              "type": "null"
+            },
+            "properties": {
+              "$ref": "#/$defs/innehallOP"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "utbytesobjekt": {
+      "type": "object",
+      "properties": {
+        "objektidentitet": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "objektversion": {
+          "type": "integer"
+        },
+        "versionGiltigFran": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "versionGiltigTill": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "objektidentitet",
+        "versionGiltigFran"
+      ]
+    },
+    "oversiktsplan": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/utbytesobjekt"
+        },
+        {
+          "properties": {
+            "feature:typ": {
+              "const": "oversiktsplan"
+            },
+            "beslut": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "kommunkod": {
+              "$ref": "#/$defs/kommunkod"
+            },
+            "kommunnamn": {
+              "$ref": "#/$defs/text"
+            },
+            "planhandelse": {
+              "$ref": "#/$defs/opKatalogen"
+            },
+            "datumPlanhandelse": {
+              "type": "string",
+              "format": "date"
+            },
+            "datumPaborjat": {
+              "type": "string",
+              "format": "date"
+            },
+            "planensTitel": {
+              "$ref": "#/$defs/text"
+            },
+            "digitaltUrsprung": {
+              "type": "boolean"
+            },
+            "digitaliseringsbeskrivning": {
+              "$ref": "#/$defs/text"
+            },
+            "underlag": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/underlagOP"
+              }
+            },
+            "dokument": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/dokumentavsnitt"
+              }
+            }
+          },
+          "required": [
+            "feature:typ",
+            "kommunkod",
+            "kommunnamn",
+            "planhandelse",
+            "datumPlanhandelse",
+            "datumPaborjat",
+            "digitaltUrsprung",
+            "underlag"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "beslutOP": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/utbytesobjekt"
+        },
+        {
+          "properties": {
+            "feature:typ": {
+              "const": "beslutOP"
+            },
+            "beslutandeOrganisation": {
+              "$ref": "#/$defs/organisation"
+            },
+            "beslutandeInstans": {
+              "$ref": "#/$defs/instans"
+            },
+            "handelse": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/beslutshandelse"
+              }
+            },
+            "paverkar": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/paverkarObjekt"
+              }
+            },
+            "rubrik": {
+              "$ref": "#/$defs/text"
+            },
+            "diarienummer": {
+              "$ref": "#/$defs/text"
+            },
+            "innehall": {
+              "$ref": "#/$defs/text"
+            },
+            "beslutsdokument": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/dokumentreferensOP"
+              }
+            },
+            "underlagsmaterial": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/dokumentreferensOP"
+              }
+            },
+            "arkividentitet": {
+              "$ref": "#/$defs/text"
+            }
+          },
+          "required": [
+            "feature:typ",
+            "beslutandeOrganisation",
+            "diarienummer",
+            "handelse",
+            "paverkar"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "innehallOP": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/utbytesobjekt"
+        },
+        {
+          "properties": {
+            "feature:typ": {
+              "const": "innehallOP"
+            },
+            "oversiktsplan": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "beslut": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "anvandningsstatus": {
+              "$ref": "#/$defs/text"
+            },
+            "innehallstyp": {
+              "$ref": "#/$defs/opKatalogen"
+            },
+            "kompletterandeInnehallstyp": {
+              "$ref": "#/$defs/opKatalogen"
+            },
+            "planhandelse": {
+              "$ref": "#/$defs/opKatalogen"
+            },
+            "datumPlanhandelse": {
+              "type": "string",
+              "format": "date"
+            },
+            "underErsattning": {
+              "type": "boolean"
+            },
+            "datumPaborjat": {
+              "type": "string",
+              "format": "date"
+            },
+            "namn": {
+              "$ref": "#/$defs/text"
+            },
+            "precisering": {
+              "$ref": "#/$defs/text"
+            },
+            "geometri": {
+              "$ref": "https://namespace.lantmateriet.se/distribution/geodatakatalog/geometri/geometri-2.0.1.json"
+            },
+            "illustrativaGranser": {
+              "const": true
+            },
+            "vertikalAvgransning": {
+              "$ref": "#/$defs/avgransning"
+            },
+            "berorAnnatInnehall": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "utbyggnadsordning": {
+              "$ref": "#/$defs/text"
+            },
+            "sambandsniva": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/opKatalogen"
+              }
+            },
+            "presentationsskala": {
+              "type": "integer"
+            },
+            "externReferens": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/externReferensOP"
+              }
+            },
+            "dokument": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/dokumentavsnitt"
+              }
+            }
+          },
+          "required": [
+            "feature:typ",
+            "oversiktsplan",
+            "innehallstyp",
+            "planhandelse",
+            "datumPlanhandelse",
+            "underErsattning",
+            "illustrativaGranser"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "underlagOP": {
+      "type": "object",
+      "properties": {
+        "underlagstyp": {
+          "$ref": "#/$defs/opKatalogen"
+        },
+        "underlag": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/dokumentreferensOP"
+          }
+        }
+      },
+      "required": [
+        "underlagstyp",
+        "underlag"
+      ],
+      "additionalProperties": false
+    },
+    "dokumentavsnitt": {
+      "type": "object",
+      "properties": {
+        "avsnittstyp": {
+          "$ref": "#/$defs/opKatalogen"
+        },
+        "avsnittsbokmarke": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "dokument": {
+          "$ref": "#/$defs/dokumentreferensOP"
+        }
+      },
+      "required": [
+        "avsnittstyp",
+        "avsnittsbokmarke",
+        "dokument"
+      ],
+      "additionalProperties": false
+    },
+    "dokumentreferensOP": {
+      "type": "object",
+      "properties": {
+        "namn": {
+          "$ref": "#/$defs/text"
+        },
+        "kortnamn": {
+          "$ref": "#/$defs/text"
+        },
+        "externReferens": {
+          "$ref": "#/$defs/externReferensOP"
+        },
+        "specifikReferens": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "namn",
+        "externReferens"
+      ],
+      "additionalProperties": false
+    },
+    "opKatalogen": {
+      "type": "object",
+      "properties": {
+        "varde": {
+          "$ref": "#/$defs/text"
+        },
+        "vardereferens": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "grupp": {
+          "$ref": "#/$defs/text"
+        },
+        "gruppreferens": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "varde",
+        "vardereferens",
+        "grupp",
+        "gruppreferens"
+      ],
+      "additionalProperties": false
+    },
+    "beslutshandelse": {
+      "type": "object",
+      "properties": {
+        "handelsetyp": {
+          "$ref": "#/$defs/beslutshandelsetyp"
+        },
+        "datum": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "handelsetyp",
+        "datum"
+      ],
+      "additionalProperties": false
+    },
+    "paverkarObjekt": {
+      "type": "object",
+      "properties": {
+        "identitet": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "objekttyp": {
+          "$ref": "#/$defs/paverkarObjekttyp"
+        }
+      },
+      "required": [
+        "identitet"
+      ],
+      "additionalProperties": false
+    },
+    "organisation": {
+      "type": "object",
+      "properties": {
+        "organisationsnamn": {
+          "$ref": "#/$defs/text"
+        },
+        "organisationsnummer": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "additionalProperties": false
+    },
+    "text": {
+      "type": "string",
+      "pattern": "[^\t\n ]+"
+    },
+    "avgransning": {
+      "type": "string",
+      "enum": [
+        "nedåt",
+        "uppåt"
+      ]
+    },
+    "beslutshandelsetyp": {
+      "type": "string",
+      "enum": [
+        "fattat",
+        "överklagat",
+        "laga kraft"
+      ]
+    },
+    "instans": {
+      "type": "string",
+      "enum": [
+        "kommunfullmäktige"
+      ]
+    },
+    "paverkarObjekttyp": {
+      "type": "string",
+      "enum": [
+        "oversiktsplan",
+        "innehallOP"
+      ]
+    },
+    "kommunkod": {
+      "type": "string",
+      "pattern": "^[0-9]{4}$"
+    },
+    "externReferensOP": {
+      "type": "object",
+      "properties": {
+        "identitet": {
+          "type": "string"
+        },
+        "producentensIdentitet": {
+          "type": "string"
+        },
+        "namnrymd": {
+          "type": "string",
+          "format": "uri"
+        },
+        "lank": {
+          "type": "string",
+          "format": "uri"
+        },
+        "tidsstampel": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "avser": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "identitet",
+        "producentensIdentitet",
+        "tidsstampel",
+        "avser"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -44,9 +44,10 @@ under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues).
   dataelementkatalog (maj 2026), men inte Boverkets exempelfiler, som inte är giltiga mot schemat. Den är inte provad
   mot något e-arkiv. Planens uppgifter ligger i `significantProperties` på planen (i ett eget namnrymd med ett eget
   schema i paketets `schemas/`): katalogen vill ha dem i `objectCharacteristics`, men PREMIS tillåter inte det för en
-  plan som helhet, och vilka uppgifter som ska med anger Boverket inte (pluginets val). Planen är en *intellektuell
-  entitet* och filerna är filer (som en PREMIS-expert föreslagit); Boverkets exempel använder *representation*. Hur det
-  ska modelleras är en öppen fråga, och relationen mellan planen och filerna är `has Part`/`is Part Of`. Paketet är inget E-ARK-/FGS-paket (ingen `METS.xml`), så en kommun med
+  representation, och vilka uppgifter som ska med anger Boverket inte (pluginets val). Planen är en *representation*,
+  som Boverkets specifikation anger, och filerna är filer; en PREMIS-expert menar att modelleringen går att diskutera (till
+  exempel mellannivån och relationen mellan planen och filerna, som här är `has Part`/`is Part Of`) och att den kan
+  variera med hur ett bevarandesystem är uppbyggt. Paketet är inget E-ARK-/FGS-paket (ingen `METS.xml`), så en kommun med
   e-arkiv får lägga PREMIS-filen i sitt eget paketeringsflöde. Formaten saknar registernyckel (PRONOM) och
   metadatafilen har ingen egen kontrollsumma. Pluginet gör inga filer till PDF/A och kontrollerar dem inte. Paketet
   sparas som en mapp.

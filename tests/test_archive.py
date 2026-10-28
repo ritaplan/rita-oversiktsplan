@@ -103,7 +103,7 @@ class ArchiveCase(unittest.TestCase):
         return [o for o in root.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:file"]
 
     def entities(self, root):
-        return [o for o in root.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:intellectualEntity"]
+        return [o for o in root.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:representation"]
 
 
 class PackageTests(ArchiveCase):
@@ -113,7 +113,8 @@ class PackageTests(ArchiveCase):
         found = sorted(p.relative_to(package.folder).as_posix() for p in package.folder.rglob("*") if p.is_file())
         self.assertEqual(found, ["content/plan.gpkg", "content/plan.json", "content/planbeskrivning.docx",
                                  "content/planbeskrivning.pdf", "content/plankarta.pdf", "metadata/PREMIS.xml",
-                                 "schemas/oversiktsplan-1.xsd", "schemas/premis-v3-0.xsd"])
+                                 "schemas/geometri-2.0.1.json", "schemas/oversiktsplan-1.xsd", "schemas/oversiktsplan-2.0.json",
+                                 "schemas/premis-v3-0.xsd"])
         self.assertEqual(package.premis, package.folder / "metadata" / "PREMIS.xml")
 
     def test_the_originals_are_left_alone(self):
@@ -234,21 +235,21 @@ class PremisTests(ArchiveCase):
 
     def test_the_category_is_given_by_xsi_type_and_there_is_no_objectcategory_element(self):
         types = [o.get(XSI_TYPE) for o in self.root_el.findall("p:object", NS)]
-        self.assertEqual(types, ["premis:intellectualEntity"] + ["premis:file"] * 5)
+        self.assertEqual(types, ["premis:representation"] + ["premis:file"] * 5)
         self.assertEqual(self.root_el.findall(".//p:objectCategory", NS), [], "finns inte i XML-schemat")
 
-    def test_the_plan_is_one_intellectual_entity_with_every_file_as_a_part(self):
+    def test_the_plan_is_one_representation_with_every_file_as_a_part(self):
         reps = self.entities(self.root_el)
         self.assertEqual(len(reps), 1)
-        self.assertEqual([o for o in self.root_el.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:representation"], [],
-                         "ingen mellannivå: planen och filerna")
+        self.assertEqual([o for o in self.root_el.findall("p:object", NS) if o.get(XSI_TYPE) == "premis:intellectualEntity"], [],
+                         "planen är en representation, som Boverkets specifikation anger")
         relation = reps[0].find("p:relationship", NS)
         self.assertEqual(relation.findtext("p:relationshipType", namespaces=NS), "structural")
         self.assertEqual(relation.findtext("p:relationshipSubType", namespaces=NS), "has Part")
         parts = {v.text for v in relation.findall("p:relatedObjectIdentifier/p:relatedObjectIdentifierValue", NS)}
         self.assertEqual(parts, {r.id for r in self.package.records})
         self.assertEqual(reps[0].findtext("p:originalName", namespaces=NS), "Lärkan 1:1")
-        self.assertIsNone(reps[0].find("p:objectCharacteristics", NS), "en entitet har inga filegenskaper")
+        self.assertIsNone(reps[0].find("p:objectCharacteristics", NS), "en representation får inte ha det")
 
     def test_every_file_points_back_at_the_plan_with_is_part_of(self):
         plan_id = self.entities(self.root_el)[0].findtext("p:objectIdentifier/p:objectIdentifierValue", namespaces=NS)
@@ -378,7 +379,7 @@ class PremisTests(ArchiveCase):
 
 
 class PlanDetailsTests(ArchiveCase):
-    """Planens uppgifter ligger i ``significantProperties`` på planen (en intellektuell entitet har inga ``objectCharacteristics``)."""
+    """Planens uppgifter ligger i ``significantProperties`` på planen (en representation får inte ha ``objectCharacteristics``)."""
 
     def details(self, package):
         return self.tree(package).find(
@@ -486,7 +487,7 @@ class SchemaTests(ArchiveCase):
 
     def test_a_missing_xsi_type_makes_it_invalid(self):
         package = self.build()
-        text = package.premis.read_text(encoding="utf-8").replace(' xsi:type="premis:intellectualEntity"', "", 1)
+        text = package.premis.read_text(encoding="utf-8").replace(' xsi:type="premis:representation"', "", 1)
         package.premis.write_text(text, encoding="utf-8")
         self.assertTrue(any("abstract" in e for e in self.errors(package.premis)))
 
@@ -497,14 +498,28 @@ class SchemasFolderTests(ArchiveCase):
     def test_the_premis_schema_and_the_schema_for_the_plans_details_are_in_the_package(self):
         package = self.build()
         found = sorted(p.name for p in (package.folder / "schemas").iterdir())
-        self.assertEqual(found, ["oversiktsplan-1.xsd", "premis-v3-0.xsd"])
+        self.assertEqual(found, ["geometri-2.0.1.json", "oversiktsplan-1.xsd", "oversiktsplan-2.0.json", "premis-v3-0.xsd"])
         for name in found:
             self.assertEqual((package.folder / "schemas" / name).read_bytes(), (SCHEMAS / name).read_bytes(),
                              "oförändrade kopior av pluginets scheman")
 
-    def test_without_plan_details_only_the_premis_schema_follows(self):
+    def test_without_plan_details_the_schema_for_them_does_not_follow(self):
         package = self.build(plan={})
-        self.assertEqual(sorted(p.name for p in (package.folder / "schemas").iterdir()), ["premis-v3-0.xsd"])
+        found = sorted(p.name for p in (package.folder / "schemas").iterdir())
+        self.assertNotIn("oversiktsplan-1.xsd", found)
+        self.assertIn("premis-v3-0.xsd", found)
+
+    def test_without_an_export_file_no_json_schemas_follow(self):
+        package = archive.build_package(self.out, "Lärkan 1:1", [archive.Item(self.karta, "plankarta.pdf")], APP, now=NOW, plan=PLAN)
+        self.assertEqual(sorted(p.name for p in (package.folder / "schemas").iterdir()), ["oversiktsplan-1.xsd", "premis-v3-0.xsd"])
+
+    def test_the_json_schemas_are_lantmateriets_and_refer_to_each_other_by_their_online_addresses(self):
+        import json
+        plan = json.loads((SCHEMAS / "oversiktsplan-2.0.json").read_text(encoding="utf-8"))
+        geometry = json.loads((SCHEMAS / "geometri-2.0.1.json").read_text(encoding="utf-8"))
+        self.assertIn("oversiktsplan-2.0.json", plan["$id"])
+        self.assertIn("geometri-2.0.1.json", geometry["$id"])
+        self.assertIn("geometri-2.0.1.json", (SCHEMAS / "oversiktsplan-2.0.json").read_text(encoding="utf-8"))
 
     def test_the_schema_location_names_the_final_premis_schema_and_our_own_schema_by_a_path_inside_the_package(self):
         package = self.build()

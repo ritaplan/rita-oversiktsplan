@@ -4,6 +4,20 @@ Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versi
 
 ## Ej utgivet
 
+## [0.1.12] – arkivpaketet: planen som representation igen, och Lantmäteriets JSON-scheman med
+
+Samma ändring som i Rita Detaljplan 0.1.65, efter svar från en PREMIS-expert:
+
+- **Planen är en representation** (`premis:representation`) igen, som Boverkets specifikation anger, med
+  `significantProperties` för planens uppgifter och `xsi:type` för kategorin. Det var en intellektuell entitet i 0.1.11.
+  Experten menar att modelleringen går att diskutera och att just nu följa Boverkets specifikation innebär en
+  representation.
+- **Lantmäteriets JSON-scheman följer med** i paketets `schemas/` när paketet innehåller exportfilen
+  (`oversiktsplan-2.0.json` och `geometri-2.0.1.json`, oförändrade kopior hämtade från Lantmäteriet), så att exportfilen kan
+  valideras utan internet. De beskrivs inte i `PREMIS.xml`. Schemana hänvisar också till GeoJSON-scheman på geojson.org,
+  som inte följer med.
+- *Kontrollera arkivpaket* känner igen paket från 0.1.11 (med intellektuell entitet) som förut.
+
 ## [0.1.11] – arkivpaketet: planen som intellektuell entitet och en schemas-mapp
 
 Samma ändring som i Rita Detaljplan 0.1.63, efter en granskning av en PREMIS-expert (som bekräftade att metadatan nu

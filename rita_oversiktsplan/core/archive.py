@@ -9,15 +9,15 @@ Paketet::
     <plannamn>_arkivpaket_<datum>/
         metadata/
             PREMIS.xml          all bevarandemetadata: planen, filerna, händelserna och aktörerna
-        schemas/                XML-scheman: PREMIS 3.0 och schemat för planens uppgifter (när de finns med)
+        schemas/                scheman: PREMIS 3.0, schemat för planens uppgifter och, med exportfilen, Lantmäteriets JSON-scheman
         content/                själva filerna: planen, exporten, planhandlingen, underlagen m.fl.
 
 ``PREMIS.xml`` är giltig mot Library of Congress XML-schema för PREMIS 3.0 (``premis-v3-0.xsd``) och är självbärande:
 varje UUID den hänvisar till finns i den. Det som skiljer från Boverkets exempelfiler, som inte är schemagiltiga, är att
 objektets kategori anges med ``xsi:type`` (schemat har inget ``objectCategory``-element), att elementen står i schemats
-ordning, att planen är en *intellektuell entitet* (``premis:intellectualEntity``) och filerna är filer som den har som
-delar, och att planens uppgifter ligger i ``significantProperties`` på planen, i ett eget namnrymd med ett eget schema
-(``schemas/oversiktsplan-1.xsd``). Värdena är de ur Boverkets värdelistor, som är LoC:s. Allt som är obligatoriskt i
+ordning, att planen är en *representation* (``premis:representation``, som Boverkets specifikation anger) med filerna som
+delar, och att planens uppgifter ligger i ``significantProperties`` på planen (en representation får inte ha
+``objectCharacteristics``), i ett eget namnrymd med ett eget schema (``schemas/oversiktsplan-1.xsd``). Värdena är de ur Boverkets värdelistor, som är LoC:s. Allt som är obligatoriskt i
 katalogen fylls i: identifierare (UUID), kategori, kontrollsumma (SHA-256), storlek, format, skapande program,
 händelser och aktörer, med relationer i båda riktningarna. Modulen är ren Python (ingen QGIS) så att den kan provas
 utan QGIS."""
@@ -45,6 +45,8 @@ METADATA, CONTENT = "metadata", "content"  # mapparna i paketet
 LEGACY_GENERAL_FILE = "oversiktsplan.xml"  # fanns i paket från 0.1.1-0.1.7 (egen fil för planen, inte schemagiltig)
 SCHEMAS = "schemas"  # mappen med scheman i paketet
 PREMIS_XSD, OVERSIKTSPLAN_XSD = "premis-v3-0.xsd", "oversiktsplan-1.xsd"
+# Lantmäteriets JSON-scheman för exportfilen (Översiktsplan 2.0); följer med när paketet innehåller exportfilen
+JSON_SCHEMAS = ("oversiktsplan-2.0.json", "geometri-2.0.1.json")
 SCHEMA_DIR = Path(__file__).resolve().parent.parent / "data" / "schemas"  # pluginets egna kopior av schemana
 # schemat för planens uppgifter har ingen publik adress; sökvägen räknas från metadata/PREMIS.xml till paketets schemas/
 OVERSIKTSPLAN_SCHEMA_LOCATION = f"{OVERSIKTSPLAN_NS} ../{SCHEMAS}/{OVERSIKTSPLAN_XSD}"
@@ -295,7 +297,7 @@ def _new_root(with_details: bool = False) -> ET.Element:
 
 
 def _object(parent: ET.Element, kind: str) -> ET.Element:
-    """Ett ``object``. Kategorin (``file`` eller ``intellectualEntity``) anges med ``xsi:type``: PREMIS XML-schema har
+    """Ett ``object``. Kategorin (``file`` eller ``representation``) anges med ``xsi:type``: PREMIS XML-schema har
     inget ``objectCategory``-element, det finns bara i dataordlistan."""
     return ET.SubElement(parent, _q("object"), {f"{{{XSI_NS}}}type": f"premis:{kind}"})
 
@@ -310,21 +312,21 @@ def _relationship(parent: ET.Element, subtype: str, others: list[str]) -> None:
 
 def premis_tree(records: list[Record], plan_name: str, plan: dict, app: App, performer: Optional[str],
                 now: datetime) -> ET.Element:
-    """``metadata/PREMIS.xml`` som träd: planen som en *intellektuell entitet* (med planens uppgifter i
-    ``significantProperties`` och alla filer som delar), varje fil, händelserna och aktörerna. Allt hänvisar till varandra med UUID och varje länk
-    finns åt båda hållen. Elementen står i den ordning schemat kräver."""
+    """``metadata/PREMIS.xml`` som träd: planen som en *representation* (med planens uppgifter i
+    ``significantProperties`` och alla filer som delar), varje fil, händelserna och aktörerna. Allt hänvisar till varandra
+    med UUID och varje länk finns åt båda hållen. Elementen står i den ordning schemat kräver."""
     root = _new_root(bool(plan))
     when = _iso(now)
     app_id = plugin_agent_id(app)
     person_id = str(uuid.uuid4()) if performer else None
-    entity = str(uuid.uuid4())
+    representation = str(uuid.uuid4())
     create_id, digest_id, export_id = (str(uuid.uuid4()) for _ in range(3))
     generated = [r for r in records if r.generated]
     event_ids_for = {r.id: [create_id, digest_id] + ([export_id] if r.generated else []) for r in records}
     used_events = [create_id, digest_id] + ([export_id] if generated else [])
 
-    box = _object(root, "intellectualEntity")
-    _identifier(box, "object", entity)
+    box = _object(root, "representation")
+    _identifier(box, "object", representation)
     if plan:
         properties = _add(box, "significantProperties")
         _add(properties, "significantPropertiesType", "oversiktsplan")
@@ -359,7 +361,7 @@ def premis_tree(records: list[Record], plan_name: str, plan: dict, app: App, per
         place = _add(_add(box, "storage"), "contentLocation")
         _add(place, "contentLocationType", "Uniform Resource Identifier")
         _add(place, "contentLocationValue", quote(record.path))
-        _relationship(box, "is Part Of", [entity])
+        _relationship(box, "is Part Of", [representation])
         for event in event_ids_for[record.id]:
             _link(box, "Event", event)
 
@@ -378,7 +380,7 @@ def premis_tree(records: list[Record], plan_name: str, plan: dict, app: App, per
 
     event(create_id, "information package creation",
           f"Arkivpaket för planen {plan_name} skapades med {app.label}.",
-          [(entity, "outcome")] + [(r.id, "source") for r in records])
+          [(representation, "outcome")] + [(r.id, "source") for r in records])
     event(digest_id, "message digest calculation", f"Kontrollsummor ({HASH_ALGORITHM}) beräknades för alla filer.",
           [(r.id, "source") for r in records])
     if generated:
@@ -477,9 +479,10 @@ def package_folder(parent: Path, plan_name: str, now: datetime) -> Path:
     return folder
 
 
-def bundled_schemas(with_details: bool) -> list[Path]:
-    """Schemafilerna som ska med i paketets ``schemas/``: PREMIS 3.0 alltid, schemat för planens uppgifter när de finns."""
-    names = [PREMIS_XSD] + ([OVERSIKTSPLAN_XSD] if with_details else [])
+def bundled_schemas(with_details: bool, with_export_file: bool = False) -> list[Path]:
+    """Schemafilerna som ska med i paketets ``schemas/``: PREMIS 3.0 alltid, schemat för planens uppgifter när de finns och
+    Lantmäteriets JSON-scheman när paketet innehåller exportfilen (så att den går att validera utan internet)."""
+    names = [PREMIS_XSD] + ([OVERSIKTSPLAN_XSD] if with_details else []) + (list(JSON_SCHEMAS) if with_export_file else [])
     return [SCHEMA_DIR / name for name in names]
 
 
@@ -523,7 +526,8 @@ def build_package(parent: Path, plan_name: str, items: list[Item], app: App, per
                           newline="\n")
         say("Lägger med scheman")
         (folder / SCHEMAS).mkdir()
-        for schema in bundled_schemas(bool(plan)):
+        export_file = any(item.creator is not None and item.source.suffix.lower() == ".json" for item in items)
+        for schema in bundled_schemas(bool(plan), export_file):
             shutil.copy2(schema, folder / SCHEMAS / schema.name)
     except Exception as exc:
         shutil.rmtree(folder, ignore_errors=True)
@@ -560,8 +564,8 @@ class VerifyReport:
 
 
 def _object_kind(box: ET.Element) -> str:
-    """``file``/``intellectualEntity``/``representation``: ur ``xsi:type`` (så som schemat vill ha det) eller, i paket från
-    0.1.1-0.1.7, ur elementet ``objectCategory``."""
+    """``file``/``representation`` (eller ``intellectualEntity`` i paket från 0.1.11): ur ``xsi:type`` (så som schemat vill ha
+    det) eller, i paket från 0.1.1-0.1.7, ur elementet ``objectCategory``."""
     typed = box.get(f"{{{XSI_NS}}}type")
     return typed.split(":")[-1] if typed else (box.findtext(_q("objectCategory")) or "")
 
