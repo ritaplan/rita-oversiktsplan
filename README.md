@@ -78,12 +78,12 @@ Vill du köra direkt från källkoden, se [Utveckling](docs/utveckling.md).
 4. Klicka **Tilldela innehåll**, klicka på det du ritat och välj grupp och innehållstyp.
 5. Klicka **Avsluta redigering** (disketten) och välj **Spara och avsluta**.
 
-Fler detaljer: [Användarhandledning](docs/anvandning.md).
+Fler detaljer, steg för steg: [Användarhandbok](docs/anvandning.md), även på [ritaplan.xyz](https://ritaplan.xyz/handbok.html?plugin=oversiktsplan).
 
 ## Dokumentation
 
 - [ritaplan.xyz](https://ritaplan.xyz): webbsidan om Rita-pluginen
-- [Användarhandledning](docs/anvandning.md)
+- [Användarhandbok](docs/anvandning.md): steg för steg genom alla moment och verktyg
 - [Datamodell](docs/datamodell.md): tabellerna och var de avviker från Boverkets mall
 - [Symbologi](docs/symbologi.md): symbolerna per innehållstyp och varför de ser ut som de gör
 - [Kända begränsningar](docs/kanda-begransningar.md): vad som inte är provat eller saknas
