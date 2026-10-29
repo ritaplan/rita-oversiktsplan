@@ -78,7 +78,7 @@ Vill du köra direkt från källkoden, se [Utveckling](docs/utveckling.md).
 4. Klicka **Tilldela innehåll**, klicka på det du ritat och välj grupp och innehållstyp.
 5. Klicka **Avsluta redigering** (disketten) och välj **Spara och avsluta**.
 
-Fler detaljer, steg för steg: [Användarhandbok](docs/anvandning.md), även på [ritaplan.xyz](https://ritaplan.xyz/handbok.html?plugin=oversiktsplan).
+Fler detaljer, steg för steg: [Användarhandbok](docs/anvandning.md), även på [ritaplan.xyz/handbok-op.html](https://ritaplan.xyz/handbok-op.html).
 
 ## Dokumentation
 
