@@ -49,8 +49,12 @@ python tools/build_plugins_xml.py    # skriver plugins.xml (checkas in)
 ```
 
 Versionen läses ur `rita_oversiktsplan/metadata.txt`. Så gör du en ny version: uppdatera `version` där och i
-[CHANGELOG](../CHANGELOG.md), kör testerna, bygg zip-filen, generera pluginkällan, märk versionen (`git tag v0.1.0`) och lägg
-zip-filen på en Release. `plugins.xml` pekar på zip-filen i Releasen, så skapa Releasen direkt efter att du pushat.
+[CHANGELOG](../CHANGELOG.md), kör testerna, bygg zip-filen, generera pluginkällan, skapa kontrollsumma och materiallista
+(`python tools/build_sbom.py`, skriver `dist/rita_oversiktsplan-<version>.zip.sha256` och `.sbom.cdx.json`), märk
+versionen (`git tag v0.1.0`) och lägg zip-filen, kontrollsumman och materiallistan på en Release. Skriptet stoppar om
+koden fått ett beroende som inte är listat; då uppdateras listan och [säkerhetsbeskrivningen](sakerhet.md) medvetet.
+Rättar releasen ett säkerhetsfel, ange det under rubriken *Säkerhet* i ändringsloggen. `plugins.xml` pekar på zip-filen
+i Releasen, så skapa Releasen direkt efter att du pushat.
 
 ## Struktur
 

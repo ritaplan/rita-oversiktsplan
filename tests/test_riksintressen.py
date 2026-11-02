@@ -86,6 +86,18 @@ class QueryTests(unittest.TestCase):
         with self.assertRaisesRegex(riksintressen.FetchError, "Kunde inte läsa"):
             riksintressen.fetch(lambda url: "<html>", NATURE, (0, 0, 1, 1), 3006)
 
+    def test_a_service_that_never_stops_sending_pages_is_cut_off(self):
+        calls = []
+
+        def endless(url):
+            calls.append(url)
+            return json.dumps({"type": "FeatureCollection", "features": [feature(polygon(0, 0, 1, 1), RIKSID="1")],
+                               "exceededTransferLimit": True})
+
+        with self.assertRaisesRegex(riksintressen.FetchError, "slutade inte skicka sidor"):
+            riksintressen.fetch(endless, NATURE, (0, 0, 100, 100), 3006)
+        self.assertEqual(len(calls), riksintressen.MAX_PAGES)
+
     def test_duplicates_from_several_layers_are_removed(self):
         record = riksintressen.Record("Naturvård", polygon(0, 0, 1, 1), "1")
         self.assertEqual(len(riksintressen.unique([record, riksintressen.Record("Naturvård", polygon(0, 0, 1, 1), "1"),

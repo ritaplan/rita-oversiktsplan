@@ -22,6 +22,7 @@ from typing import Callable, Iterable, Optional
 
 SERVICE = "https://gis2.boverket.se/arcgis/rest/services/Riksintressen___Februari_2025_WMS/MapServer"
 PAGE = 1000  # objekt per fråga (tjänsten tillåter 2000)
+MAX_PAGES = 200  # fler sidor än så per lager är ett fel i tjänsten, inte riktiga riksintressen
 CATEGORY = "riksintressen"  # pluginets grupp för underlaget
 POSITION = "riksintressenop"  # Riksintresse, kommunens ställningstagande
 # fält med myndighetens id och namn, i den ordning de prövas (olika lager har olika fält)
@@ -103,7 +104,7 @@ def fetch_layer(get: Callable[[str], str], service: str, layer: int, bbox, epsg:
     """(egenskaper, GeoJSON-geometri) för alla objekt i ett lager i en ArcGIS-tjänst, sida för sida."""
     found: list[tuple[dict, dict]] = []
     offset = 0
-    while True:
+    for _ in range(MAX_PAGES):
         if progress:
             progress(f"Hämtar {title} …")
         try:
@@ -119,6 +120,9 @@ def fetch_layer(get: Callable[[str], str], service: str, layer: int, bbox, epsg:
         if not more or not features:
             return found
         offset += len(features)
+    # en tjänst som aldrig slutar säga "fler" ska inte få hämtningen att pågå för alltid
+    raise FetchError(f"{owner[0].upper()}{owner[1:]} slutade inte skicka sidor för {title} efter {MAX_PAGES * PAGE} "
+                     "objekt. Avbröt hämtningen.")
 
 
 def _first(properties: dict, names: Iterable[str]) -> Optional[str]:

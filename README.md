@@ -87,6 +87,8 @@ Fler detaljer, steg för steg: [Användarhandbok](docs/anvandning.md), även på
 - [Datamodell](docs/datamodell.md): tabellerna och var de avviker från Boverkets mall
 - [Symbologi](docs/symbologi.md): symbolerna per innehållstyp och varför de ser ut som de gör
 - [Kända begränsningar](docs/kanda-begransningar.md): vad som inte är provat eller saknas
+- [Säkerhetsbeskrivning](docs/sakerhet.md): vad pluginet gör, vilka data som rör sig vart och vad som är granskat
+- [OpenSSF Best Practices](docs/openssf-markning.md): underlag för märket för säker öppen källkod
 - [Utveckling](docs/utveckling.md): köra koden och testerna, struktur
 - [Ändringslogg](CHANGELOG.md)
 

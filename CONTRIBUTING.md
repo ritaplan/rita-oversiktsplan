@@ -30,7 +30,9 @@ Sätt `QGIS_ROOT` om QGIS ligger någon annanstans än `C:\Program Files\QGIS 4.
 ## Pull requests
 
 1. Forka repot och skapa en gren.
-2. Se till att `tests\run_tests.bat` går igenom.
+2. Se till att `tests\run_tests.bat` går igenom. På GitHub körs också kodanalys (CodeQL), kodkontroll (ruff, reglerna i
+   `ruff.toml`) och en bygg- och beroendekontroll; de ska vara gröna. Hittar du en säkerhetsbrist: öppna inte ett
+   ärende eller en pull request, utan följ [SECURITY.md](SECURITY.md).
 3. Beskriv vad ändringen gör och varför, och lägg en rad i [CHANGELOG.md](CHANGELOG.md) under *Ej utgivet*.
 4. Öppna en pull request.
 

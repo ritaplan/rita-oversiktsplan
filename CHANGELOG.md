@@ -4,6 +4,21 @@ Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versi
 
 ## Ej utgivet
 
+## [0.1.13] – säkerhetsgenomgång
+
+- **Säkerhet:** hämtningen av riksintressen avbryts nu efter 200 sidor per lager med ett felmeddelande. Förut kunde en
+  tjänst som alltid sa att det fanns fler objekt få hämtningen att fortsätta för alltid och fylla minnet. Ingen kod kunde
+  köras och inga data läckte.
+- **Säkerhetsbeskrivning** (docs/sakerhet.md) finns nu för Rita Översiktsplan, med en kort version för
+  IT-säkerhetsfunktionen. Den gamla `SECURITY.md` sa felaktigt att pluginet bara kontaktar databasen och att leverans
+  till NGP inte finns. Det är rättat: leverans till Lantmäteriet, hämtning av riksintressen från Boverket och av kommunens
+  yta från SCB beskrivs nu, och alla görs bara på användarens begäran. [SECURITY.md](SECURITY.md) anger också hur en
+  sårbarhet rapporteras och vad rapportören kan vänta sig.
+- **Kontrollsumma och materiallista** (SBOM, CycloneDX) följer med varje release, skapade av `tools/build_sbom.py`.
+  Skriptet stoppar om koden får ett beroende som inte är listat.
+- **Automatiska kontroller på GitHub:** statisk kodanalys (CodeQL), kodkontroll (ruff), kontroll att zip-filen blir
+  identisk vid två byggen, OpenSSF Scorecard och Dependabot för verktygens versioner. Pluginets funktion är oförändrad.
+
 ## [0.1.12] – arkivpaketet: planen som representation igen, och Lantmäteriets JSON-scheman med
 
 Samma ändring som i Rita Detaljplan 0.1.65, efter svar från en PREMIS-expert:
