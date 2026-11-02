@@ -7,7 +7,8 @@ sig till GIS-samordnare, databasadministratörer och andra som vill förstå ell
 Du behöver inte läsa den för att använda pluginet.
 
 > Tabellerna i detalj, och var de avviker från Boverkets mall, står i [Datamodell](../datamodell.md). Symbolerna
-> förklaras i [Symbologi](../symbologi.md). Hur du kör koden och testerna står i [Utveckling](../utveckling.md).
+> förklaras i [Symbologi](../symbologi.md). Hur du kör koden och testerna står i [Utveckling](../utveckling.md). Hur
+> koden är uppbyggd, modul för modul, visar [kodkartan](https://ritaplan.xyz/kodkarta-op.html).
 
 ## Översikt
 
