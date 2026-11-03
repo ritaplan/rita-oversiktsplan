@@ -17,7 +17,7 @@ get_app()
 from docx_case import write_docx  # noqa: E402
 from qgis.core import QgsFeature, QgsGeometry, QgsProject  # noqa: E402
 
-from rita_oversiktsplan.core import content, documents, geopackage, model, planhandling  # noqa: E402
+from rita_oversiktsplan.core import content, documents, geopackage, model  # noqa: E402
 from rita_oversiktsplan.core.project import active_plan_group, load_plan  # noqa: E402
 
 PLAN = geopackage.NewPlan("0484", "Eskilstuna", "ÖP 2040", datetime.date(2027, 1, 1))

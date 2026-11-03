@@ -227,7 +227,6 @@ def development_symbol(style: Style, level: Level, geometry, factor: float = 1.0
     """Symbolen för ett tema och en nivå (för linjer bara bandet; pilspetsarna är egna regler). ``factor`` krymper
     den för inzoomad karta."""
     color = style.color
-    group = styles.group_for(DEVELOPMENT)
     if geometry == QgsWkbTypes.GeometryType.PolygonGeometry:
         fill = QgsSimpleFillSymbolLayer.create({"color": _rgb(color, styles.DEVELOPMENT_AREA_ALPHA),
                                                 "outline_style": "no"})

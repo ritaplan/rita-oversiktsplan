@@ -17,7 +17,7 @@ from qgis.PyQt.QtWidgets import (QAbstractItemView, QButtonGroup, QCheckBox, QCo
 from . import session as ss
 from . import theme
 from .widgets import (Card, Facts, MapView, ObjectChip, ParagraphText, Pill, TypeChip, box, button, dot_icon, frame,
-                      label, restyle, scrolled, short)
+                      label, restyle, scrolled)
 
 ROLE = Qt.ItemDataRole.UserRole
 

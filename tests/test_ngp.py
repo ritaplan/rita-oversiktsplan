@@ -18,7 +18,7 @@ from qgis_app import get_app  # noqa: E402
 
 if True:
     from qgis.PyQt.QtCore import QCoreApplication
-    from qgis.core import QgsProject, QgsSettings
+    from qgis.core import QgsSettings
     from rita_oversiktsplan.core import ngp_client as ngp
     from rita_oversiktsplan.core import settings
     from rita_oversiktsplan.gui.delivery_dialog import DeliveryDialog, confirmation_text

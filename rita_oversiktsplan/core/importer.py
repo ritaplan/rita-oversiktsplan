@@ -9,10 +9,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from qgis.core import (Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeatureRequest, QgsGeometry,
+from qgis.core import (Qgis, QgsCoordinateTransform, QgsFeatureRequest, QgsGeometry,
                        QgsProject, QgsVectorLayer, QgsVectorLayerUtils, QgsWkbTypes)
 
-from . import model
 
 _KIND = {
     QgsWkbTypes.GeometryType.PolygonGeometry: "polygon",

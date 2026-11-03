@@ -100,7 +100,7 @@ class DialogTests(UnderlagCase):
     def test_the_tab_shows_the_underlag_and_rows_can_be_added_and_removed(self):
         dialog = self.dialog([Underlag("Miljökonsekvensbeskrivning", "MKB", "", datetime.date(2026, 1, 2))])
         self.assertEqual([dialog.tabs.tabText(i) for i in range(dialog.tabs.count())],
-                         ["Planen", "Planhändelse", "Beslut", "Underlag", "Standardvärden för innehåll"])
+                         ["Planen", "Planhändelse", "Beslut", "Underlag", "Utbyggnadsordning", "Standardvärden för innehåll"])
         self.assertEqual(dialog.underlag(), [Underlag("Miljökonsekvensbeskrivning", "MKB", "", datetime.date(2026, 1, 2))])
         row = dialog.add_underlag()
         self.assertEqual(dialog.underlag_table.cellWidget(row, 0).currentText(), "Planeringsunderlag")

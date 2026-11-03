@@ -13,7 +13,7 @@ from qgis.core import (NULL, QgsFeatureRequest, QgsGeometry, QgsPointXY, QgsRect
                        QgsVectorLayerUtils, QgsWkbTypes)
 from qgis.PyQt.QtCore import QDate
 
-from . import geopackage, model
+from . import model
 from .project import draft_layers, layer_in_group, plan_storage
 
 # Fält som tilldelningsdialogen fyller i; resten kommer från standardvärdena och planen.

@@ -17,7 +17,7 @@ from qgis.core import NULL  # noqa: E402
 
 from rita_oversiktsplan.core import andring, content, export_lm  # noqa: E402
 from rita_oversiktsplan.gui.andring_dialog import AndringDialog  # noqa: E402
-from test_tools import OTHER, SQUARE, ToolCase  # noqa: E402
+from test_tools import OTHER, ToolCase  # noqa: E402
 
 THIRD = "MULTIPOLYGON(((400 0, 500 0, 500 100, 400 100, 400 0)))"
 STARTED = datetime.date(2028, 3, 1)
