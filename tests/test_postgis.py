@@ -464,6 +464,71 @@ class PluginTests(PostgisCase):
         self.assertEqual(texts, ["Lokal fil (GeoPackage)…", "PostGIS-databas…"])
         dialog.assert_called_once()
 
+    def open_from_dialog(self, checkout_requested, lock=None, checked_out=True, plan_ids=("op_2040",), load=True):
+        with mock.patch("rita_oversiktsplan.plugin.PostgisPlanDialog") as dialog_cls,                 mock.patch.object(type(self.plugin), "_load", return_value=load) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=lock),                 mock.patch("rita_oversiktsplan.plugin.find_plan_group", return_value=self.group),                 mock.patch.object(self.plugin.checkout, "check_out", return_value=checked_out) as check_out:
+            dialog_cls.return_value.exec.return_value = True
+            dialog_cls.return_value.selections.return_value = [("planer", "oversiktsplan", p) for p in plan_ids]
+            dialog_cls.return_value.checkout_requested = checkout_requested
+            result = self.plugin.open_database_plan()
+        self.loaded, self.result = loaded, result
+        return check_out
+
+    def messages_text(self):
+        return [c.args[1] for c in self.iface.bar.pushMessage.call_args_list]
+
+    def test_checking_out_from_the_dialog_checks_the_plan_out_without_asking_again(self):
+        check_out = self.open_from_dialog(True)
+        check_out.assert_called_once_with(self.group, ask=False)
+        self.assertTrue(self.result)
+        self.assertFalse(any("skrivskyddad" in t for t in self.messages_text()))
+
+    def test_opening_read_only_from_the_dialog_does_not_check_out(self):
+        check_out = self.open_from_dialog(False)
+        check_out.assert_not_called()
+        self.assertTrue(any("skrivskyddad" in t for t in self.messages_text()))
+
+    def test_a_plan_taken_by_someone_else_in_the_meantime_is_opened_read_only(self):
+        check_out = self.open_from_dialog(True, lock=other_lock())
+        check_out.assert_not_called()
+        self.assertTrue(any("anna" in t and "skrivskyddad" in t for t in self.messages_text()))
+
+    def test_a_declined_or_failed_checkout_leaves_the_plan_open_read_only(self):
+        self.open_from_dialog(True, checked_out=False)
+        self.assertTrue(any("skrivskyddad" in t for t in self.messages_text()))
+
+    def test_several_plans_are_opened_in_turn(self):
+        check_out = self.open_from_dialog(False, plan_ids=("a", "b", "c"))
+        self.assertEqual([c.args[0].plan_id for c in self.loaded.call_args_list], ["a", "b", "c"])
+        check_out.assert_not_called()
+        self.assertTrue(any("Öppnade 3 planer" in t and "3 skrivskyddade" in t for t in self.messages_text()))
+
+    def test_several_plans_can_be_checked_out_one_after_the_other(self):
+        check_out = self.open_from_dialog(True, plan_ids=("a", "b"))
+        self.assertEqual(check_out.call_count, 2)
+        self.assertTrue(any("2 utcheckade" in t for t in self.messages_text()))
+
+    def test_the_map_is_not_redrawn_while_several_plans_load(self):
+        canvas = self.iface.mapCanvas()
+        with mock.patch.object(canvas, "freeze", wraps=canvas.freeze) as freeze:
+            self.open_from_dialog(False, plan_ids=("a", "b"))
+            self.assertEqual([c.args[0] for c in freeze.call_args_list], [True, False])
+        self.assertFalse(canvas.isFrozen(), "kartan är upptinad igen")
+
+    def test_a_plan_that_cannot_be_opened_does_not_stop_the_others(self):
+        with mock.patch("rita_oversiktsplan.plugin.PostgisPlanDialog") as dialog_cls,                mock.patch.object(type(self.plugin), "_load", side_effect=[True, False, True]) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=None):
+            dialog_cls.return_value.exec.return_value = True
+            dialog_cls.return_value.selections.return_value = [("planer", "oversiktsplan", p) for p in "abc"]
+            dialog_cls.return_value.checkout_requested = False
+            self.assertTrue(self.plugin.open_database_plan())
+        self.assertEqual(loaded.call_count, 3)
+        self.assertTrue(any("Öppnade 2 planer" in t for t in self.messages_text()))
+
+    def test_nothing_is_opened_when_the_dialog_is_cancelled(self):
+        with mock.patch("rita_oversiktsplan.plugin.PostgisPlanDialog") as dialog_cls,                 mock.patch.object(type(self.plugin), "_load") as loaded:
+            dialog_cls.return_value.exec.return_value = False
+            self.assertFalse(self.plugin.open_database_plan())
+        loaded.assert_not_called()
+
     def test_a_new_plan_can_be_created_in_the_database(self):
         def fill(dialog):
             dialog.kommun.set_kommun("Eskilstuna")

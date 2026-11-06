@@ -18,6 +18,7 @@ CHECKOUT_TIP = ("Checka ut: lås planen i databasen och redigera en lokal kopia.
 CHECKIN_TIP = ("Checka in: skriv planen tillbaka till databasen, släpp låset och ta bort den lokala kopian (eller "
                "kasta utcheckningen).")
 CHECKOUT_FILE_TIP = "Checka ut eller in: bara för planer i en PostGIS-databas. Den här planen ligger i en fil."
+CHECKOUT_NO_PLAN_TIP = "Checka ut eller in: öppna en översiktsplan från en PostGIS-databas först."
 START_TIP = "Börja redigera: alla planens lager öppnas för redigering."
 STOP_TIP = "Avsluta redigering: spara och avsluta, förkasta och avsluta, eller avbryt."
 INFO_TIP = "Planens uppgifter: planen, planhändelse, beslut och standardvärden för nytt innehåll"
@@ -111,15 +112,15 @@ class PlanToolBar(QToolBar):
             action.setEnabled(has_plan and editing)
 
     def set_checkout_state(self, state: str) -> None:
-        """Knappen visar Checka ut för en plan i databasen och Checka in för en utcheckad plan. För en plan i en fil,
-        och utan plan, syns den inte (som i Rita Detaljplan)."""
+        """Knappen visar Checka ut för en plan i databasen och Checka in för en utcheckad plan. Den syns alltid men är grå
+        för en plan i en fil och när ingen plan är öppen (som i Rita Detaljplan)."""
         checked_out = state == "local"
         self.act_checkout.setIcon(icon("checkin.svg" if checked_out else "checkout.svg"))
         self.act_checkout.setText("Checka in" if checked_out else "Checka ut")
         self.act_checkout.setToolTip(CHECKIN_TIP if checked_out else CHECKOUT_TIP if state == "database"
-                                     else CHECKOUT_FILE_TIP if state == "file" else CHECKOUT_TIP)
+                                     else CHECKOUT_FILE_TIP if state == "file" else CHECKOUT_NO_PLAN_TIP)
         self.act_checkout.setEnabled(state in ("local", "database"))
-        self.act_checkout.setVisible(state in ("local", "database"))
+        self.act_checkout.setVisible(True)
 
     def _action(self, icon_name: str, text: str, callback, tip: str = "") -> QAction:
         action = QAction(icon(icon_name), text, self)

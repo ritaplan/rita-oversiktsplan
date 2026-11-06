@@ -2,8 +2,17 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
-## Ej utgivet
+## [0.1.14] – databasplaner: ny öppna-dialog och utcheckning vid öppning
 
+- **Ny dialog för att öppna en plan från databasen** (som i Rita Detaljplan 0.1.77): en översikt över alla planer i
+  databasen i stället för en enkel lista. Kolumner för titel, planhändelse och dess datum, påbörjad, diarienummer, beslut
+  fattat, laga kraft och utcheckning; fritextfilter och filter för schema (bredvid databasvalet), planhändelse och
+  utcheckning; "Synliga: X av Y · Valda: N". Listan är sorterad på titel med tal som tal (ÖP 2 före ÖP 10). Flera planer
+  kan väljas och öppnas på en gång. Uppgifterna hämtas med fyra frågor per schema, inte en per plan.
+- **Erbjudande om utcheckning vid öppning:** *Checka ut och öppna* låser planen och öppnar den som en lokal kopia direkt
+  (kartan ritas inte först om mot databasen). *Öppna skrivskyddad* öppnar den som förut. Är planen utcheckad av någon
+  annan är bara den senare möjlig.
+- **Utcheckningsknappen syns alltid** i verktygsfältet och är grå när planen ligger i en fil eller ingen plan är öppen.
 - **Installation via pluginkällan** (`plugins.xml`) fungerar nu. QGIS tar plugin-id:t ur `file_name` genom att klippa
   vid första punkten, så `rita_..-0.1.x.zip` blev id:t `rita_..-0` och installationen avbröts med "Could not store
   plugin to the plugin directory". Namnet är nu `<id>.<version>.zip`; nedladdningen är oförändrad. Rättat i

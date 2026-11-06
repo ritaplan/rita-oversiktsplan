@@ -173,13 +173,18 @@ class PluginTests(unittest.TestCase):
             self.assertEqual(Path(QgsProject.instance().fileName()), existing)
             QgsProject.instance().clear()
 
-    def test_the_database_button_is_hidden_for_a_plan_in_a_file(self):
-        self.assertFalse(self.plugin.toolbar.act_checkout.isVisible())  # ingen plan
+    def test_the_database_button_is_always_shown_but_grey_for_a_plan_in_a_file_and_without_a_plan(self):
+        button = self.plugin.toolbar.act_checkout
+        self.assertTrue(button.isVisible())  # ingen plan: syns men är grå
+        self.assertFalse(button.isEnabled())
+        self.assertIn("PostGIS", button.toolTip())
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             path = geopackage.create_geopackage(Path(tmp) / "op.gpkg", PLAN)
             load_plan(path, QgsProject.instance())
             self.plugin.refresh_tools()
-            self.assertFalse(self.plugin.toolbar.act_checkout.isVisible())
+            self.assertTrue(button.isVisible())
+            self.assertFalse(button.isEnabled())
+            self.assertIn("ligger i en fil", button.toolTip())
             QgsProject.instance().clear()
 
     def test_an_existing_file_gives_a_warning_and_is_left_alone(self):

@@ -9,6 +9,8 @@ säkerhetsbeskrivning. Den bygger på sökningar över hela koden och på läsni
 filhantering. Pluginet delar mycket kod med [Rita Detaljplan](https://github.com/ritaplan/rita-detaljplan), vars
 [säkerhetsbeskrivning](https://github.com/ritaplan/rita-detaljplan/blob/main/docs/sakerhet.md) har samma upplägg.
 
+**Version 0.1.14 är inte genomgången på nytt.** Den lägger till en översikt över planerna i en databas (`core/plan_overview.py`), som läser planernas uppgifter med `SELECT`-frågor där scheman och tabeller citeras med samma hjälpfunktioner som resten av lagringen (`quote` och `literal`); schemanamnen kommer ur databasen. Inga nya filer läses eller skrivs och inga nya beroenden tillkommer. Resten är gränssnitt (dialogen och verktygsraden).
+
 ## Läs det här först: vad dokumentet är och inte är
 
 - Pluginet är skrivet med AI-stöd och underhålls av en enskild person på fritiden. Det är en experimentell

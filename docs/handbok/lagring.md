@@ -30,7 +30,21 @@ QGIS-projektet sparas i mappen du väljer.
 Klicka på **Öppna översiktsplan** (mappen). Finns det databasanslutningar visas en liten meny:
 
 - **Lokal fil (GeoPackage)…** – peka ut filen.
-- **PostGIS-databas…** – välj anslutning, schema och plan.
+- **PostGIS-databas…** – visar en översikt över alla planer i databasen.
+
+Översikten (alla scheman som skapats med pluginet) har en rad per plan och kolumner för titel, planhändelse och dess
+datum, påbörjad, diarienummer, beslut fattat, laga kraft och vem som har planen utcheckad. Listan är sorterad på titel,
+där tal räknas som tal (ÖP 2 före ÖP 10). Klicka på en kolumnrubrik för att sortera på något annat.
+
+- **Filtrera** genom att skriva i rutan (delar av titel, diarienummer, planhändelse …, flera ord kan kombineras) och med
+  listorna för schema (bredvid databasvalet), planhändelse och utcheckning (*Bara lediga* / *Bara utcheckade*). Under
+  listan står hur många planer som syns av alla och hur många som är valda.
+- **Välj flera planer** med Ctrl eller Skift och öppna dem på en gång. De läggs till bredvid varandra, och den sist
+  öppnade planen blir den aktiva.
+- **Checka ut och öppna** låser planen och skapar en lokal kopia som du redigerar. Har du valt flera hämtas och låses de
+  en i taget. Knappen är grå om någon av dem har checkats ut av någon annan.
+- **Öppna skrivskyddad** visar planerna direkt från databasen utan att låsa dem. Det är också vad dubbelklick gör. Du kan
+  checka ut en plan senare med knappen **Checka ut** i verktygsfältet.
 
 Sparar du QGIS-projektet följer planens lager med, och då behöver du inte öppna planen på nytt. En plan som skapats med
 en äldre version av pluginet uppgraderas när den öppnas.
@@ -44,7 +58,8 @@ som ritar samtidigt skulle skriva över varandra.
 
 ### Checka ut
 
-Klicka på **Checka ut** (databasen med grön pil nedåt). Börjar du rita, importera eller tilldela innehåll i en
+Knappen **Checka ut** (databasen med grön pil nedåt) syns alltid men är grå när planen ligger i en fil eller ingen plan
+är öppen. Du kan också välja **Checka ut och öppna** direkt när du öppnar planen från databasen. Börjar du rita, importera eller tilldela innehåll i en
 skrivskyddad plan frågar pluginet om den ska checkas ut. Pluginet
 
 1. låser planen i databasen,

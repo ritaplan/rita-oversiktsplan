@@ -20,8 +20,8 @@ from qgis.PyQt import sip
 from .core import (archive, checkout, content, editing, export_lm, geopackage, importer, model, relations, settings,
                    kommunyta, riksintressen, sld, storage, underlag, utbyggnad)
 from .core import ngp_client as ngp
-from .core.project import (PlanError, active_plan_group, draft_layers, is_read_only, layer_in_group, load_plan,
-                           plan_groups, plan_storage)
+from .core.project import (PlanError, active_plan_group, draft_layers, find_plan_group, is_read_only, layer_in_group,
+                           load_plan, plan_groups, plan_storage)
 from .gui.about_dialog import AboutDialog
 from .gui.andring_dialog import AndringDialog
 from .gui.archive_dialog import ArchiveDialog, build_archive
@@ -215,13 +215,64 @@ class OversiktsplanPlugin:
 
     def open_database_plan(self) -> bool:
         dialog = PostgisPlanDialog(self.iface.mainWindow())
-        if not dialog.exec() or dialog.selection() is None:
+        if not dialog.exec() or not dialog.selections():
             return False
-        connection, schema, plan_id = dialog.selection()
-        if not self._load(storage.PostgisStorage(connection, schema, plan_id)):
-            return False
-        self._info(f"Öppnade planen {plan_id} från databasen. Den är skrivskyddad: checka ut den för att rita.")
-        return True
+        selections = dialog.selections()
+        want_checkout = dialog.checkout_requested is True
+        canvas = self.iface.mapCanvas()
+        # Kartan ritas inte om medan planerna läses in: vid utcheckning läses planen först från databasen och pekas sedan
+        # om till den lokala kopian (onödiga läsningar över nätet), och med flera planer ritas den annars om efter
+        # varje plan.
+        freeze = want_checkout or len(selections) > 1
+        if freeze:
+            canvas.freeze(True)
+        try:
+            results = [self._open_one_database_plan(connection, schema, plan_id, want_checkout)
+                       for connection, schema, plan_id in selections]
+        finally:
+            if freeze:
+                canvas.freeze(False)
+                canvas.refresh()
+        self._report_database_plans(results)
+        return any(outcome != "error" for _plan_id, outcome, _detail in results)
+
+    def _open_one_database_plan(self, connection: str, schema: str, plan_id: str,
+                                want_checkout: bool) -> tuple[str, str, str]:
+        """Läser in en plan ur databasen (och checkar ut den om användaren bad om det). Returnerar (plan-id, utfall,
+        uppgift) där utfallet är ``checked_out``, ``read_only``, ``locked`` (uppgiften är vem som har den) eller
+        ``error``."""
+        plan = storage.PostgisStorage(connection, schema, plan_id)
+        if not self._load(plan):
+            return plan_id, "error", ""
+        lock = checkout.read_lock(plan)
+        group = find_plan_group(QgsProject.instance(), plan)
+        if want_checkout and group is not None and (lock is None or checkout.is_own_lock(lock)):
+            # användaren bad om utcheckning i dialogen: ingen ny fråga, bara själva utcheckningen
+            if self.checkout.check_out(group, ask=False):
+                return plan_id, "checked_out", ""
+        if lock is not None:
+            return plan_id, "locked", lock.describe()
+        return plan_id, "read_only", ""
+
+    def _report_database_plans(self, results: list[tuple[str, str, str]]) -> None:
+        loaded = [r for r in results if r[1] != "error"]
+        if not loaded:
+            return  # felen är redan visade
+        if len(results) == 1:
+            plan_id, outcome, detail = results[0]
+            if outcome == "locked":
+                self._warn(f"Öppnade planen {plan_id}, men den är utcheckad av {detail} och därför skrivskyddad.")
+            elif outcome == "read_only":
+                self._info(f"Öppnade planen {plan_id} från databasen. Den är skrivskyddad: checka ut den för att rita.")
+            return
+        out = sum(1 for r in loaded if r[1] == "checked_out")
+        text = f"Öppnade {len(loaded)} planer från databasen"
+        text += f", {out} utcheckade" if out else ""
+        text += f" och {len(loaded) - out} skrivskyddade." if len(loaded) > out else "."
+        self._info(text + " Den senast öppnade planen är den aktiva.")
+        for plan_id, outcome, detail in loaded:
+            if outcome == "locked":
+                self._warn(f"{plan_id} är utcheckad av {detail} och därför skrivskyddad.")
 
     def _ask_open_source(self) -> Optional[str]:
         """En liten meny vid muspekaren (som i Rita Detaljplan): fil eller databas."""
