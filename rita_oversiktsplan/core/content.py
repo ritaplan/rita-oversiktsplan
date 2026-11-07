@@ -225,25 +225,27 @@ def decision_feature(group):
 
 
 def read_decision(group) -> Decision:
+    from . import beslut
     feature = decision_feature(group)
     if feature is None:
         return Decision()
-    return Decision(diarienummer=_text(feature["diarienummer"]), fattat=_py_date(feature["datum_fattat"]),
-                    overklagat=_py_date(feature["datum_overklagat"]), laga_kraft=_py_date(feature["datum_laga_kraft"]))
+    dates = beslut.read(group, str(feature["objektidentitet"]))
+    return Decision(diarienummer=_text(feature["diarienummer"]), fattat=dates.get(model.FATTAT),
+                    overklagat=dates.get(model.OVERKLAGAT), laga_kraft=dates.get(model.LAGA_KRAFT))
 
 
 def _save_decision(group, decision: Decision, organisation: str) -> Optional[str]:
     """Sparar antagandebeslutet direkt och returnerar dess objektidentitet. Ett tomt beslut som inte finns skapas
-    inte."""
+    inte. Datumen sparas som händelser i beslut_op_handelse."""
+    from . import beslut
     layer = layer_in_group(group, model.BESLUT.name)
     if layer is None:
         raise ValueError(f"Lagret {model.BESLUT.alias} saknas i planen. Öppna planen på nytt.")
     existing = decision_feature(group)
     if existing is None and decision.is_empty():
         return None
-    values = {"diarienummer": decision.diarienummer or None, "datum_fattat": decision.fattat,
-              "datum_overklagat": decision.overklagat, "datum_laga_kraft": decision.laga_kraft,
-              "beslutande_organisation": organisation, "beslutande_instans": model.BESLUT_INSTANS}
+    values = {"diarienummer": decision.diarienummer or None, "beslutande_organisation_namn": organisation,
+              "beslutande_instans": model.BESLUT_INSTANS}
     attributes = {layer.fields().indexOf(k): _to_qgis(v) for k, v in values.items()}
     started = not layer.isEditable() and layer.startEditing()
     if existing is None:
@@ -256,6 +258,8 @@ def _save_decision(group, decision: Decision, organisation: str) -> Optional[str
         identity = existing["objektidentitet"]
     if not layer.commitChanges(started):
         raise ValueError("Kunde inte spara beslutet: " + "; ".join(layer.commitErrors()))
+    beslut.write(group, str(identity), {model.FATTAT: decision.fattat, model.OVERKLAGAT: decision.overklagat,
+                                        model.LAGA_KRAFT: decision.laga_kraft})
     return str(identity)
 
 

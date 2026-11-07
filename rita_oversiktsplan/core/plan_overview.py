@@ -86,13 +86,19 @@ def _plan_fields(connection, schema: str) -> dict[str, dict[str, str]]:
 
 def _decisions(connection, schema: str) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
     """Beslutsraderna, dels per beslutets id (det planen pekar på) och dels per plan (den med senast fattade beslut, om
-    planen inte pekar på något)."""
-    rows = _query(connection, 'SELECT "plan", "objektidentitet", "diarienummer", "datum_fattat", "datum_laga_kraft" '
+    planen inte pekar på något). Datumen står i beslut_op_handelse (databasmodell 0.4)."""
+    rows = _query(connection, 'SELECT "plan", "objektidentitet", "diarienummer" '
                               f'FROM {_table(schema, model.BESLUT.name)} ORDER BY "plan"')
+    events: dict[tuple[str, str], str] = {}  # (beslut, händelsetyp) → datum, ur beslut_op_handelse
+    for row in _query(connection, 'SELECT "beslut_op_id", "handelsetyp", "datum" '
+                                  f'FROM {_table(schema, model.BESLUT_HANDELSE.name)}'):
+        events[(_text(row[0]), _text(row[1]))] = _text(row[2])
     by_id: dict[str, dict[str, str]] = {}
     by_plan: dict[str, dict[str, str]] = {}
     for row in rows:
-        values = {"diarienummer": _text(row[2]), "beslut_fattat": _text(row[3]), "laga_kraft": _text(row[4])}
+        identity = _text(row[1])
+        values = {"diarienummer": _text(row[2]), "beslut_fattat": events.get((identity, model.FATTAT), ""),
+                  "laga_kraft": events.get((identity, model.LAGA_KRAFT), "")}
         by_id[_text(row[1])] = values
         plan = _text(row[0])
         if plan not in by_plan or values["beslut_fattat"] >= by_plan[plan]["beslut_fattat"]:

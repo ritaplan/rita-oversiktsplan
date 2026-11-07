@@ -49,7 +49,7 @@ SOURCES: tuple[Source, ...] = (
     Source((13,), "Kulturmiljövård", "Kulturmiljövård (3 kap. 6 §)", 3),
     Source((18, 3, 4, 5, 6, 7), "Yrkesfiske", "Yrkesfiske (3 kap. 5 §)", 3),
     Source((9, 10), "Rennäring", "Rennäring (3 kap. 5 §)", 3),
-    Source((15, 16), "Fyndighet av ämnen och material", "Värdefulla ämnen och material (3 kap. 7 §)", 3),
+    Source((15, 16), "Fyndighet av ämnen eller material", "Värdefulla ämnen och material (3 kap. 7 §)", 3),
     Source((19,), "Anläggning för energiproduktion", "Energiproduktion, vindbruk (3 kap. 8 §)", 3),
     Source((150, 153, 152, 154, 142, 145, 144, 146, 147, 148, 149, 132, 135, 134, 137, 138, 140, 141, 129, 128, 131),
            "Anläggning för kommunikation, trafikslagen",
@@ -271,8 +271,7 @@ def _positions_by_target(group) -> set[str]:
     found: set[str] = set()
     for layer in _layers(group, POSITION).values():
         for f in layer.getFeatures() if layer is not None else ():
-            link = content.plain(f[relations.LINK])
-            found |= links.get(str(link), set()) if link else set()
+            found |= links.get(str(content.plain(f["objektidentitet"]) or ""), set())
     return found
 
 
@@ -280,8 +279,6 @@ def _add_position(group, source, base: dict, table, done: set[str]) -> Optional[
     """Kopierar ett hämtat riksintresse (QgsFeature) till kommunens ställningstagande, med samma värde, namn,
     riksintressets id och geometri, och kopplar kopian till riksintresset med *berör annat innehåll*. Returnerar
     lagrets namn, eller None om riksintresset redan har ett ställningstagande."""
-    import uuid
-
     from qgis.core import QgsGeometry
 
     from . import content, relations
@@ -291,14 +288,12 @@ def _add_position(group, source, base: dict, table, done: set[str]) -> Optional[
     layer = _layers(group, POSITION)[_suffix(source.geometry())]
     if layer is None:
         return None
-    link = str(uuid.uuid4())
     values = {**base, "innehallstyp_varde": content.plain(source["innehallstyp_varde"]),
-              "namn": content.plain(source["namn"]), "objektidentitet_ri": content.plain(source["objektidentitet_ri"]),
-              relations.LINK: link}
-    _add(layer, QgsGeometry(source.geometry()), values)
+              "namn": content.plain(source["namn"]), "objektidentitet_ri": content.plain(source["objektidentitet_ri"])}
+    position = _add(layer, QgsGeometry(source.geometry()), values)
     if not table.isEditable():
         table.startEditing()
-    _add(table, QgsGeometry(), {relations.LINK: link, relations.TARGET: target})
+    relations.add(table, str(position["objektidentitet"]), target)
     done.add(target)
     return layer.name()
 

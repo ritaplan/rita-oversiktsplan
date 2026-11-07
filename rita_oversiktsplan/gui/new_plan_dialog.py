@@ -124,8 +124,8 @@ class NewPlanDialog(QDialog):
             "mindre del av kommunen: då ritar du plangeometrin själv.")
         form.addRow("Plangeometri", self.municipality_area)
 
-        self.about = QLabel(f"Planen skapas med Boverkets GIS-databasmodell och värden ur ÖP-katalogen "
-                            f"{bundled().version}.")
+        self.about = QLabel(f"Planen skapas med Boverkets GIS-databasmodell {model.DATABASMODELL} och värden ur "
+                            f"ÖP-katalogen {bundled().version}.")
         self.about.setWordWrap(True)
         self.about.setEnabled(False)  # dämpad färg
 

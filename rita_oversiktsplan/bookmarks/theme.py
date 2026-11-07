@@ -22,7 +22,7 @@ DARK = {
     "t1": "#a691ec", "t2": "#74a8ea", "t3": "#f08a5a", "t4": "#d5b45a", "t5": "#9db3c8", "t6": "#5fcc9f", "t7": "#e47aa8",
     "map_bg": "#1d2726", "map_line": "#9fb0ab",
 }
-# avsnittstyperna i ÖP-katalogen 2.2 får var sin färg; en typ som inte finns här får en färg efter sin plats i listan
+# avsnittstyperna i ÖP-katalogen 2.3 får var sin färg; en typ som inte finns här får en färg efter sin plats i listan
 TYPE_TOKEN = {
     "Sammanfattning": "t5", "Översiktsplanens syfte": "t1", "Beskrivning": "t2", "Ställningstagande": "t6",
     "Konsekvens": "t7", "Framtagandeprocess": "t4", "Länsstyrelsens invändning": "t3",

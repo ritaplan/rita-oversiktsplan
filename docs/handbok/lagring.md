@@ -47,7 +47,9 @@ där tal räknas som tal (ÖP 2 före ÖP 10). Klicka på en kolumnrubrik för a
   checka ut en plan senare med knappen **Checka ut** i verktygsfältet.
 
 Sparar du QGIS-projektet följer planens lager med, och då behöver du inte öppna planen på nytt. En plan som skapats med
-en äldre version av pluginet uppgraderas när den öppnas.
+en äldre version av pluginet uppgraderas när den öppnas. En plan i en fil från version 0.1.14 eller äldre
+uppgraderas till Boverkets databasmodell 0.4 och ÖP-katalogen 2.3; en kopia av filen som den var sparas först bredvid
+den, `<filnamn>_fore_uppgradering.gpkg` (se [Datamodell](../datamodell.md)).
 
 ## Checka ut och checka in
 

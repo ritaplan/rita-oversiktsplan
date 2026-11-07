@@ -80,12 +80,12 @@ def outline(catalog: opkatalog.Catalog) -> list[tuple[int, str, str]]:
     for value in children(catalog, "Kompletterande mark- och vattenanvändning"):
         add(3, value["namn"].strip(), guide(catalog, value))
     category("Bostadsförsörjning")
-    category("LIS", "Landsbygdsutveckling i strandnära lägen (LIS)")
+    category("Landsbygdsutveckling i strandnära läge", "Landsbygdsutveckling i strandnära lägen (LIS)")
     category("Riksintresse kommunens ställningstagande", "Riksintressen", sublevel_statement=False)
     # riksintressen: kommunens ställningstagande per riksintresse (rubrik 3)
     rows[:] = _riksintressen(rows)
     category("Miljökvalitetsnormer enligt 5 kap. MB")
-    category("Särskilt värdefull kulturmiljö")
+    category("Särskilt värdefulla byggnadsverk, allmänna platser och bebyggelseområden", "Särskilt värdefull kulturmiljö")
     category("Klimatrelaterade risker")
     category("Övriga förhållanden av väsentlig betydelse")
     category("Mellankommunala och regionala intressen")
@@ -102,7 +102,7 @@ def outline(catalog: opkatalog.Catalog) -> list[tuple[int, str, str]]:
         add(2, heading)
     add(1, "Övrig information", "Till exempel underlag till planen och ordlista.")
     add(2, "Underlag", "Planens underlag, med underlagstyperna i ÖP-katalogen.")
-    for value in children(catalog, "Underlagstyp"):
+    for value in children(catalog, "Underlag"):
         add(3, value["namn"].strip(), guide(catalog, value))
     return rows
 

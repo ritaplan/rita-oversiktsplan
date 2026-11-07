@@ -1,12 +1,11 @@
 """Berör annat innehåll: att ett innehåll hänger ihop med ett annat (``berorAnnatInnehall`` i Lantmäteriets
 *innehallOP*, en lista med objektidentiteter), till exempel en klimatrisk som berör ett område för bostadsbebyggelse.
 
-I Boverkets tabeller har varje innehåll kolumnen ``beror_annat_innehall_id``, som pekar på rader i tabellen
-``innehall_op_beror_annat_innehall`` (``beror_annat_innehall_id`` och det berörda innehållets objektidentitet i
-``beror_annat_innehal_uuid``, med mallens stavning). Ändringarna läggs i redigeringsbufferten, som när man ritar."""
+I Boverkets databasmodell 0.4 är det en kopplingstabell, ``innehall_op_beror_annat_innehall``, med en rad per
+koppling: innehållet som berör (``objektidentitet``) och innehållet som berörs (``beror_objektidentitet``). Samma
+koppling finns bara en gång, och ett innehåll kan inte beröra sig självt. Ändringarna läggs i redigeringsbufferten, som
+när man ritar."""
 from __future__ import annotations
-
-import uuid
 
 from qgis.core import QgsGeometry, QgsVectorLayer, QgsVectorLayerUtils
 
@@ -14,8 +13,8 @@ from .content import plain
 from .project import layer_in_group
 
 TABLE = "innehall_op_beror_annat_innehall"
-LINK = "beror_annat_innehall_id"
-TARGET = "beror_annat_innehal_uuid"
+SOURCE = "objektidentitet"
+TARGET = "beror_objektidentitet"
 
 
 def _table(group) -> QgsVectorLayer:
@@ -26,40 +25,42 @@ def _table(group) -> QgsVectorLayer:
 
 
 def links(group) -> dict[str, set[str]]:
-    """``beror_annat_innehall_id`` → objektidentiteterna det berör."""
+    """Objektidentitet → objektidentiteterna det berör."""
     found: dict[str, set[str]] = {}
     for row in _table(group).getFeatures():
-        link, target = plain(row[LINK]), plain(row[TARGET])
-        if link and target:
-            found.setdefault(str(link), set()).add(str(target))
+        source, target = plain(row[SOURCE]), plain(row[TARGET])
+        if source and target:
+            found.setdefault(str(source), set()).add(str(target))
     return found
 
 
 def related(group, layer: QgsVectorLayer, fid: int) -> set[str]:
     """Objektidentiteterna som ett innehåll berör."""
-    link = plain(layer.getFeature(fid)[LINK])
-    return links(group).get(str(link), set()) if link else set()
+    identity = plain(layer.getFeature(fid)["objektidentitet"])
+    return links(group).get(str(identity), set()) if identity else set()
+
+
+def add(table: QgsVectorLayer, source: str, target: str) -> None:
+    """Lägger till kopplingen i redigeringsbufferten (tabellen redigeras redan)."""
+    table.addFeature(QgsVectorLayerUtils.createFeature(
+        table, QgsGeometry(), {table.fields().indexOf(SOURCE): source, table.fields().indexOf(TARGET): target}))
 
 
 def toggle(group, layer: QgsVectorLayer, fid: int, target: str) -> bool:
     """Lägger till kopplingen till ``target`` (en objektidentitet), eller tar bort den om den finns. Returnerar True
     om innehållet nu berör ``target``."""
-    feature = layer.getFeature(fid)
-    if str(plain(feature["objektidentitet"])) == target:
+    source = str(plain(layer.getFeature(fid)["objektidentitet"]) or "")
+    if not source:
+        raise ValueError("Innehållet saknar objektidentitet.")
+    if source == target:
         raise ValueError("Ett innehåll kan inte beröra sig självt.")
     table = _table(group)
-    for started_layer in (layer, table):
-        if not started_layer.isEditable():
-            started_layer.startEditing()
-    link = plain(feature[LINK])
-    if not link:
-        link = str(uuid.uuid4())
-        layer.changeAttributeValue(fid, layer.fields().indexOf(LINK), link)
+    if not table.isEditable():
+        table.startEditing()
     existing = [row.id() for row in table.getFeatures()
-                if str(plain(row[LINK])) == str(link) and str(plain(row[TARGET])) == target]
+                if str(plain(row[SOURCE])) == source and str(plain(row[TARGET])) == target]
     if existing:
         table.deleteFeatures(existing)
         return False
-    table.addFeature(QgsVectorLayerUtils.createFeature(
-        table, QgsGeometry(), {table.fields().indexOf(LINK): str(link), table.fields().indexOf(TARGET): target}))
+    add(table, source, target)
     return True

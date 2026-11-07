@@ -130,7 +130,7 @@ def load_plan(source, project: QgsProject) -> dict[str, QgsVectorLayer]:
         if not category.polygon_only:
             parent.setExpanded(False)
     documents = group.addGroup(DOCUMENTS_GROUP)
-    for layer_def in (model.BESLUT, *model.DOCUMENT_TABLES):
+    for layer_def in (*model.DECISION_TABLES, *model.DOCUMENT_TABLES):
         add(layer_def, documents)
     documents.setExpanded(False)
 
@@ -224,6 +224,8 @@ def _default_expression(layer_def: model.LayerDef, field: model.FieldDef, plan_l
     if layer_def.category is not None and field.name in ("planhandelse_varde", "planhandelse_datum"):
         # nytt innehåll får planens aktuella planhändelse (en GeoPackage = en översiktsplan)
         return f"aggregate('{plan_layer.id()}', 'max', \"{field.name}\")"
+    if layer_def.category is not None and field.name == model.PLAN_FIELD:
+        return f"aggregate('{plan_layer.id()}', 'max', \"objektidentitet\")"  # innehållet hör till planen
     return field.default
 
 

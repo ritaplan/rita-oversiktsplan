@@ -51,7 +51,10 @@ class OverviewConnection:
             return [[plan_id, p.get("titel"), p.get("planhandelse"), p.get("planhandelse_datum"), p.get("paborjad"),
                      p.get("beslut")] for plan_id, p in sorted(plans.items())]
         if sql.startswith('SELECT "plan", "objektidentitet"'):
-            return self.decisions.get(schema, [])
+            return [row[:3] for row in self.decisions.get(schema, [])]
+        if sql.startswith('SELECT "beslut_op_id"'):  # beslutens datum står i beslut_op_handelse
+            return [[row[1], kind, when] for row in self.decisions.get(schema, [])
+                    for kind, when in (("fattat", row[3]), ("laga kraft", row[4])) if when]
         return []
 
 
@@ -120,7 +123,7 @@ class OverviewTests(unittest.TestCase):
     def test_the_overview_uses_a_few_queries_per_schema_not_one_per_plan(self):
         conn = detailed()
         plan_overview.list_plans("db", conn, "op_a")
-        self.assertEqual(len(conn.sql), 4, conn.sql)  # planer, lås, uppgifter, beslut
+        self.assertEqual(len(conn.sql), 5, conn.sql)  # planer, lås, uppgifter, beslut och beslutens datum
 
     def test_the_lock_check_matches_the_user_and_the_computer(self):
         self.assertTrue(co.is_own_lock(co.new_lock()))

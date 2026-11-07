@@ -31,8 +31,8 @@ Pluginet följer tre underlag:
 
 | Underlag | Version | Används till |
 |---|---|---|
-| Boverkets **GIS-databasmodell** för ÖP-modellen | 0.3 | Tabellernas och kolumnernas namn. |
-| Boverkets **ÖP-katalog** | 2.2 | Värdena: innehållstyper, planhändelser, avsnittstyper med mera. |
+| Boverkets **GIS-databasmodell** för ÖP-modellen | 0.4 | Tabellernas och kolumnernas namn. |
+| Boverkets **ÖP-katalog** | 2.3 | Värdena: innehållstyper, planhändelser, avsnittstyper med mera. |
 | Lantmäteriets **nationella specifikation** för översiktsplan | test 4 | Exportformatet och reglerna i kontrollen. |
 
 En plan som pluginet skapar har alltså samma struktur som Boverkets mall, med några medvetna avvikelser som beskrivs i
@@ -87,10 +87,11 @@ på *Spara* i dialogen.
 
 | Koppling | Hur den lagras |
 |---|---|
-| **Berör annat innehåll** | Innehållets `beror_annat_innehall_id` pekar på rader i `innehall_op_beror_annat_innehall`, en per berört innehåll, med det berördas `objektidentitet`. |
+| **Berör annat innehåll** | En rad i `innehall_op_beror_annat_innehall` per koppling: det berörande innehållets `objektidentitet` och det berördas `beror_objektidentitet`. |
 | **Riksintressets id** | Kolumnen `objektidentitet_ri` i riksintressenas lager. |
 | **Planhandlingen** | `dokumentavsnitt` har en rad per koppling mellan ett avsnitt och ett objekt: avsnittstyp, bokmärke, dokument och objektets `objektidentitet`. |
-| **Beslut** | Planens `beslut` pekar på antagandebeslutet. Innehållets `beslut` pekar på en ändrings beslut. |
+| **Beslut** | Planens `beslut` pekar på antagandebeslutet i `beslut_op`. Innehållets `beslut` pekar på en ändrings beslut. Beslutets datum (fattat, överklagat, laga kraft) är rader i `beslut_op_handelse`. |
+| **Planen** | Allt innehåll har `oversiktsplan` = planens `objektidentitet`. |
 
 ### Metadata i `rita_oversiktsplan_meta`
 
@@ -98,7 +99,7 @@ Tabellen är en nyckel–värde-tabell. Några nycklar:
 
 | Nyckel | Innehåll |
 |---|---|
-| `schema_version` | Pluginets schemaversion (nu 4). |
+| `schema_version` | Pluginets schemaversion (nu 5). |
 | `epsg` | Planens koordinatsystem. |
 | `standard_*` | Standardvärden för nytt innehåll. |
 | `utbyggnadsordning` | Planens etapper som JSON: en lista med `{"namn", "period"}`. |
@@ -150,8 +151,9 @@ schema "oversiktsplaner"
 
 Pluginet använder en av **QGIS sparade PostgreSQL-anslutningar**, och inloggningen sköts av QGIS. Databasen måste ha
 tillägget PostGIS. Användaren behöver kunna skapa schema och tabeller första gången, och sedan läsa, skriva och ta bort
-rader. Ett schema från en äldre version (schema 3) uppgraderas när en plan i det öppnas första gången, vilket kräver
-rätt att ändra tabellerna.
+rader. Ett schema från en äldre version (schema 3 eller 4) uppgraderas när en plan i det öppnas första gången, vilket
+kräver rätt att ändra tabellerna. Från schema 4 till 5 flyttas datan till Boverkets databasmodell 0.4 för alla planer
+i schemat, se [Datamodell](../datamodell.md).
 
 ## Utcheckning och incheckning
 

@@ -27,7 +27,7 @@ OPTIONAL: set[str] = set()
 
 # (sökväg under repots rot, namn, leverantör, licens/villkor, källa)
 BUNDLED_DATA = [
-    (f"{PLUGIN}/data/opkatalog.json", "ÖP-katalogen 2.2", "Boverket", "CC0 (Boverkets användarvillkor för API-tjänsten)",
+    (f"{PLUGIN}/data/opkatalog.json", "ÖP-katalogen 2.3", "Boverket", "CC0 (Boverkets användarvillkor för API-tjänsten)",
      "https://www.boverket.se/sv/om-boverket/oppna-data/api-for-op-katalogen/"),
     (f"{PLUGIN}/data/kommuner.json", "Kommunlista med kommunkoder", "SCB", "Öppen statistik (källa anges)",
      "https://api.scb.se"),

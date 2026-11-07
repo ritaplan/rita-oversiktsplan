@@ -4,9 +4,8 @@
 ``avsnittsbokmärke``: bokmärkena i dokumentet, med rubriken som text.
 ``dokumentavsnitt``: en rad per koppling mellan ett avsnitt och ett objekt: avsnittstyp, bokmärke, dokumentet och
 objektets ``objektidentitet``. Ett avsnitt kan gälla flera objekt och ett objekt flera avsnitt (många-till-många,
-som i Boverkets instruktion). Objektets ``dokument_id`` sätts till dess objektidentitet, och samma värde står i
-``dokumentavsnitt.dokument_id``, så att raderna för ett objekt går att hitta från båda håll (en tolkning av mallen,
-som inte beskriver kolumnen närmare).
+som i Boverkets instruktion). ``dokumentavsnitt.dokument_id`` får också objektets objektidentitet (en tolkning av
+mallen, som inte beskriver kolumnen närmare; innehållet har ingen egen ``dokument_id`` sedan databasmodell 0.4).
 
 Kopplingarna till hela planen gäller raden i ``oversiktsplan`` (specifikationens ``oversiktsplan.dokument``).
 Sparas direkt."""
@@ -18,7 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from qgis.core import NULL, QgsFeatureRequest, QgsGeometry, QgsVectorLayer, QgsVectorLayerUtils
+from qgis.core import QgsFeatureRequest, QgsGeometry, QgsVectorLayer, QgsVectorLayerUtils
 
 from . import model
 from .content import plain
@@ -166,7 +165,8 @@ def save(group, path: str | Path, sections: list[SectionLinks]) -> str:
     values = {"namn": path.name, "kortnamn": "Planhandling", "datumangivelse": today, "lank": str(path)}
     if existing is None:
         doc_id = str(uuid.uuid4())
-        values.update({"dokumentreferens_id": doc_id, "identitet": doc_id})
+        # producentens identitet behåller kommunens värde när identiteten skrivs över vid uppladdning (Boverket)
+        values.update({"dokumentreferens_id": doc_id, "identitet": doc_id, "producentens_identitet": doc_id})
         documents.addFeature(QgsVectorLayerUtils.createFeature(
             documents, QgsGeometry(), {documents.fields().indexOf(k): v for k, v in values.items()}))
     else:
@@ -194,20 +194,4 @@ def save(group, path: str | Path, sections: list[SectionLinks]) -> str:
             bookmarks, QgsGeometry(), {bookmarks.fields().indexOf(k): v for k, v in values.items()}))
     _commit(bookmarks, started, "bokmärkena")
 
-    _set_document_ids(group, {i for s in sections for i in s.identities})
     return doc_id
-
-
-def _set_document_ids(group, identities: set[str]) -> None:
-    """Ger objekten med kopplingar ett dokument_id (deras objektidentitet), om de saknar ett."""
-    for layer in _layers_with_identity(group):
-        changes = {f.id(): str(f["objektidentitet"]) for f in layer.getFeatures()
-                   if str(f["objektidentitet"]) in identities and f["dokument_id"] in (None, NULL, "")}
-        if not changes:
-            continue
-        idx = layer.fields().indexOf("dokument_id")
-        started = not layer.isEditable() and layer.startEditing()
-        for fid, value in changes.items():
-            layer.changeAttributeValue(fid, idx, value)
-        if started:
-            _commit(layer, True, layer.name())

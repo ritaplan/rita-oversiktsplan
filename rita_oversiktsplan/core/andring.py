@@ -28,7 +28,7 @@ from typing import Optional
 from qgis.core import NULL, QgsGeometry, QgsVectorLayerUtils
 from qgis.PyQt.QtCore import QDate
 
-from . import model
+from . import beslut, model
 from .project import layer_in_group, plan_storage
 
 KEYS = {"beslut": "andring_beslut", "paborjat": "andring_paborjat", "planhandelse": "andring_planhandelse",
@@ -97,10 +97,11 @@ def active(group) -> Optional[Andring]:
     if row is None:
         return None
     rubrik = str(_plain(row["rubrik"]) or "")
+    dates = beslut.read(group, identity)
     return Andring(identity, rubrik.removeprefix("Ändring: "), _date(meta.get(KEYS["paborjat"])),
                    meta.get(KEYS["planhandelse"]) or None, _date(meta.get(KEYS["planhandelse_datum"])),
-                   str(_plain(row["diarienummer"]) or ""), _date(row["datum_fattat"]), _date(row["datum_overklagat"]),
-                   _date(row["datum_laga_kraft"]))
+                   str(_plain(row["diarienummer"]) or ""), dates.get(model.FATTAT), dates.get(model.OVERKLAGAT),
+                   dates.get(model.LAGA_KRAFT))
 
 
 def content_values(group) -> dict[str, object]:
@@ -163,7 +164,7 @@ def start(group, namn: str, diarienummer: str, paborjat: datetime.date, planhand
     plan_row = next(plan.getFeatures(), None) if plan is not None else None
     organisation = str(_plain(plan_row["kommunnamn"]) or "") if plan_row is not None else ""
     values = {"rubrik": f"Ändring: {namn.strip()}", "diarienummer": diarienummer.strip() or None,
-              "beslutande_organisation": organisation, "beslutande_instans": model.BESLUT_INSTANS}
+              "beslutande_organisation_namn": organisation, "beslutande_instans": model.BESLUT_INSTANS}
     feature = QgsVectorLayerUtils.createFeature(layer, QgsGeometry(), {layer.fields().indexOf(k): _qgis(v)
                                                                        for k, v in values.items()})
     started = not layer.isEditable() and layer.startEditing()
@@ -189,8 +190,9 @@ def update(group, planhandelse: Optional[str], planhandelse_datum: Optional[date
                                     KEYS["planhandelse_datum"]: planhandelse_datum.isoformat()
                                     if planhandelse_datum else ""})
     row = _decision_row(group, change.beslut)
-    _apply(_decisions(group), {row.id(): {"diarienummer": diarienummer.strip() or None, "datum_fattat": fattat,
-                                          "datum_overklagat": overklagat, "datum_laga_kraft": laga_kraft}})
+    _apply(_decisions(group), {row.id(): {"diarienummer": diarienummer.strip() or None}})
+    beslut.write(group, change.beslut, {model.FATTAT: fattat, model.OVERKLAGAT: overklagat,
+                                        model.LAGA_KRAFT: laga_kraft})
     changed = 0
     for _, layer in _content(group):
         found = {f.id(): {"planhandelse_varde": planhandelse, "planhandelse_datum": planhandelse_datum}

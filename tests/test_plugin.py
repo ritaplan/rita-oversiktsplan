@@ -379,7 +379,7 @@ class PlanCommandTests(unittest.TestCase):
 
     def test_plan_info_saves_the_plan_the_event_and_the_defaults(self):
         self.draft()
-        with mock.patch.object(AssignDialog, "exec", new=choose("lis", "LIS")):
+        with mock.patch.object(AssignDialog, "exec", new=choose("lis", "Landsbygdsutveckling i strandnära läge")):
             self.plugin.assign_at(QgsPointXY(50, 50), 1.0)
         self.plugin.save_all()
 
@@ -418,9 +418,11 @@ class PlanCommandTests(unittest.TestCase):
         self.assertEqual(len(decisions), 1)
         decision = decisions[0]
         self.assertEqual(decision["diarienummer"], "KS 2027/123")
-        self.assertEqual(decision["beslutande_organisation"], "Eskilstuna")
+        self.assertEqual(decision["beslutande_organisation_namn"], "Eskilstuna")
         self.assertEqual(decision["beslutande_instans"], "kommunfullmäktige")
-        self.assertEqual(decision["datum_laga_kraft"], QDate(2028, 7, 15))
+        events = {(e["beslut_op_id"], e["handelsetyp"]): e["datum"] for e in self.layers["beslut_op_handelse"].getFeatures()}
+        self.assertEqual(events, {(decision["objektidentitet"], "fattat"): QDate(2028, 6, 10),
+                                  (decision["objektidentitet"], "laga kraft"): QDate(2028, 7, 15)})
         self.assertRegex(str(decision["objektidentitet"]), r"^[0-9a-f-]{36}$")
         plan = next(self.layers["oversiktsplan"].getFeatures())
         self.assertEqual(plan["beslut"], decision["objektidentitet"])

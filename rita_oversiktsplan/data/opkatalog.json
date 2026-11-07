@@ -1,20 +1,20 @@
 {
  "kalla": "Boverket, ÖP-katalogen (https://api.boverket.se/opmodell). Text och bild omfattas av CC0 enligt Boverkets användarvillkor för API-tjänsten.",
- "hamtad": "2026-10-16",
+ "hamtad": "2026-11-07",
  "katalog": {
-  "id": 10,
-  "url": "/version/10",
-  "version": "2.2",
-  "beskrivning": "Språkliga och begreppsmässiga justeringar har gjorts. Bland annat har benämningen ”Planhändelsetyp” ersatts av ”Planhändelse”, beskrivningen av kategorin ”Område” har förtydligats samt vissa texter och kodlistor har harmoniserats utan att ändra det faktiska innehållet.",
-  "ursprungId": 8,
-  "ursprungUrl": "/version/8",
-  "publicerad": "2026-06-29T10:46:33.5574533",
+  "id": 11,
+  "url": "/version/11",
+  "version": "2.3",
+  "beskrivning": "Benämningar för ett antal kategorier och underkategorier har justerats, bland annat för LIS, yrkesfiske, särskilt värdefull kulturmiljö och underlag. Berörda kodlistor har uppdaterats. Beskrivningen av ”Område” har förtydligats. Geometritypen för ”Område” och ”Plangeometri” har begränsats till yta. För ”Regionala mål, planer och program” har geometrityper lagts till. Övriga ändringar är språkliga och harmoniserande.",
+  "ursprungId": 10,
+  "ursprungUrl": "/version/10",
+  "publicerad": "2026-10-23T10:40:51.4307732",
   "status": "Publicerad",
   "typ": "Juridisk",
   "data": [
    {
     "id": "a99d8853-1ad0-4406-be82-0d9975fb598e",
-    "url": "/forekomst/10/a99d8853-1ad0-4406-be82-0d9975fb598e",
+    "url": "/forekomst/11/a99d8853-1ad0-4406-be82-0d9975fb598e",
     "namn": "Avsnittstyp",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -50,7 +50,7 @@
     "barn": [
      {
       "id": "d86a7c87-83e6-44c6-a65e-ec9ea92a89c1",
-      "url": "/forekomst/10/d86a7c87-83e6-44c6-a65e-ec9ea92a89c1",
+      "url": "/forekomst/11/d86a7c87-83e6-44c6-a65e-ec9ea92a89c1",
       "namn": "Beskrivning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -77,7 +77,7 @@
      },
      {
       "id": "dd851fa0-312f-4210-bb51-8d99e94e79d6",
-      "url": "/forekomst/10/dd851fa0-312f-4210-bb51-8d99e94e79d6",
+      "url": "/forekomst/11/dd851fa0-312f-4210-bb51-8d99e94e79d6",
       "namn": "Framtagandeprocess",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -104,7 +104,7 @@
      },
      {
       "id": "62538296-db18-4357-afbe-bd43098ec52a",
-      "url": "/forekomst/10/62538296-db18-4357-afbe-bd43098ec52a",
+      "url": "/forekomst/11/62538296-db18-4357-afbe-bd43098ec52a",
       "namn": "Kommentar på länsstyrelsens invändning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -131,7 +131,7 @@
      },
      {
       "id": "e870c4be-a20e-49d4-b5b5-ee5427cafd61",
-      "url": "/forekomst/10/e870c4be-a20e-49d4-b5b5-ee5427cafd61",
+      "url": "/forekomst/11/e870c4be-a20e-49d4-b5b5-ee5427cafd61",
       "namn": "Konsekvens",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -158,7 +158,7 @@
      },
      {
       "id": "5c09d2fa-1b60-45df-a606-a875d477a222",
-      "url": "/forekomst/10/5c09d2fa-1b60-45df-a606-a875d477a222",
+      "url": "/forekomst/11/5c09d2fa-1b60-45df-a606-a875d477a222",
       "namn": "Länsstyrelsens invändning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -185,7 +185,7 @@
      },
      {
       "id": "02f742da-94d7-4d1c-a94c-1d4318553c58",
-      "url": "/forekomst/10/02f742da-94d7-4d1c-a94c-1d4318553c58",
+      "url": "/forekomst/11/02f742da-94d7-4d1c-a94c-1d4318553c58",
       "namn": "Sammanfattning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -212,7 +212,7 @@
      },
      {
       "id": "56d85084-b9d9-43c4-8243-1fbd3b6d3205",
-      "url": "/forekomst/10/56d85084-b9d9-43c4-8243-1fbd3b6d3205",
+      "url": "/forekomst/11/56d85084-b9d9-43c4-8243-1fbd3b6d3205",
       "namn": "Ställningstagande",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -239,7 +239,7 @@
      },
      {
       "id": "f906f87c-ff0f-4650-9b68-dbfba9ca1235",
-      "url": "/forekomst/10/f906f87c-ff0f-4650-9b68-dbfba9ca1235",
+      "url": "/forekomst/11/f906f87c-ff0f-4650-9b68-dbfba9ca1235",
       "namn": "Översiktsplanens syfte",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -266,7 +266,7 @@
      },
      {
       "id": "06e5a50f-3fcd-4eff-a75f-ba1ffe7841e7",
-      "url": "/forekomst/10/06e5a50f-3fcd-4eff-a75f-ba1ffe7841e7",
+      "url": "/forekomst/11/06e5a50f-3fcd-4eff-a75f-ba1ffe7841e7",
       "namn": "Övrig information",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -295,7 +295,7 @@
    },
    {
     "id": "497bbb17-922f-48a6-976e-f5f0a1e24cc8",
-    "url": "/forekomst/10/497bbb17-922f-48a6-976e-f5f0a1e24cc8",
+    "url": "/forekomst/11/497bbb17-922f-48a6-976e-f5f0a1e24cc8",
     "namn": "Avvikelse från regionplan",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -372,7 +372,7 @@
    },
    {
     "id": "50555d77-4b72-43b2-bb0a-fee187385b60",
-    "url": "/forekomst/10/50555d77-4b72-43b2-bb0a-fee187385b60",
+    "url": "/forekomst/11/50555d77-4b72-43b2-bb0a-fee187385b60",
     "namn": "Bostadsförsörjning",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -449,7 +449,7 @@
    },
    {
     "id": "91298fed-3299-4990-a266-5db7e5445fb2",
-    "url": "/forekomst/10/91298fed-3299-4990-a266-5db7e5445fb2",
+    "url": "/forekomst/11/91298fed-3299-4990-a266-5db7e5445fb2",
     "namn": "Invändningar i länsstyrelsens granskningsyttrande",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -503,7 +503,7 @@
     "barn": [
      {
       "id": "249c5a18-af20-4c2e-97c5-052133fa0733",
-      "url": "/forekomst/10/249c5a18-af20-4c2e-97c5-052133fa0733",
+      "url": "/forekomst/11/249c5a18-af20-4c2e-97c5-052133fa0733",
       "namn": "Invändning hälsa och säkerhet",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -571,7 +571,7 @@
      },
      {
       "id": "876bf203-49cd-4225-8cb6-5cb8f14cea7c",
-      "url": "/forekomst/10/876bf203-49cd-4225-8cb6-5cb8f14cea7c",
+      "url": "/forekomst/11/876bf203-49cd-4225-8cb6-5cb8f14cea7c",
       "namn": "Invändning LIS",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -639,7 +639,7 @@
      },
      {
       "id": "1ae8ca3d-44e0-4add-870c-fd20692f62db",
-      "url": "/forekomst/10/1ae8ca3d-44e0-4add-870c-fd20692f62db",
+      "url": "/forekomst/11/1ae8ca3d-44e0-4add-870c-fd20692f62db",
       "namn": "Invändning mellankommunala frågor",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -707,7 +707,7 @@
      },
      {
       "id": "294483dd-3695-4803-ace7-9d2e8718321b",
-      "url": "/forekomst/10/294483dd-3695-4803-ace7-9d2e8718321b",
+      "url": "/forekomst/11/294483dd-3695-4803-ace7-9d2e8718321b",
       "namn": "Invändning miljökvalitetsnorm",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -775,7 +775,7 @@
      },
      {
       "id": "303cd7d6-ac84-4aa3-8861-ec877c226fdb",
-      "url": "/forekomst/10/303cd7d6-ac84-4aa3-8861-ec877c226fdb",
+      "url": "/forekomst/11/303cd7d6-ac84-4aa3-8861-ec877c226fdb",
       "namn": "Invändning riksintresse",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -845,7 +845,7 @@
    },
    {
     "id": "2c944baa-28be-4a8b-80f8-99721744c0d9",
-    "url": "/forekomst/10/2c944baa-28be-4a8b-80f8-99721744c0d9",
+    "url": "/forekomst/11/2c944baa-28be-4a8b-80f8-99721744c0d9",
     "namn": "Klimatrelaterade risker",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -899,7 +899,7 @@
     "barn": [
      {
       "id": "8a2616a3-2adf-4643-ac70-212220d64467",
-      "url": "/forekomst/10/8a2616a3-2adf-4643-ac70-212220d64467",
+      "url": "/forekomst/11/8a2616a3-2adf-4643-ac70-212220d64467",
       "namn": "Risk för erosion",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -967,7 +967,7 @@
      },
      {
       "id": "728a528f-3d69-49cb-ab57-77373741f0b8",
-      "url": "/forekomst/10/728a528f-3d69-49cb-ab57-77373741f0b8",
+      "url": "/forekomst/11/728a528f-3d69-49cb-ab57-77373741f0b8",
       "namn": "Risk för ras",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1035,7 +1035,7 @@
      },
      {
       "id": "89bf41cc-0a38-4ed5-aa49-47172d33718a",
-      "url": "/forekomst/10/89bf41cc-0a38-4ed5-aa49-47172d33718a",
+      "url": "/forekomst/11/89bf41cc-0a38-4ed5-aa49-47172d33718a",
       "namn": "Risk för skred",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1103,7 +1103,7 @@
      },
      {
       "id": "1e0c2483-741b-4c6b-b3fc-a131738dc270",
-      "url": "/forekomst/10/1e0c2483-741b-4c6b-b3fc-a131738dc270",
+      "url": "/forekomst/11/1e0c2483-741b-4c6b-b3fc-a131738dc270",
       "namn": "Risk för översvämning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1173,7 +1173,7 @@
    },
    {
     "id": "41c782fd-69c7-43db-9822-fd367b695dd8",
-    "url": "/forekomst/10/41c782fd-69c7-43db-9822-fd367b695dd8",
+    "url": "/forekomst/11/41c782fd-69c7-43db-9822-fd367b695dd8",
     "namn": "Kompletterande mark- och vattenanvändning",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -1218,7 +1218,7 @@
     "barn": [
      {
       "id": "40b0700a-5012-43ce-9fa8-a095a418c9dc",
-      "url": "/forekomst/10/40b0700a-5012-43ce-9fa8-a095a418c9dc",
+      "url": "/forekomst/11/40b0700a-5012-43ce-9fa8-a095a418c9dc",
       "namn": "Avloppshantering",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1245,7 +1245,7 @@
      },
      {
       "id": "37f8d402-8135-47e2-8caf-fa2c528e1fb2",
-      "url": "/forekomst/10/37f8d402-8135-47e2-8caf-fa2c528e1fb2",
+      "url": "/forekomst/11/37f8d402-8135-47e2-8caf-fa2c528e1fb2",
       "namn": "Badplats",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1272,7 +1272,7 @@
      },
      {
       "id": "2cce0dd9-7563-4e0e-bcca-49120b2a626b",
-      "url": "/forekomst/10/2cce0dd9-7563-4e0e-bcca-49120b2a626b",
+      "url": "/forekomst/11/2cce0dd9-7563-4e0e-bcca-49120b2a626b",
       "namn": "Begravningsplats",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1299,7 +1299,7 @@
      },
      {
       "id": "e8e5db48-7cdc-41c9-84ba-de31881aa42b",
-      "url": "/forekomst/10/e8e5db48-7cdc-41c9-84ba-de31881aa42b",
+      "url": "/forekomst/11/e8e5db48-7cdc-41c9-84ba-de31881aa42b",
       "namn": "Besöksanläggning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1326,7 +1326,7 @@
      },
      {
       "id": "498b046a-c1d9-4207-a6a2-fd43a8e72cd2",
-      "url": "/forekomst/10/498b046a-c1d9-4207-a6a2-fd43a8e72cd2",
+      "url": "/forekomst/11/498b046a-c1d9-4207-a6a2-fd43a8e72cd2",
       "namn": "Cykelväg",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1353,7 +1353,7 @@
      },
      {
       "id": "da267dba-12a5-4e54-af98-9f443db760b6",
-      "url": "/forekomst/10/da267dba-12a5-4e54-af98-9f443db760b6",
+      "url": "/forekomst/11/da267dba-12a5-4e54-af98-9f443db760b6",
       "namn": "Dagvattenhantering",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1380,7 +1380,7 @@
      },
      {
       "id": "fe2b25fe-2ee5-458d-99a0-49ee75426a2b",
-      "url": "/forekomst/10/fe2b25fe-2ee5-458d-99a0-49ee75426a2b",
+      "url": "/forekomst/11/fe2b25fe-2ee5-458d-99a0-49ee75426a2b",
       "namn": "Djurhållning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1407,7 +1407,7 @@
      },
      {
       "id": "3e46ae7c-9d5e-4c89-9dfb-dae457c37e47",
-      "url": "/forekomst/10/3e46ae7c-9d5e-4c89-9dfb-dae457c37e47",
+      "url": "/forekomst/11/3e46ae7c-9d5e-4c89-9dfb-dae457c37e47",
       "namn": "Energiförsörjning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1434,7 +1434,7 @@
      },
      {
       "id": "9a33fb69-699d-4ea2-b8a6-1bb7d07d3672",
-      "url": "/forekomst/10/9a33fb69-699d-4ea2-b8a6-1bb7d07d3672",
+      "url": "/forekomst/11/9a33fb69-699d-4ea2-b8a6-1bb7d07d3672",
       "namn": "Farled",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1461,7 +1461,7 @@
      },
      {
       "id": "70bd8717-8020-4c7d-850d-8ec9f5558ad7",
-      "url": "/forekomst/10/70bd8717-8020-4c7d-850d-8ec9f5558ad7",
+      "url": "/forekomst/11/70bd8717-8020-4c7d-850d-8ec9f5558ad7",
       "namn": "Företagsområde",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1488,7 +1488,7 @@
      },
      {
       "id": "3a6cb81d-539d-4264-82d8-29fe70b857d8",
-      "url": "/forekomst/10/3a6cb81d-539d-4264-82d8-29fe70b857d8",
+      "url": "/forekomst/11/3a6cb81d-539d-4264-82d8-29fe70b857d8",
       "namn": "Gång- och cykelväg",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1515,7 +1515,7 @@
      },
      {
       "id": "5e89489c-1160-43cc-a9d6-0c80661738fc",
-      "url": "/forekomst/10/5e89489c-1160-43cc-a9d6-0c80661738fc",
+      "url": "/forekomst/11/5e89489c-1160-43cc-a9d6-0c80661738fc",
       "namn": "Hamn",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1542,7 +1542,7 @@
      },
      {
       "id": "fe791968-3d8a-476b-8ee9-82bad5b84ef5",
-      "url": "/forekomst/10/fe791968-3d8a-476b-8ee9-82bad5b84ef5",
+      "url": "/forekomst/11/fe791968-3d8a-476b-8ee9-82bad5b84ef5",
       "namn": "Handel",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1569,7 +1569,7 @@
      },
      {
       "id": "0ab3d49d-6454-48c5-a264-63aa8d7824e2",
-      "url": "/forekomst/10/0ab3d49d-6454-48c5-a264-63aa8d7824e2",
+      "url": "/forekomst/11/0ab3d49d-6454-48c5-a264-63aa8d7824e2",
       "namn": "Idrotts- och sportanläggning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1596,7 +1596,7 @@
      },
      {
       "id": "15a739c5-d5b2-4bff-a226-22ea3a75ee30",
-      "url": "/forekomst/10/15a739c5-d5b2-4bff-a226-22ea3a75ee30",
+      "url": "/forekomst/11/15a739c5-d5b2-4bff-a226-22ea3a75ee30",
       "namn": "IT och telekommunikation",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1623,7 +1623,7 @@
      },
      {
       "id": "0b626516-ab08-431f-a439-1b870f0f0c4c",
-      "url": "/forekomst/10/0b626516-ab08-431f-a439-1b870f0f0c4c",
+      "url": "/forekomst/11/0b626516-ab08-431f-a439-1b870f0f0c4c",
       "namn": "Kontor",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1650,7 +1650,7 @@
      },
      {
       "id": "f4e8e038-5abf-47b9-902c-81b1bbcd250f",
-      "url": "/forekomst/10/f4e8e038-5abf-47b9-902c-81b1bbcd250f",
+      "url": "/forekomst/11/f4e8e038-5abf-47b9-902c-81b1bbcd250f",
       "namn": "Kulturmiljö",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1677,7 +1677,7 @@
      },
      {
       "id": "92c3412c-9218-43bd-81d1-f2febc94f0cc",
-      "url": "/forekomst/10/92c3412c-9218-43bd-81d1-f2febc94f0cc",
+      "url": "/forekomst/11/92c3412c-9218-43bd-81d1-f2febc94f0cc",
       "namn": "Kärnkraft",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1704,7 +1704,7 @@
      },
      {
       "id": "f0457e59-5151-48a2-80cc-adfe904ccd23",
-      "url": "/forekomst/10/f0457e59-5151-48a2-80cc-adfe904ccd23",
+      "url": "/forekomst/11/f0457e59-5151-48a2-80cc-adfe904ccd23",
       "namn": "Materialutvinning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1731,7 +1731,7 @@
      },
      {
       "id": "cedcdcc7-4598-435c-aeb3-6b9772cff025",
-      "url": "/forekomst/10/cedcdcc7-4598-435c-aeb3-6b9772cff025",
+      "url": "/forekomst/11/cedcdcc7-4598-435c-aeb3-6b9772cff025",
       "namn": "Materialåtervinning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1758,7 +1758,7 @@
      },
      {
       "id": "7d48ec36-0d7a-46df-b0fc-417d5aa48d6a",
-      "url": "/forekomst/10/7d48ec36-0d7a-46df-b0fc-417d5aa48d6a",
+      "url": "/forekomst/11/7d48ec36-0d7a-46df-b0fc-417d5aa48d6a",
       "namn": "Naturmiljö",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1785,7 +1785,7 @@
      },
      {
       "id": "3893da7a-8ddd-40ed-aa87-949bae147c11",
-      "url": "/forekomst/10/3893da7a-8ddd-40ed-aa87-949bae147c11",
+      "url": "/forekomst/11/3893da7a-8ddd-40ed-aa87-949bae147c11",
       "namn": "Park",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1812,7 +1812,7 @@
      },
      {
       "id": "3f35be67-3518-4ae8-b162-79a61c3b7d60",
-      "url": "/forekomst/10/3f35be67-3518-4ae8-b162-79a61c3b7d60",
+      "url": "/forekomst/11/3f35be67-3518-4ae8-b162-79a61c3b7d60",
       "namn": "Parkering",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1839,7 +1839,7 @@
      },
      {
       "id": "abd9f721-8590-4cc8-ae73-64fc61fbee10",
-      "url": "/forekomst/10/abd9f721-8590-4cc8-ae73-64fc61fbee10",
+      "url": "/forekomst/11/abd9f721-8590-4cc8-ae73-64fc61fbee10",
       "namn": "Resecentrum",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1866,7 +1866,7 @@
      },
      {
       "id": "43e5ffd8-3552-4473-9251-96c431bb2f2a",
-      "url": "/forekomst/10/43e5ffd8-3552-4473-9251-96c431bb2f2a",
+      "url": "/forekomst/11/43e5ffd8-3552-4473-9251-96c431bb2f2a",
       "namn": "Samhällsviktig verksamhet",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1893,7 +1893,7 @@
      },
      {
       "id": "319f444c-70fd-4a93-a093-bfea17ee9ac8",
-      "url": "/forekomst/10/319f444c-70fd-4a93-a093-bfea17ee9ac8",
+      "url": "/forekomst/11/319f444c-70fd-4a93-a093-bfea17ee9ac8",
       "namn": "Skola",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1920,7 +1920,7 @@
      },
      {
       "id": "3a53cf42-8083-4bb3-a204-b7d06765066d",
-      "url": "/forekomst/10/3a53cf42-8083-4bb3-a204-b7d06765066d",
+      "url": "/forekomst/11/3a53cf42-8083-4bb3-a204-b7d06765066d",
       "namn": "Skydd",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1947,7 +1947,7 @@
      },
      {
       "id": "0386198d-5cc6-45a2-8620-1f8386831ffa",
-      "url": "/forekomst/10/0386198d-5cc6-45a2-8620-1f8386831ffa",
+      "url": "/forekomst/11/0386198d-5cc6-45a2-8620-1f8386831ffa",
       "namn": "Småbåtshamn",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -1974,7 +1974,7 @@
      },
      {
       "id": "5dd19d50-3b8b-4e88-b7bb-81e60df0d4fb",
-      "url": "/forekomst/10/5dd19d50-3b8b-4e88-b7bb-81e60df0d4fb",
+      "url": "/forekomst/11/5dd19d50-3b8b-4e88-b7bb-81e60df0d4fb",
       "namn": "Solcellsanläggning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2001,7 +2001,7 @@
      },
      {
       "id": "0e61e08b-2e01-4942-b793-93f34afb4009",
-      "url": "/forekomst/10/0e61e08b-2e01-4942-b793-93f34afb4009",
+      "url": "/forekomst/11/0e61e08b-2e01-4942-b793-93f34afb4009",
       "namn": "Spår och leder",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2028,7 +2028,7 @@
      },
      {
       "id": "8693bd2e-90bb-4e12-9350-0c2bc19b7d91",
-      "url": "/forekomst/10/8693bd2e-90bb-4e12-9350-0c2bc19b7d91",
+      "url": "/forekomst/11/8693bd2e-90bb-4e12-9350-0c2bc19b7d91",
       "namn": "Spårväg",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2055,7 +2055,7 @@
      },
      {
       "id": "599d1d24-a960-469f-a1ac-8f66343f8020",
-      "url": "/forekomst/10/599d1d24-a960-469f-a1ac-8f66343f8020",
+      "url": "/forekomst/11/599d1d24-a960-469f-a1ac-8f66343f8020",
       "namn": "Stadsodling och koloniområden",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2082,7 +2082,7 @@
      },
      {
       "id": "d2ef2086-38ff-48b7-a36d-86d81b666fca",
-      "url": "/forekomst/10/d2ef2086-38ff-48b7-a36d-86d81b666fca",
+      "url": "/forekomst/11/d2ef2086-38ff-48b7-a36d-86d81b666fca",
       "namn": "Tillfällig vistelse",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2109,7 +2109,7 @@
      },
      {
       "id": "a8b55b80-d3e3-4d61-8e54-b2af4528f4e0",
-      "url": "/forekomst/10/a8b55b80-d3e3-4d61-8e54-b2af4528f4e0",
+      "url": "/forekomst/11/a8b55b80-d3e3-4d61-8e54-b2af4528f4e0",
       "namn": "Vattenförsörjning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2136,7 +2136,7 @@
      },
      {
       "id": "8d089160-ab4e-4cfb-ad1c-e884256c7115",
-      "url": "/forekomst/10/8d089160-ab4e-4cfb-ad1c-e884256c7115",
+      "url": "/forekomst/11/8d089160-ab4e-4cfb-ad1c-e884256c7115",
       "namn": "Verksamhet med hög omgivningspåverkan",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2163,7 +2163,7 @@
      },
      {
       "id": "d9dda743-6605-44b5-aee2-46d1da9e53e7",
-      "url": "/forekomst/10/d9dda743-6605-44b5-aee2-46d1da9e53e7",
+      "url": "/forekomst/11/d9dda743-6605-44b5-aee2-46d1da9e53e7",
       "namn": "Vindkraft",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2190,7 +2190,7 @@
      },
      {
       "id": "36ebb671-4d23-449a-a58d-d7c87734fa22",
-      "url": "/forekomst/10/36ebb671-4d23-449a-a58d-d7c87734fa22",
+      "url": "/forekomst/11/36ebb671-4d23-449a-a58d-d7c87734fa22",
       "namn": "Vågkraft",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2217,7 +2217,7 @@
      },
      {
       "id": "78943fea-bd62-4ced-a8b8-beab3a996380",
-      "url": "/forekomst/10/78943fea-bd62-4ced-a8b8-beab3a996380",
+      "url": "/forekomst/11/78943fea-bd62-4ced-a8b8-beab3a996380",
       "namn": "Vård",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2244,7 +2244,7 @@
      },
      {
       "id": "b1f324c2-c75d-4667-b9e1-3c77b46278e7",
-      "url": "/forekomst/10/b1f324c2-c75d-4667-b9e1-3c77b46278e7",
+      "url": "/forekomst/11/b1f324c2-c75d-4667-b9e1-3c77b46278e7",
       "namn": "Värmeverk",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2273,7 +2273,7 @@
    },
    {
     "id": "d1f8ac99-dd45-4e65-a406-006bc8b04a17",
-    "url": "/forekomst/10/d1f8ac99-dd45-4e65-a406-006bc8b04a17",
+    "url": "/forekomst/11/d1f8ac99-dd45-4e65-a406-006bc8b04a17",
     "namn": "Konsekvenser",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -2327,7 +2327,7 @@
     "barn": [
      {
       "id": "d8297605-45fc-4cc6-94a1-dc9b69cbd131",
-      "url": "/forekomst/10/d8297605-45fc-4cc6-94a1-dc9b69cbd131",
+      "url": "/forekomst/11/d8297605-45fc-4cc6-94a1-dc9b69cbd131",
       "namn": "Miljökonsekvenser",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2395,7 +2395,7 @@
      },
      {
       "id": "032e08dc-52a7-473e-8541-b70e6772fe38",
-      "url": "/forekomst/10/032e08dc-52a7-473e-8541-b70e6772fe38",
+      "url": "/forekomst/11/032e08dc-52a7-473e-8541-b70e6772fe38",
       "namn": "Planens väsentliga konsekvenser",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2465,8 +2465,8 @@
    },
    {
     "id": "da6b4e5d-ff29-4536-8140-a7be447059e7",
-    "url": "/forekomst/10/da6b4e5d-ff29-4536-8140-a7be447059e7",
-    "namn": "LIS",
+    "url": "/forekomst/11/da6b4e5d-ff29-4536-8140-a7be447059e7",
+    "namn": "Landsbygdsutveckling i strandnära läge",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
     "attribut": [
@@ -2542,7 +2542,7 @@
    },
    {
     "id": "70f1021e-cf01-4537-b5b2-715986f16259",
-    "url": "/forekomst/10/70f1021e-cf01-4537-b5b2-715986f16259",
+    "url": "/forekomst/11/70f1021e-cf01-4537-b5b2-715986f16259",
     "namn": "Mark- och vattenanvändning",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -2605,7 +2605,7 @@
     "barn": [
      {
       "id": "cec02d4b-feca-4897-b59a-4f22448cc066",
-      "url": "/forekomst/10/cec02d4b-feca-4897-b59a-4f22448cc066",
+      "url": "/forekomst/11/cec02d4b-feca-4897-b59a-4f22448cc066",
       "namn": "Annan mark- och vattenanvändning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2664,7 +2664,7 @@
      },
      {
       "id": "2b17bfa0-235d-49ac-8c7d-24afb9f22b8b",
-      "url": "/forekomst/10/2b17bfa0-235d-49ac-8c7d-24afb9f22b8b",
+      "url": "/forekomst/11/2b17bfa0-235d-49ac-8c7d-24afb9f22b8b",
       "namn": "Bostadsbebyggelse",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2723,7 +2723,7 @@
      },
      {
       "id": "f3d87252-5109-4a37-b75d-e6c82216e771",
-      "url": "/forekomst/10/f3d87252-5109-4a37-b75d-e6c82216e771",
+      "url": "/forekomst/11/f3d87252-5109-4a37-b75d-e6c82216e771",
       "namn": "Energiproduktion",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2781,67 +2781,8 @@
       ]
      },
      {
-      "id": "f3f20f08-73cd-434b-9241-14dea0987e53",
-      "url": "/forekomst/10/f3f20f08-73cd-434b-9241-14dea0987e53",
-      "namn": "Fiske",
-      "niva": "Kategorinivå 2",
-      "nivaId": 2,
-      "attribut": [
-       {
-        "namn": "Beskrivning",
-        "dataTyp": {
-         "id": 9,
-         "namn": "Description",
-         "beskrivning": "Beskrivning"
-        },
-        "data": "Område för yrkesfiske som inkluderar exempelvis hamnar, fångstområden, vandringsstråk samt lek- och uppväxtområden för kommersiellt viktiga arter. "
-       },
-       {
-        "namn": "Vägledning",
-        "dataTyp": {
-         "id": 1,
-         "namn": "LongString",
-         "beskrivning": "Lång fritext"
-        },
-        "data": "Områden för yrkesfiske. Det kan dels handla om tillgång till exempelvis fiskeplatser, hamnar, landningsplatser och sjöfartsleder, dels om områden som behövs för fiskebeståndet som vandringsstråk samt lek- och uppväxtområden för de arter som är kommersiellt gångbara.\n\nFinns behov av att specificera innehållet? Inom en mark- eller vattenanvändning kan kommunen välja att använda Kompletterande mark- och vattenanvändning. De får dock endast användas tillsammans med en mark- och vattenanvändning som framgår av föreskrifterna – aldrig fristående. Under rubriken Allmänt på den här sidan finns förslag på vanligt förekommande kompletterande mark- och vattenanvändningar att välja emellan om det finns behov av att specificera innehållet."
-       },
-       {
-        "namn": "Geometrityp",
-        "dataTyp": {
-         "id": 5,
-         "namn": "Geometry",
-         "beskrivning": "Geometri"
-        },
-        "data": {
-         "yta": true,
-         "kropp": true,
-         "linje": true,
-         "punkt": true
-        }
-       },
-       {
-        "namn": "Boverkets föreskrifter om ÖP (BFS 2024:2)",
-        "dataTyp": {
-         "id": 0,
-         "namn": "String",
-         "beskrivning": "Fritext"
-        },
-        "data": "3 kap. 3 §"
-       },
-       {
-        "namn": "Kodlista 1",
-        "dataTyp": {
-         "id": 10,
-         "namn": "CodeListNSOP",
-         "beskrivning": "Kodlista NS ÖP"
-        },
-        "data": "Mark- och vattenanvändning"
-       }
-      ]
-     },
-     {
       "id": "963659ac-a995-46dc-9aaf-01c2b0ffc25c",
-      "url": "/forekomst/10/963659ac-a995-46dc-9aaf-01c2b0ffc25c",
+      "url": "/forekomst/11/963659ac-a995-46dc-9aaf-01c2b0ffc25c",
       "namn": "Friluftsliv och rekreation",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2900,7 +2841,7 @@
      },
      {
       "id": "10bb9862-a04e-4b89-8a1a-0923f8a8abbc",
-      "url": "/forekomst/10/10bb9862-a04e-4b89-8a1a-0923f8a8abbc",
+      "url": "/forekomst/11/10bb9862-a04e-4b89-8a1a-0923f8a8abbc",
       "namn": "Funktionsblandad bebyggelse",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -2959,7 +2900,7 @@
      },
      {
       "id": "7667ae5f-0638-4411-b699-f888be68e931",
-      "url": "/forekomst/10/7667ae5f-0638-4411-b699-f888be68e931",
+      "url": "/forekomst/11/7667ae5f-0638-4411-b699-f888be68e931",
       "namn": "Grönområde",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3018,7 +2959,7 @@
      },
      {
       "id": "b51834da-09ea-4731-a2d7-98e4d1fbe8e4",
-      "url": "/forekomst/10/b51834da-09ea-4731-a2d7-98e4d1fbe8e4",
+      "url": "/forekomst/11/b51834da-09ea-4731-a2d7-98e4d1fbe8e4",
       "namn": "Jordbruk",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3077,7 +3018,7 @@
      },
      {
       "id": "7f68b049-6a98-4120-8a51-1448ee467349",
-      "url": "/forekomst/10/7f68b049-6a98-4120-8a51-1448ee467349",
+      "url": "/forekomst/11/7f68b049-6a98-4120-8a51-1448ee467349",
       "namn": "Järnväg",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3136,7 +3077,7 @@
      },
      {
       "id": "480de539-fd3c-45e1-b4fc-76b6832cec0e",
-      "url": "/forekomst/10/480de539-fd3c-45e1-b4fc-76b6832cec0e",
+      "url": "/forekomst/11/480de539-fd3c-45e1-b4fc-76b6832cec0e",
       "namn": "Landsbygd",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3195,7 +3136,7 @@
      },
      {
       "id": "670a9e36-248d-4a8f-ad98-bd6e47e9f04c",
-      "url": "/forekomst/10/670a9e36-248d-4a8f-ad98-bd6e47e9f04c",
+      "url": "/forekomst/11/670a9e36-248d-4a8f-ad98-bd6e47e9f04c",
       "namn": "Luftfart",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3254,7 +3195,7 @@
      },
      {
       "id": "87284180-0252-452d-8a6f-d07609774dd3",
-      "url": "/forekomst/10/87284180-0252-452d-8a6f-d07609774dd3",
+      "url": "/forekomst/11/87284180-0252-452d-8a6f-d07609774dd3",
       "namn": "Natur- och kulturlandskap",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3313,7 +3254,7 @@
      },
      {
       "id": "ea757a7d-571a-447b-ac0c-b8996060f7b5",
-      "url": "/forekomst/10/ea757a7d-571a-447b-ac0c-b8996060f7b5",
+      "url": "/forekomst/11/ea757a7d-571a-447b-ac0c-b8996060f7b5",
       "namn": "Renskötsel",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3372,7 +3313,7 @@
      },
      {
       "id": "26d17a5e-4b53-4c2d-affc-74d40f39f001",
-      "url": "/forekomst/10/26d17a5e-4b53-4c2d-affc-74d40f39f001",
+      "url": "/forekomst/11/26d17a5e-4b53-4c2d-affc-74d40f39f001",
       "namn": "Service",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3431,7 +3372,7 @@
      },
      {
       "id": "01068057-5553-4734-bad1-e96d7ea21850",
-      "url": "/forekomst/10/01068057-5553-4734-bad1-e96d7ea21850",
+      "url": "/forekomst/11/01068057-5553-4734-bad1-e96d7ea21850",
       "namn": "Sjöfart",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3490,7 +3431,7 @@
      },
      {
       "id": "820755a6-abd6-49cd-b8f0-b4a48c76ba9a",
-      "url": "/forekomst/10/820755a6-abd6-49cd-b8f0-b4a48c76ba9a",
+      "url": "/forekomst/11/820755a6-abd6-49cd-b8f0-b4a48c76ba9a",
       "namn": "Skogsbruk",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3549,7 +3490,7 @@
      },
      {
       "id": "4a6f0666-6bf2-4d10-b9e6-700e0307f69f",
-      "url": "/forekomst/10/4a6f0666-6bf2-4d10-b9e6-700e0307f69f",
+      "url": "/forekomst/11/4a6f0666-6bf2-4d10-b9e6-700e0307f69f",
       "namn": "Teknisk infrastruktur",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3608,7 +3549,7 @@
      },
      {
       "id": "04c5c35b-2c04-4d94-96c4-d9360670bdb0",
-      "url": "/forekomst/10/04c5c35b-2c04-4d94-96c4-d9360670bdb0",
+      "url": "/forekomst/11/04c5c35b-2c04-4d94-96c4-d9360670bdb0",
       "namn": "Vatten",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3667,7 +3608,7 @@
      },
      {
       "id": "93392734-2c68-4d92-a2d4-b50e7fc6c298",
-      "url": "/forekomst/10/93392734-2c68-4d92-a2d4-b50e7fc6c298",
+      "url": "/forekomst/11/93392734-2c68-4d92-a2d4-b50e7fc6c298",
       "namn": "Vattenbruk",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3726,7 +3667,7 @@
      },
      {
       "id": "4bfe4481-f0ba-40a1-8c21-431e8b482b6b",
-      "url": "/forekomst/10/4bfe4481-f0ba-40a1-8c21-431e8b482b6b",
+      "url": "/forekomst/11/4bfe4481-f0ba-40a1-8c21-431e8b482b6b",
       "namn": "Verksamheter",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3785,7 +3726,7 @@
      },
      {
       "id": "75c9debd-1c57-4295-9cb2-92c91ec22f2f",
-      "url": "/forekomst/10/75c9debd-1c57-4295-9cb2-92c91ec22f2f",
+      "url": "/forekomst/11/75c9debd-1c57-4295-9cb2-92c91ec22f2f",
       "namn": "Vägtrafik",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -3841,12 +3782,71 @@
         "data": "Mark- och vattenanvändning"
        }
       ]
+     },
+     {
+      "id": "f3f20f08-73cd-434b-9241-14dea0987e53",
+      "url": "/forekomst/11/f3f20f08-73cd-434b-9241-14dea0987e53",
+      "namn": "Yrkesfiske",
+      "niva": "Kategorinivå 2",
+      "nivaId": 2,
+      "attribut": [
+       {
+        "namn": "Beskrivning",
+        "dataTyp": {
+         "id": 9,
+         "namn": "Description",
+         "beskrivning": "Beskrivning"
+        },
+        "data": "Område för yrkesfiske som inkluderar exempelvis hamnar, fångstområden, vandringsstråk samt lek- och uppväxtområden för kommersiellt viktiga arter. "
+       },
+       {
+        "namn": "Vägledning",
+        "dataTyp": {
+         "id": 1,
+         "namn": "LongString",
+         "beskrivning": "Lång fritext"
+        },
+        "data": "Områden för yrkesfiske. Det kan dels handla om tillgång till exempelvis fiskeplatser, hamnar, landningsplatser och sjöfartsleder, dels om områden som behövs för fiskebeståndet som vandringsstråk samt lek- och uppväxtområden för de arter som är kommersiellt gångbara.\n\nFinns behov av att specificera innehållet? Inom en mark- eller vattenanvändning kan kommunen välja att använda Kompletterande mark- och vattenanvändning. De får dock endast användas tillsammans med en mark- och vattenanvändning som framgår av föreskrifterna – aldrig fristående. Under rubriken Allmänt på den här sidan finns förslag på vanligt förekommande kompletterande mark- och vattenanvändningar att välja emellan om det finns behov av att specificera innehållet."
+       },
+       {
+        "namn": "Geometrityp",
+        "dataTyp": {
+         "id": 5,
+         "namn": "Geometry",
+         "beskrivning": "Geometri"
+        },
+        "data": {
+         "yta": true,
+         "kropp": true,
+         "linje": true,
+         "punkt": true
+        }
+       },
+       {
+        "namn": "Boverkets föreskrifter om ÖP (BFS 2024:2)",
+        "dataTyp": {
+         "id": 0,
+         "namn": "String",
+         "beskrivning": "Fritext"
+        },
+        "data": "3 kap. 3 §"
+       },
+       {
+        "namn": "Kodlista 1",
+        "dataTyp": {
+         "id": 10,
+         "namn": "CodeListNSOP",
+         "beskrivning": "Kodlista NS ÖP"
+        },
+        "data": "Mark- och vattenanvändning"
+       }
+      ]
      }
     ]
    },
    {
     "id": "f69f9a70-19fd-4986-801b-f18591b918c5",
-    "url": "/forekomst/10/f69f9a70-19fd-4986-801b-f18591b918c5",
+    "url": "/forekomst/11/f69f9a70-19fd-4986-801b-f18591b918c5",
     "namn": "Mellankommunala och regionala intressen",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -3923,7 +3923,7 @@
    },
    {
     "id": "c53e59bd-bca0-4c3e-9614-4b9d84af1478",
-    "url": "/forekomst/10/c53e59bd-bca0-4c3e-9614-4b9d84af1478",
+    "url": "/forekomst/11/c53e59bd-bca0-4c3e-9614-4b9d84af1478",
     "namn": "Miljökvalitetsnormer enligt 5 kap. MB",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -3977,7 +3977,7 @@
     "barn": [
      {
       "id": "1b6f1461-503d-45a5-9cc2-7d5bfe021962",
-      "url": "/forekomst/10/1b6f1461-503d-45a5-9cc2-7d5bfe021962",
+      "url": "/forekomst/11/1b6f1461-503d-45a5-9cc2-7d5bfe021962",
       "namn": "Fisk- och musselvatten",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4036,7 +4036,7 @@
      },
      {
       "id": "b0d89c3a-5696-4a85-bbb6-a52b54993492",
-      "url": "/forekomst/10/b0d89c3a-5696-4a85-bbb6-a52b54993492",
+      "url": "/forekomst/11/b0d89c3a-5696-4a85-bbb6-a52b54993492",
       "namn": "Havsmiljö",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4095,7 +4095,7 @@
      },
      {
       "id": "ba1fa39b-a57f-4f79-b83a-41e77dbdf562",
-      "url": "/forekomst/10/ba1fa39b-a57f-4f79-b83a-41e77dbdf562",
+      "url": "/forekomst/11/ba1fa39b-a57f-4f79-b83a-41e77dbdf562",
       "namn": "Omgivningsbuller",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4154,7 +4154,7 @@
      },
      {
       "id": "88d17f24-c8e3-4e6f-a97a-528eb9863107",
-      "url": "/forekomst/10/88d17f24-c8e3-4e6f-a97a-528eb9863107",
+      "url": "/forekomst/11/88d17f24-c8e3-4e6f-a97a-528eb9863107",
       "namn": "Utomhusluft",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4213,7 +4213,7 @@
      },
      {
       "id": "a5ba55f5-b264-462c-aefd-a74c10dfc45b",
-      "url": "/forekomst/10/a5ba55f5-b264-462c-aefd-a74c10dfc45b",
+      "url": "/forekomst/11/a5ba55f5-b264-462c-aefd-a74c10dfc45b",
       "namn": "Vattenkvalitet",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4274,7 +4274,7 @@
    },
    {
     "id": "fe828f02-26f7-44a7-ab00-a73c3c9c4ab0",
-    "url": "/forekomst/10/fe828f02-26f7-44a7-ab00-a73c3c9c4ab0",
+    "url": "/forekomst/11/fe828f02-26f7-44a7-ab00-a73c3c9c4ab0",
     "namn": "Mål, planer och program",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -4337,7 +4337,7 @@
     "barn": [
      {
       "id": "dc55b47c-aa60-4038-b334-88020dea2335",
-      "url": "/forekomst/10/dc55b47c-aa60-4038-b334-88020dea2335",
+      "url": "/forekomst/11/dc55b47c-aa60-4038-b334-88020dea2335",
       "namn": "Internationella mål, planer och program",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4387,7 +4387,7 @@
      },
      {
       "id": "90c98f44-28b8-431d-b1e2-d32ad580d860",
-      "url": "/forekomst/10/90c98f44-28b8-431d-b1e2-d32ad580d860",
+      "url": "/forekomst/11/90c98f44-28b8-431d-b1e2-d32ad580d860",
       "namn": "Kommunala mål, planer och program",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4437,7 +4437,7 @@
      },
      {
       "id": "9b267b17-5305-4f68-9cd3-f3290954037a",
-      "url": "/forekomst/10/9b267b17-5305-4f68-9cd3-f3290954037a",
+      "url": "/forekomst/11/9b267b17-5305-4f68-9cd3-f3290954037a",
       "namn": "Nationella mål, planer och program",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4505,7 +4505,7 @@
      },
      {
       "id": "d04d128d-bdc7-4e79-a43c-61f0b7b4e306",
-      "url": "/forekomst/10/d04d128d-bdc7-4e79-a43c-61f0b7b4e306",
+      "url": "/forekomst/11/d04d128d-bdc7-4e79-a43c-61f0b7b4e306",
       "namn": "Regionala mål, planer och program",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4527,6 +4527,20 @@
          "beskrivning": "Lång fritext"
         },
         "data": "Det är kommunen som gör bedömningen om vilka mål, planer och program som är relevanta för kommunens hållbara utveckling och den fysiska planeringen eftersom dessa ändras över tid. Exempel på regionala mål, planer och program är regionala tillväxt- och utvecklingsprogram, länsplaner för transportinfrastruktur, regionala miljökvalitetsmål och regionala klimat- och energistrategier."
+       },
+       {
+        "namn": "Geometrityp",
+        "dataTyp": {
+         "id": 5,
+         "namn": "Geometry",
+         "beskrivning": "Geometri"
+        },
+        "data": {
+         "yta": true,
+         "kropp": true,
+         "linje": true,
+         "punkt": true
+        }
        },
        {
         "namn": "Boverkets föreskrifter om ÖP (BFS 2024:2)",
@@ -4561,7 +4575,7 @@
    },
    {
     "id": "7006260b-64a1-467a-9a8b-5d2f660ac013",
-    "url": "/forekomst/10/7006260b-64a1-467a-9a8b-5d2f660ac013",
+    "url": "/forekomst/11/7006260b-64a1-467a-9a8b-5d2f660ac013",
     "namn": "Område",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -4573,7 +4587,7 @@
        "namn": "Description",
        "beskrivning": "Beskrivning"
       },
-      "data": "En eller flera ytor med information som behöver beskrivas i ett sammanhang."
+      "data": "Ett område som kommunen vill beskriva i ett sammanhang, till exempel ett landsbygdsavsnitt eller en tätort."
      },
      {
       "namn": "Utgör Gruppnamn",
@@ -4593,9 +4607,9 @@
       },
       "data": {
        "yta": true,
-       "kropp": true,
-       "linje": true,
-       "punkt": true
+       "kropp": false,
+       "linje": false,
+       "punkt": false
       }
      },
      {
@@ -4611,7 +4625,7 @@
    },
    {
     "id": "aa96e31c-3a39-40d7-9b9f-fb85521884ae",
-    "url": "/forekomst/10/aa96e31c-3a39-40d7-9b9f-fb85521884ae",
+    "url": "/forekomst/11/aa96e31c-3a39-40d7-9b9f-fb85521884ae",
     "namn": "Plangeometri",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -4643,9 +4657,9 @@
       },
       "data": {
        "yta": true,
-       "kropp": true,
-       "linje": true,
-       "punkt": true
+       "kropp": false,
+       "linje": false,
+       "punkt": false
       }
      },
      {
@@ -4661,7 +4675,7 @@
    },
    {
     "id": "68ac20f6-636d-4670-a526-61099b91596d",
-    "url": "/forekomst/10/68ac20f6-636d-4670-a526-61099b91596d",
+    "url": "/forekomst/11/68ac20f6-636d-4670-a526-61099b91596d",
     "namn": "Planhändelse",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -4697,7 +4711,7 @@
     "barn": [
      {
       "id": "4c37832c-067e-44cc-93ea-59b87d8d6bb0",
-      "url": "/forekomst/10/4c37832c-067e-44cc-93ea-59b87d8d6bb0",
+      "url": "/forekomst/11/4c37832c-067e-44cc-93ea-59b87d8d6bb0",
       "namn": "Angivet innehåll fastställt som inaktuellt",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4724,7 +4738,7 @@
      },
      {
       "id": "fa5ec73a-b691-409f-b088-6e0ec1488fda",
-      "url": "/forekomst/10/fa5ec73a-b691-409f-b088-6e0ec1488fda",
+      "url": "/forekomst/11/fa5ec73a-b691-409f-b088-6e0ec1488fda",
       "namn": "Antagen",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4751,7 +4765,7 @@
      },
      {
       "id": "fb1c0cd4-da72-4ebd-b63d-209e99415266",
-      "url": "/forekomst/10/fb1c0cd4-da72-4ebd-b63d-209e99415266",
+      "url": "/forekomst/11/fb1c0cd4-da72-4ebd-b63d-209e99415266",
       "namn": "Ersatt av ny plan",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4778,7 +4792,7 @@
      },
      {
       "id": "0b6bde10-3c19-41e5-89ff-7ca1fdf14108",
-      "url": "/forekomst/10/0b6bde10-3c19-41e5-89ff-7ca1fdf14108",
+      "url": "/forekomst/11/0b6bde10-3c19-41e5-89ff-7ca1fdf14108",
       "namn": "Fastställd som aktuell",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4805,7 +4819,7 @@
      },
      {
       "id": "40b78cd3-0145-407f-b5d0-0a0456d6ecca",
-      "url": "/forekomst/10/40b78cd3-0145-407f-b5d0-0a0456d6ecca",
+      "url": "/forekomst/11/40b78cd3-0145-407f-b5d0-0a0456d6ecca",
       "namn": "Fastställd som inaktuell",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4832,7 +4846,7 @@
      },
      {
       "id": "5acfaf1d-22f4-4b85-a41e-c903a8d81f16",
-      "url": "/forekomst/10/5acfaf1d-22f4-4b85-a41e-c903a8d81f16",
+      "url": "/forekomst/11/5acfaf1d-22f4-4b85-a41e-c903a8d81f16",
       "namn": "Klar för granskning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4859,7 +4873,7 @@
      },
      {
       "id": "51ce38fb-3ce4-4c9d-822d-41faa582de8a",
-      "url": "/forekomst/10/51ce38fb-3ce4-4c9d-822d-41faa582de8a",
+      "url": "/forekomst/11/51ce38fb-3ce4-4c9d-822d-41faa582de8a",
       "namn": "Samrådsunderlag färdigställt",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -4888,7 +4902,7 @@
    },
    {
     "id": "fb7c5fbd-93ae-421d-a744-30f1aacabfb1",
-    "url": "/forekomst/10/fb7c5fbd-93ae-421d-a744-30f1aacabfb1",
+    "url": "/forekomst/11/fb7c5fbd-93ae-421d-a744-30f1aacabfb1",
     "namn": "Riksintresse kommunens ställningstagande",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -4951,7 +4965,7 @@
     "barn": [
      {
       "id": "de889269-c030-47fd-a313-605b97b9d7cf",
-      "url": "/forekomst/10/de889269-c030-47fd-a313-605b97b9d7cf",
+      "url": "/forekomst/11/de889269-c030-47fd-a313-605b97b9d7cf",
       "namn": "Anläggning för avfallshantering",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5028,7 +5042,7 @@
      },
      {
       "id": "bbc901f2-698f-49ab-96bf-40955768ad35",
-      "url": "/forekomst/10/bbc901f2-698f-49ab-96bf-40955768ad35",
+      "url": "/forekomst/11/bbc901f2-698f-49ab-96bf-40955768ad35",
       "namn": "Anläggning för energidistribution",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5105,7 +5119,7 @@
      },
      {
       "id": "38247d88-deea-45a9-aad9-bdc8828992a3",
-      "url": "/forekomst/10/38247d88-deea-45a9-aad9-bdc8828992a3",
+      "url": "/forekomst/11/38247d88-deea-45a9-aad9-bdc8828992a3",
       "namn": "Anläggning för energiproduktion",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5182,7 +5196,7 @@
      },
      {
       "id": "65f0031b-9e72-4022-9491-fb5cfc2ae26a",
-      "url": "/forekomst/10/65f0031b-9e72-4022-9491-fb5cfc2ae26a",
+      "url": "/forekomst/11/65f0031b-9e72-4022-9491-fb5cfc2ae26a",
       "namn": "Anläggning för industriell produktion",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5259,7 +5273,7 @@
      },
      {
       "id": "db5b0fed-58dc-4f03-8294-f0822ea000ae",
-      "url": "/forekomst/10/db5b0fed-58dc-4f03-8294-f0822ea000ae",
+      "url": "/forekomst/11/db5b0fed-58dc-4f03-8294-f0822ea000ae",
       "namn": "Anläggning för kommunikation, elektronisk",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5336,7 +5350,7 @@
      },
      {
       "id": "afd4199d-f3f0-40c4-a47d-8d891a240565",
-      "url": "/forekomst/10/afd4199d-f3f0-40c4-a47d-8d891a240565",
+      "url": "/forekomst/11/afd4199d-f3f0-40c4-a47d-8d891a240565",
       "namn": "Anläggning för kommunikation, trafikslagen",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5413,7 +5427,7 @@
      },
      {
       "id": "d9ebebb7-c971-4b03-b898-0d75133e4a90",
-      "url": "/forekomst/10/d9ebebb7-c971-4b03-b898-0d75133e4a90",
+      "url": "/forekomst/11/d9ebebb7-c971-4b03-b898-0d75133e4a90",
       "namn": "Anläggning för slutlig förvaring av använt kärnbränsle och kärnavfall",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5490,7 +5504,7 @@
      },
      {
       "id": "15a4a5dd-440b-44ca-8c1b-8968612ee6ee",
-      "url": "/forekomst/10/15a4a5dd-440b-44ca-8c1b-8968612ee6ee",
+      "url": "/forekomst/11/15a4a5dd-440b-44ca-8c1b-8968612ee6ee",
       "namn": "Anläggning för totalförsvaret",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5567,7 +5581,7 @@
      },
      {
       "id": "b6873605-b7ba-4be5-b0e9-b82d27817f65",
-      "url": "/forekomst/10/b6873605-b7ba-4be5-b0e9-b82d27817f65",
+      "url": "/forekomst/11/b6873605-b7ba-4be5-b0e9-b82d27817f65",
       "namn": "Anläggning för vattenförsörjning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5644,7 +5658,7 @@
      },
      {
       "id": "29b9a772-b834-47c8-84fb-0d9216c143f0",
-      "url": "/forekomst/10/29b9a772-b834-47c8-84fb-0d9216c143f0",
+      "url": "/forekomst/11/29b9a772-b834-47c8-84fb-0d9216c143f0",
       "namn": "Friluftsliv",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5721,8 +5735,8 @@
      },
      {
       "id": "9d942e9e-705c-4f1b-a7c7-821da80f09cb",
-      "url": "/forekomst/10/9d942e9e-705c-4f1b-a7c7-821da80f09cb",
-      "namn": "Fyndighet av ämnen och material",
+      "url": "/forekomst/11/9d942e9e-705c-4f1b-a7c7-821da80f09cb",
+      "namn": "Fyndighet av ämnen eller material",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
       "attribut": [
@@ -5798,7 +5812,7 @@
      },
      {
       "id": "a8bfcf24-4857-4e41-80eb-dd7f3b90cf9e",
-      "url": "/forekomst/10/a8bfcf24-4857-4e41-80eb-dd7f3b90cf9e",
+      "url": "/forekomst/11/a8bfcf24-4857-4e41-80eb-dd7f3b90cf9e",
       "namn": "Högexploaterad kust",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5875,7 +5889,7 @@
      },
      {
       "id": "7158f3c6-0b23-4b1b-bd73-508547742289",
-      "url": "/forekomst/10/7158f3c6-0b23-4b1b-bd73-508547742289",
+      "url": "/forekomst/11/7158f3c6-0b23-4b1b-bd73-508547742289",
       "namn": "Kulturmiljövård",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -5952,7 +5966,7 @@
      },
      {
       "id": "eed8cc55-1496-4c72-9f6f-5a84a4e5204d",
-      "url": "/forekomst/10/eed8cc55-1496-4c72-9f6f-5a84a4e5204d",
+      "url": "/forekomst/11/eed8cc55-1496-4c72-9f6f-5a84a4e5204d",
       "namn": "Nationalstadspark",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6029,7 +6043,7 @@
      },
      {
       "id": "5e481ad4-cb25-4b6a-926f-dacc11faf6a6",
-      "url": "/forekomst/10/5e481ad4-cb25-4b6a-926f-dacc11faf6a6",
+      "url": "/forekomst/11/5e481ad4-cb25-4b6a-926f-dacc11faf6a6",
       "namn": "Natura 2000, vilda djur och växter",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6106,7 +6120,7 @@
      },
      {
       "id": "1a635739-b6aa-4c5f-a175-762cd6bf169e",
-      "url": "/forekomst/10/1a635739-b6aa-4c5f-a175-762cd6bf169e",
+      "url": "/forekomst/11/1a635739-b6aa-4c5f-a175-762cd6bf169e",
       "namn": "Natura 2000, vilda fåglar",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6183,7 +6197,7 @@
      },
      {
       "id": "f70964f2-5c3b-4021-90c0-18d94f7fa651",
-      "url": "/forekomst/10/f70964f2-5c3b-4021-90c0-18d94f7fa651",
+      "url": "/forekomst/11/f70964f2-5c3b-4021-90c0-18d94f7fa651",
       "namn": "Naturvård",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6260,7 +6274,7 @@
      },
      {
       "id": "1b4e3b3e-4c15-4d74-862b-fb0068d3aa8c",
-      "url": "/forekomst/10/1b4e3b3e-4c15-4d74-862b-fb0068d3aa8c",
+      "url": "/forekomst/11/1b4e3b3e-4c15-4d74-862b-fb0068d3aa8c",
       "namn": "Obruten kust",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6337,7 +6351,7 @@
      },
      {
       "id": "6eb03264-396c-4c84-876a-dc80ec99735a",
-      "url": "/forekomst/10/6eb03264-396c-4c84-876a-dc80ec99735a",
+      "url": "/forekomst/11/6eb03264-396c-4c84-876a-dc80ec99735a",
       "namn": "Obrutet fjäll",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6414,7 +6428,7 @@
      },
      {
       "id": "44aaf569-0d7c-49e9-9af4-cf1318e0e794",
-      "url": "/forekomst/10/44aaf569-0d7c-49e9-9af4-cf1318e0e794",
+      "url": "/forekomst/11/44aaf569-0d7c-49e9-9af4-cf1318e0e794",
       "namn": "Rennäring",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6491,7 +6505,7 @@
      },
      {
       "id": "dcf27449-ad7a-4138-9946-4de4c67e046c",
-      "url": "/forekomst/10/dcf27449-ad7a-4138-9946-4de4c67e046c",
+      "url": "/forekomst/11/dcf27449-ad7a-4138-9946-4de4c67e046c",
       "namn": "Skyddat vattendrag",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6568,7 +6582,7 @@
      },
      {
       "id": "07b17140-e0a6-4059-bb7f-eaabf51297cc",
-      "url": "/forekomst/10/07b17140-e0a6-4059-bb7f-eaabf51297cc",
+      "url": "/forekomst/11/07b17140-e0a6-4059-bb7f-eaabf51297cc",
       "namn": "Turism och rörligt friluftsliv",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6645,7 +6659,7 @@
      },
      {
       "id": "6ef3666d-692d-4aca-9ec5-8c7f6c02e3d3",
-      "url": "/forekomst/10/6ef3666d-692d-4aca-9ec5-8c7f6c02e3d3",
+      "url": "/forekomst/11/6ef3666d-692d-4aca-9ec5-8c7f6c02e3d3",
       "namn": "Yrkesfiske",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6724,7 +6738,7 @@
    },
    {
     "id": "35e24b7b-8c67-40ff-8986-80569e22e222",
-    "url": "/forekomst/10/35e24b7b-8c67-40ff-8986-80569e22e222",
+    "url": "/forekomst/11/35e24b7b-8c67-40ff-8986-80569e22e222",
     "namn": "Riksintressen enligt 3 och 4 kap. MB",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -6792,7 +6806,7 @@
    },
    {
     "id": "eece0c7c-f216-414e-af3e-9dfb0c3991e5",
-    "url": "/forekomst/10/eece0c7c-f216-414e-af3e-9dfb0c3991e5",
+    "url": "/forekomst/11/eece0c7c-f216-414e-af3e-9dfb0c3991e5",
     "namn": "Sambandsnivå",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -6837,7 +6851,7 @@
     "barn": [
      {
       "id": "d06738fd-9d3d-4764-b5fc-0cf7933ba076",
-      "url": "/forekomst/10/d06738fd-9d3d-4764-b5fc-0cf7933ba076",
+      "url": "/forekomst/11/d06738fd-9d3d-4764-b5fc-0cf7933ba076",
       "namn": "Internationell",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6873,7 +6887,7 @@
      },
      {
       "id": "37a642f6-ae90-438f-add6-6b9ccabe195d",
-      "url": "/forekomst/10/37a642f6-ae90-438f-add6-6b9ccabe195d",
+      "url": "/forekomst/11/37a642f6-ae90-438f-add6-6b9ccabe195d",
       "namn": "Kommunal",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6909,7 +6923,7 @@
      },
      {
       "id": "38005501-5c79-492f-b59a-b14d1fde2298",
-      "url": "/forekomst/10/38005501-5c79-492f-b59a-b14d1fde2298",
+      "url": "/forekomst/11/38005501-5c79-492f-b59a-b14d1fde2298",
       "namn": "Lokal",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6945,7 +6959,7 @@
      },
      {
       "id": "f5736725-4d1f-4c41-8ddc-0472420ce445",
-      "url": "/forekomst/10/f5736725-4d1f-4c41-8ddc-0472420ce445",
+      "url": "/forekomst/11/f5736725-4d1f-4c41-8ddc-0472420ce445",
       "namn": "Nationell",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -6981,7 +6995,7 @@
      },
      {
       "id": "b5486e84-d7a2-4b48-aa49-7389c1f8e6d9",
-      "url": "/forekomst/10/b5486e84-d7a2-4b48-aa49-7389c1f8e6d9",
+      "url": "/forekomst/11/b5486e84-d7a2-4b48-aa49-7389c1f8e6d9",
       "namn": "Regional",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7019,8 +7033,8 @@
    },
    {
     "id": "83aeb454-e3b9-402f-a037-66e662081e7c",
-    "url": "/forekomst/10/83aeb454-e3b9-402f-a037-66e662081e7c",
-    "namn": "Särskilt värdefull kulturmiljö",
+    "url": "/forekomst/11/83aeb454-e3b9-402f-a037-66e662081e7c",
+    "namn": "Särskilt värdefulla byggnadsverk, allmänna platser och bebyggelseområden",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
     "attribut": [
@@ -7096,8 +7110,8 @@
    },
    {
     "id": "52f1909b-4223-40bb-b974-9569ea6f0ad0",
-    "url": "/forekomst/10/52f1909b-4223-40bb-b974-9569ea6f0ad0",
-    "namn": "Underlagstyp",
+    "url": "/forekomst/11/52f1909b-4223-40bb-b974-9569ea6f0ad0",
+    "namn": "Underlag",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
     "attribut": [
@@ -7126,13 +7140,13 @@
        "namn": "CodeListNSOP",
        "beskrivning": "Kodlista NS ÖP"
       },
-      "data": "Underlagstyp"
+      "data": "Underlag"
      }
     ],
     "barn": [
      {
       "id": "9ce253f5-2ba1-4c3c-a915-72366be2f98c",
-      "url": "/forekomst/10/9ce253f5-2ba1-4c3c-a915-72366be2f98c",
+      "url": "/forekomst/11/9ce253f5-2ba1-4c3c-a915-72366be2f98c",
       "namn": "Länsstyrelsens granskningsyttrande",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7153,13 +7167,13 @@
          "namn": "CodeListNSOP",
          "beskrivning": "Kodlista NS ÖP"
         },
-        "data": "Underlagstyp"
+        "data": "Underlag"
        }
       ]
      },
      {
       "id": "9cf790f7-eefb-4fb4-bc35-2e10e529eee6",
-      "url": "/forekomst/10/9cf790f7-eefb-4fb4-bc35-2e10e529eee6",
+      "url": "/forekomst/11/9cf790f7-eefb-4fb4-bc35-2e10e529eee6",
       "namn": "Miljökonsekvensbeskrivning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7180,13 +7194,13 @@
          "namn": "CodeListNSOP",
          "beskrivning": "Kodlista NS ÖP"
         },
-        "data": "Underlagstyp"
+        "data": "Underlag"
        }
       ]
      },
      {
       "id": "0e2cf6f4-08e9-40f4-8a34-4d08a29952b0",
-      "url": "/forekomst/10/0e2cf6f4-08e9-40f4-8a34-4d08a29952b0",
+      "url": "/forekomst/11/0e2cf6f4-08e9-40f4-8a34-4d08a29952b0",
       "namn": "Planeringsstrategi",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7207,13 +7221,13 @@
          "namn": "CodeListNSOP",
          "beskrivning": "Kodlista NS ÖP"
         },
-        "data": "Underlagstyp"
+        "data": "Underlag"
        }
       ]
      },
      {
       "id": "463ad40c-825c-49a4-9a41-f0f0cebd5d43",
-      "url": "/forekomst/10/463ad40c-825c-49a4-9a41-f0f0cebd5d43",
+      "url": "/forekomst/11/463ad40c-825c-49a4-9a41-f0f0cebd5d43",
       "namn": "Planeringsunderlag",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7234,13 +7248,13 @@
          "namn": "CodeListNSOP",
          "beskrivning": "Kodlista NS ÖP"
         },
-        "data": "Underlagstyp"
+        "data": "Underlag"
        }
       ]
      },
      {
       "id": "ea96362b-18cf-4d1b-a3e9-427ce1b4faa3",
-      "url": "/forekomst/10/ea96362b-18cf-4d1b-a3e9-427ce1b4faa3",
+      "url": "/forekomst/11/ea96362b-18cf-4d1b-a3e9-427ce1b4faa3",
       "namn": "Översiktsplan",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7261,13 +7275,13 @@
          "namn": "CodeListNSOP",
          "beskrivning": "Kodlista NS ÖP"
         },
-        "data": "Underlagstyp"
+        "data": "Underlag"
        }
       ]
      },
      {
       "id": "340905a7-5b62-44db-b172-edb3e7bb8734",
-      "url": "/forekomst/10/340905a7-5b62-44db-b172-edb3e7bb8734",
+      "url": "/forekomst/11/340905a7-5b62-44db-b172-edb3e7bb8734",
       "namn": "Övrig handling",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7288,7 +7302,7 @@
          "namn": "CodeListNSOP",
          "beskrivning": "Kodlista NS ÖP"
         },
-        "data": "Underlagstyp"
+        "data": "Underlag"
        }
       ]
      }
@@ -7296,7 +7310,7 @@
    },
    {
     "id": "18a5af9e-9d90-486d-a621-655beef034d5",
-    "url": "/forekomst/10/18a5af9e-9d90-486d-a621-655beef034d5",
+    "url": "/forekomst/11/18a5af9e-9d90-486d-a621-655beef034d5",
     "namn": "Utvecklingsinriktning",
     "niva": "Kategorinivå 1",
     "nivaId": 1,
@@ -7373,7 +7387,7 @@
     "barn": [
      {
       "id": "b55dc52f-4353-4296-be02-8e70fc1847d6",
-      "url": "/forekomst/10/b55dc52f-4353-4296-be02-8e70fc1847d6",
+      "url": "/forekomst/11/b55dc52f-4353-4296-be02-8e70fc1847d6",
       "namn": "Annan utvecklingsinriktning",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7409,7 +7423,7 @@
      },
      {
       "id": "8378a77d-fee3-4b86-8c1d-47291cbd2a96",
-      "url": "/forekomst/10/8378a77d-fee3-4b86-8c1d-47291cbd2a96",
+      "url": "/forekomst/11/8378a77d-fee3-4b86-8c1d-47291cbd2a96",
       "namn": "Bebyggelsestruktur",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7445,7 +7459,7 @@
      },
      {
       "id": "d3c30c5a-e02c-4061-b95a-9b8e4cf16478",
-      "url": "/forekomst/10/d3c30c5a-e02c-4061-b95a-9b8e4cf16478",
+      "url": "/forekomst/11/d3c30c5a-e02c-4061-b95a-9b8e4cf16478",
       "namn": "Grön- och blåstruktur",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7481,7 +7495,7 @@
      },
      {
       "id": "a6a710f6-d8cb-44f7-8cda-f3f910371a45",
-      "url": "/forekomst/10/a6a710f6-d8cb-44f7-8cda-f3f910371a45",
+      "url": "/forekomst/11/a6a710f6-d8cb-44f7-8cda-f3f910371a45",
       "namn": "Kommunikation",
       "niva": "Kategorinivå 2",
       "nivaId": 2,
@@ -7519,7 +7533,7 @@
    },
    {
     "id": "533188e8-0d2a-4153-a039-96c224772733",
-    "url": "/forekomst/10/533188e8-0d2a-4153-a039-96c224772733",
+    "url": "/forekomst/11/533188e8-0d2a-4153-a039-96c224772733",
     "namn": "Övriga förhållanden av väsentlig betydelse",
     "niva": "Kategorinivå 1",
     "nivaId": 1,

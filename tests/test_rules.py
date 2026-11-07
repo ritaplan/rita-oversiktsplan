@@ -44,7 +44,7 @@ def collection():
     plan = {"feature:typ": "oversiktsplan", "objektidentitet": PLAN_ID, "kommunkod": "1494",
             "kommunnamn": "Lidköping", "planhandelse": catalog_value("Planhändelse", "Samrådsunderlag färdigställt"),
             "digitaltUrsprung": True,
-            "underlag": [{"underlagstyp": catalog_value("Underlagstyp", "Planeringsunderlag"), "underlag": []}]}
+            "underlag": [{"underlagstyp": catalog_value("Underlag", "Planeringsunderlag"), "underlag": []}]}
     content = {"feature:typ": "innehallOP", "objektidentitet": CONTENT_ID, "oversiktsplan": PLAN_ID,
                "innehallstyp": value(MVA), "geometri": SQUARE}
     return {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": None, "properties": p}
@@ -93,7 +93,7 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(sorted({f.rule for f in found}), ["OP-JSON-042", "OP-JSON-044"])
         self.assertEqual(sum(1 for f in found if f.rule == "OP-JSON-042"), 2)  # granskningsyttrande och MKB
         plan = props(data, "oversiktsplan")
-        plan["underlag"] += [{"underlagstyp": catalog_value("Underlagstyp", name), "underlag": []}
+        plan["underlag"] += [{"underlagstyp": catalog_value("Underlag", name), "underlag": []}
                              for name in rules.REQUIRED_UNDERLAG]
         data["features"].append({"type": "Feature", "properties": {
             "feature:typ": "beslutOP", "objektidentitet": DECISION_ID,

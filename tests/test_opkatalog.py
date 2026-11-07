@@ -15,8 +15,8 @@ class CatalogTests(unittest.TestCase):
     def setUp(self):
         self.catalog = opkatalog.bundled()
 
-    def test_the_bundled_catalog_is_version_2_2_with_its_source(self):
-        self.assertEqual(self.catalog.version, "2.2")
+    def test_the_bundled_catalog_is_version_2_3_with_its_source(self):
+        self.assertEqual(self.catalog.version, "2.3")
         self.assertIn("CC0", self.catalog.data["kalla"])
 
     def test_values_carry_name_id_group_and_group_id_like_the_specification(self):
@@ -27,8 +27,8 @@ class CatalogTests(unittest.TestCase):
         self.assertTrue(value.beskrivning)
 
     def test_a_category_without_values_below_it_is_its_own_value(self):
-        (lis,) = self.catalog.values("LIS")
-        self.assertEqual((lis.varde, lis.grupp), ("LIS", "LIS"))
+        (lis,) = self.catalog.values("Landsbygdsutveckling i strandnära läge")
+        self.assertEqual((lis.varde, lis.grupp), ("Landsbygdsutveckling i strandnära läge", "Landsbygdsutveckling i strandnära läge"))
 
     def test_utvecklingsinriktning_is_itself_the_value_and_its_children_are_the_complementary_ones(self):
         (value,) = self.catalog.values("Utvecklingsinriktning", itself=True)

@@ -66,8 +66,7 @@ class LinkTests(DocumentCase):
         row = next(f for f in self.layers["dokumentavsnitt"].getFeatures() if f["avsnittsbokmarke_id"] == "op_a")
         self.assertEqual((row["avsnittstyp_varde"], row["dokumentreferens_id"], row["objektidentitet"]),
                          ("Ställningstagande", doc_id, "11111111-2222-3333-4444-555555555555"))
-        risk = next(self.layers["innehall_op_klimatrelateradrisk_polygon"].getFeatures())
-        self.assertEqual(risk["dokument_id"], "11111111-2222-3333-4444-555555555555")
+        self.assertEqual(row["dokument_id"], "11111111-2222-3333-4444-555555555555")  # innehållet saknar dokument_id
         links = documents.read_links(self.group, self.docx)
         self.assertEqual(links["op_b"].identities, {plan})
         self.assertEqual(links["op_a"].type, "Ställningstagande")

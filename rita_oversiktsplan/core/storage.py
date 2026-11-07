@@ -155,14 +155,42 @@ def added_columns_sql(schema: str) -> list[str]:
     return statements
 
 
-UPGRADABLE = ("3",)  # schemaversioner i databasen som pluginet kan uppgradera
+UPGRADABLE = ("3", "4")  # schemaversioner i databasen som pluginet kan uppgradera
+
+
+def migration_sql(schema: str, catalog=None) -> list[str]:
+    """Flytten till Boverkets databasmodell 0.4 och katalogen som följer med pluginet, för alla planer i schemat (se
+    :mod:`migration`), och sedan bort med kolumnerna som inte finns i 0.4. Förutsätter ett schema från version 3 eller
+    4, där alla gamla kolumner finns och de nya just lagts till."""
+    from . import migration, opkatalog
+    catalog = catalog or opkatalog.bundled()
+
+    def table(name: str) -> str:
+        return f"{quote(schema)}.{quote(db_name(name))}"
+
+    plans = f'SELECT DISTINCT "plan" FROM {table(model.OVERSIKTSPLAN.name)}'
+    parts = migration.plan_reference_sql(table, True, lambda _: True)
+    parts += migration.relations_sql(table, True, lambda _: True)
+    parts += migration.decisions_sql(table, True)
+    parts += migration.documents_sql(table)
+    parts += migration.catalog_renames_sql(table, True, catalog)
+    parts += migration.replace_lookups_sql(table, catalog, geopackage.lookup_columns, plans)
+    for name, removed in model.REMOVED_COLUMNS.items():
+        parts += [f"ALTER TABLE {table(name)} DROP COLUMN IF EXISTS {quote(column)}" for column in removed]
+    parts.append(f"UPDATE {quote(schema)}.{quote(model.META_TABLE)} SET \"value\" = {literal(catalog.version)} "
+                 "WHERE \"key\" = 'opkatalog_version'")
+    parts.append(f"UPDATE {quote(schema)}.{quote(model.META_TABLE)} SET \"value\" = "
+                 f"{literal(model.DATABASMODELL)} WHERE \"key\" = 'databasmodell'")
+    return parts
 
 
 def upgrade_schema_sql(schema: str, epsg: int) -> str:
-    """Uppgraderar ett schema i databasen till pluginets schemaversion: saknade tabeller och kolumner läggs till, och
-    alla planer i schemat (de delar tabeller) får den nya versionen. En transaktion."""
+    """Uppgraderar ett schema i databasen till pluginets schemaversion: saknade tabeller och kolumner läggs till,
+    datan flyttas till databasmodell 0.4 och alla planer i schemat (de delar tabeller) får den nya versionen. En
+    transaktion: går något fel är schemat som förut."""
     version = literal(model.SCHEMA_VERSION)
     parts = [statement + ";" for statement in ensure_schema_sql(schema, epsg)]
+    parts += [statement + ";" for statement in migration_sql(schema)]
     parts.append(f'UPDATE {quote(schema)}.{quote(model.META_TABLE)} SET "value" = {version} '
                  "WHERE \"key\" = 'schema_version';")
     parts.append(f'UPDATE {quote(schema)}.{quote(SCHEMA_TABLE)} SET "value" = {version} WHERE "key" = '
@@ -401,7 +429,7 @@ class PostgisStorage(Storage):
             self.sql(upgrade_schema_sql(self.schema, self.epsg))
         except PostgisError as exc:
             raise PostgisError(f"Schemat {self.schema} är skapat med en äldre version av pluginet och behöver "
-                               "uppgraderas (en kolumn läggs till), men det gick inte. Den som har rätt att ändra "
+                               "uppgraderas (till Boverkets databasmodell 0.4), men det gick inte. Den som har rätt att ändra "
                                f"tabellerna i schemat behöver öppna en plan i det en gång. {exc}") from exc
         return True
 

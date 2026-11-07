@@ -182,7 +182,7 @@ MARK_OCH_VATTEN: dict[str, Style] = {
     "Luftfart": _mva((204, 178, 240)),  # ljuslila
     "Sjöfart": _mva((52, 84, 140)),  # marinblå
     "Vatten": _topo("Vatten"),
-    "Fiske": _mva((40, 146, 214)),  # klarblå
+    "Yrkesfiske": _mva((40, 146, 214)),  # klarblå (Fiske före ÖP-katalogen 2.3)
     "Vattenbruk": _mva((110, 206, 196)),  # blågrön
     "Grönområde": _topo("Grönområde"),
     "Natur- och kulturlandskap": _topo("Natur- och kulturlandskap"),
@@ -210,7 +210,7 @@ RIKSINTRESSEN: dict[str, RGB] = {
     "Obrutet fjäll": (100, 110, 150),
     "Rennäring": (150, 120, 20),
     "Yrkesfiske": (0, 110, 100),
-    "Fyndighet av ämnen och material": (175, 160, 40),
+    "Fyndighet av ämnen eller material": (175, 160, 40),
     "Anläggning för avfallshantering": (110, 70, 50),
     "Anläggning för energidistribution": (123, 31, 162),
     "Anläggning för energiproduktion": (170, 80, 190),
@@ -255,9 +255,9 @@ STYLES: dict[str, dict[str, Style]] = {
         "Regionala mål, planer och program": (110, 70, 170),
         "Kommunala mål, planer och program": (70, 140, 100),
     }),
-    "lis": _colors({"LIS": (47, 156, 149)}),
+    "lis": _colors({"Landsbygdsutveckling i strandnära läge": (47, 156, 149)}),
     "sarskiltvardefullabyggnadsverkallmannaplatserochbebyggelseomraden": _colors(
-        {"Särskilt värdefull kulturmiljö": (160, 82, 45)}),
+        {"Särskilt värdefulla byggnadsverk, allmänna platser och bebyggelseområden": (160, 82, 45)}),
     "klimatrelateradrisk": _colors({
         "Risk för översvämning": (21, 101, 192),
         "Risk för ras": (198, 40, 40),

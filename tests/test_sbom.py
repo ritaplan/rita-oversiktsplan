@@ -31,7 +31,7 @@ class SbomTest(unittest.TestCase):
         self.assertEqual(app["version"], build_zip.version())
         self.assertEqual(app["licenses"][0]["license"]["id"], "GPL-2.0-or-later")
         names = {component["name"] for component in sbom["components"]}
-        self.assertTrue({"ÖP-katalogen 2.2", "QGIS", "GDAL/OGR (osgeo)"} <= names)
+        self.assertTrue({"ÖP-katalogen 2.3", "QGIS", "GDAL/OGR (osgeo)"} <= names)
         listed = {ref for entry in sbom["dependencies"] for ref in entry["dependsOn"]}
         self.assertEqual(listed, {component["bom-ref"] for component in sbom["components"]})
         json.dumps(sbom)  # går att skriva som JSON

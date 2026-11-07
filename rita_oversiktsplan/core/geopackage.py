@@ -12,7 +12,7 @@ from urllib.parse import quote
 
 from osgeo import gdal, ogr, osr
 
-from . import model, opkatalog
+from . import migration, model, opkatalog
 
 gdal.UseExceptions()
 
@@ -80,9 +80,9 @@ def create_geopackage(path: str | Path, plan: Optional[NewPlan], catalog: Option
         for lookup in model.LOOKUPS:
             _create_lookup(ds, lookup, catalog if plan is not None else None)
         if plan is not None:
-            _insert_plan(ds.GetLayerByName(model.OVERSIKTSPLAN.name), plan)
+            identity = _insert_plan(ds.GetLayerByName(model.OVERSIKTSPLAN.name), plan)
             if plan.plan_area:
-                _insert_plan_area(ds.GetLayerByName("innehall_op_plangeometri"), plan)
+                _insert_plan_area(ds.GetLayerByName("innehall_op_plangeometri"), plan, identity)
         _create_meta(ds, {"schema_version": str(model.SCHEMA_VERSION), "databasmodell": model.DATABASMODELL,
                           "spec_version": model.SPEC_VERSION, "opkatalog_version": catalog.version,
                           "epsg": str(epsg), **model.DEFAULT_VALUES} if plan is not None else {})
@@ -95,13 +95,29 @@ def create_geopackage(path: str | Path, plan: Optional[NewPlan], catalog: Option
     return path
 
 
-def upgrade(path: str | Path) -> bool:
-    """Lägger till det som saknas i en plan som skapats med en äldre version av pluginet. Returnerar True om filen
-    ändrades. Schema 1 → 2: tabellerna för otilldelad geometri och standardvärdena för nytt innehåll; 2 → 3: tabellen
-    för beslut; 3 → 4: kolumnen precisering i plangeometrin. Befintliga tabeller, kolumner och värden rörs inte."""
+UPGRADABLE = ("1", "2", "3", "4")  # schemaversioner som upgrade tar
+BACKUP_SUFFIX = "_fore_uppgradering"  # kopian av filen innan den uppgraderas till schema 5
+
+
+def backup_path(path: str | Path) -> Path:
+    path = Path(path)
+    return path.with_name(f"{path.stem}{BACKUP_SUFFIX}{path.suffix}")
+
+
+def upgrade(path: str | Path, catalog: Optional[opkatalog.Catalog] = None) -> bool:
+    """Uppgraderar en plan som skapats med en äldre version av pluginet. Returnerar True om filen ändrades.
+
+    Schema 1 → 2: tabellerna för otilldelad geometri och standardvärdena för nytt innehåll; 2 → 3: tabellen för
+    beslut; 3 → 4: kolumnen precisering i plangeometrin; 4 → 5: Boverkets databasmodell 0.4 och ÖP-katalogen som
+    följer med pluginet (se :mod:`migration`). Före steget till schema 5 sparas en kopia av filen bredvid den
+    (``<namn>_fore_uppgradering.gpkg``), eftersom kolumner tas bort."""
     meta = read_meta(path)
-    if meta.get("schema_version") not in ("1", "2", "3"):
+    if meta.get("schema_version") not in UPGRADABLE:
         return False
+    catalog = catalog or opkatalog.bundled()
+    backup = backup_path(path)
+    if not backup.exists():
+        snapshot(path, backup)
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(int(meta.get("epsg") or model.EPSG))
     srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
@@ -122,9 +138,53 @@ def upgrade(path: str | Path) -> bool:
                     layer.CreateField(_field_definition(fields[column]))
     finally:
         ds = None
+    _migrate(path, catalog)
     write_meta(path, {**{k: v for k, v in model.DEFAULT_VALUES.items() if k not in meta},
-                      "schema_version": str(model.SCHEMA_VERSION)})
+                      "schema_version": str(model.SCHEMA_VERSION), "databasmodell": model.DATABASMODELL,
+                      "opkatalog_version": catalog.version,
+                      "opkatalog_version_fore_uppgradering": meta.get("opkatalog_version", "")})
     return True
+
+
+def _migrate(path: str | Path, catalog: opkatalog.Catalog) -> None:
+    """Flyttar data till databasmodell 0.4 och uppgraderar katalogen i en transaktion, och tar sedan bort de kolumner
+    som inte finns i 0.4. SQL:en körs genom GDAL, eftersom GeoPackagens triggrar för det rumsliga indexet använder
+    GDAL:s funktioner (``ST_IsEmpty``). Stegen går att köra om: avbryts uppgraderingen blir det rätt nästa gång."""
+    ds = ogr.Open(str(path), 1)
+    try:
+        def columns(table: str) -> set[str]:
+            layer = ds.GetLayerByName(table)
+            if layer is None:
+                return set()
+            definition = layer.GetLayerDefn()
+            return {definition.GetFieldDefn(i).GetName() for i in range(definition.GetFieldCount())}
+
+        def table(name: str) -> str:
+            return migration.quote(name)
+
+        parts = migration.plan_reference_sql(table, False, lambda t: model.PLAN_FIELD in columns(t))
+        parts += migration.relations_sql(table, False, lambda t: "beror_annat_innehall_id" in columns(t)) \
+            if "beror_annat_innehal_uuid" in columns(migration.RELATIONS) else []
+        parts += migration.decisions_sql(table, False) if "datum_fattat" in columns(model.BESLUT.name) else []
+        parts += migration.documents_sql(table)
+        parts += migration.catalog_renames_sql(table, False, catalog)
+        parts += migration.replace_lookups_sql(table, catalog, lookup_columns)
+        ds.StartTransaction()
+        try:
+            for statement in parts:
+                ds.ExecuteSQL(statement)
+        except Exception:
+            ds.RollbackTransaction()
+            raise
+        ds.CommitTransaction()
+        for name, removed in model.REMOVED_COLUMNS.items():
+            layer = ds.GetLayerByName(name)
+            for column in removed:
+                index = layer.GetLayerDefn().GetFieldIndex(column) if layer is not None else -1
+                if index >= 0:
+                    layer.DeleteField(index)
+    finally:
+        ds = None
 
 
 def write_meta(path: str | Path, values: dict[str, str]) -> None:
@@ -182,10 +242,12 @@ def _create_lookup(ds: ogr.DataSource, lookup: model.LookupDef, catalog: Optiona
         layer.CreateFeature(feature)
 
 
-def _insert_plan(layer: ogr.Layer, plan: NewPlan) -> None:
+def _insert_plan(layer: ogr.Layer, plan: NewPlan) -> str:
+    """Planens rad. Returnerar planens objektidentitet."""
     feature = ogr.Feature(layer.GetLayerDefn())
     now = datetime.datetime.now()
-    feature.SetField("objektidentitet", str(uuid.uuid4()))
+    identity = str(uuid.uuid4())
+    feature.SetField("objektidentitet", identity)
     feature.SetField("versiongiltigfran", now.year, now.month, now.day, now.hour, now.minute, now.second, 0)
     feature.SetField("kommunkod", plan.kommunkod)
     feature.SetField("kommunnamn", plan.kommunnamn)
@@ -194,9 +256,10 @@ def _insert_plan(layer: ogr.Layer, plan: NewPlan) -> None:
     feature.SetField("datum_paborjat", d.year, d.month, d.day, 0, 0, 0, 0)
     feature.SetField("digitalt_ursprung", 1 if plan.digitalt_ursprung else 0)
     layer.CreateFeature(feature)
+    return identity
 
 
-def _insert_plan_area(layer: ogr.Layer, plan: NewPlan) -> None:
+def _insert_plan_area(layer: ogr.Layer, plan: NewPlan, identity: str) -> None:
     """Plangeometrin som planen börjar med (kommunens yta), med samma värden som innehåll som tilldelas i QGIS."""
     import json
     now = datetime.datetime.now()
@@ -214,6 +277,7 @@ def _insert_plan_area(layer: ogr.Layer, plan: NewPlan) -> None:
         feature.SetField("under_ersattning", 0)
         feature.SetField("illustrativa_granser", 1)
         feature.SetField("datum_paborjat", d.year, d.month, d.day, 0, 0, 0, 0)
+        feature.SetField(model.PLAN_FIELD, identity)
         feature.SetGeometry(geometry)
         layer.CreateFeature(feature)
 

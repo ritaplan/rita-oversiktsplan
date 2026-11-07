@@ -74,16 +74,26 @@ under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues).
 - **Samma yta med flera innehåll.** En ritad yta får ett innehåll när den tilldelas. Ska samma område ha flera
   innehåll (till exempel markanvändning och ett riksintresse) ritar du ytan en gång till, eller kopierar den.
 - **Snappning och topologi.** Pluginet ställer inte in snappning åt dig; använd QGIS egna inställningar.
-- **Uppgradering av katalogen i en befintlig plan.** En plan behåller den ÖP-katalog den skapades med.
+- **Uppgradering av katalogen i en befintlig plan.** En plan behåller den ÖP-katalog den skapades med, utom när
+  pluginet uppgraderar planen till en ny databasmodell: planer från 0.1.14 och äldre får ÖP-katalogen 2.3 när de öppnas
+  (se [Datamodell](datamodell.md)). Det finns inget eget verktyg för att byta katalog i en plan.
+- **Uppgraderingen till databasmodell 0.4** är provad med automatiska tester och med en plan skapad av version 0.1.14,
+  inte med en riktig plan med mycket innehåll. I PostGIS är SQL:en bara provad mot en låtsasdatabas: prova på en kopia av
+  schemat först. Kopian `<filnamn>_fore_uppgradering.gpkg` som sparas bredvid en planfil kan tas bort när den uppgraderade
+  planen fungerar.
+- **Tabellerna för externa referenser till riksintressen och för beslutens dokument** (`innehall_op_extern_referens_ri`,
+  `beslut_op_dokumentreferens`) finns i planen men fylls inte i av pluginet än. Riksintressets id står som förut i
+  `objektidentitet_ri`.
 
 ## Underlagen ändras fortfarande
 
 - **Lantmäteriets nationella specifikation för översiktsplan** har status *test* (test 4) under 2026 och är inte
-  fastställd.
-- **Boverkets GIS-databasmodell** (version 0.3), som pluginets tabeller följer, uppdateras under teståret
+  fastställd. Boverket skriver att databasmodell 0.4 följer *test 5*, men Lantmäteriet har inte publicerat den (läst
+  2026-11-07). Exporten följer därför fortfarande test 4 (schemat `oversiktsplan-2.0`).
+- **Boverkets GIS-databasmodell** (version 0.4, november 2026), som pluginets tabeller följer, uppdateras under teståret
   allteftersom specifikationen testas. Pluginet avviker medvetet från mallen på några punkter, se
   [Datamodell](datamodell.md).
-- **ÖP-katalogen** får nya versioner upp till två gånger per år. Pluginet har version 2.2 (juni 2026).
+- **ÖP-katalogen** får nya versioner upp till två gånger per år. Pluginet har version 2.3 (oktober 2026).
 
 ## Inte provat
 

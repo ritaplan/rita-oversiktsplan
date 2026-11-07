@@ -61,7 +61,7 @@ class GeoPackageTests(PlanFileCase):
                           "FROM innehall_op_markochvattenanvandning_lookup")
         self.assertEqual(len(rows), 21)
         self.assertIn(("Bostadsbebyggelse", "2b17bfa0-235d-49ac-8c7d-24afb9f22b8b", "Mark- och vattenanvändning",
-                       "2.2"), rows)
+                       "2.3"), rows)
         planhandelser = [r[0] for r in self.query("SELECT planhandelse_varde FROM planhandelse_lookup")]
         self.assertIn("Angivet innehåll fastställt som inaktuellt", planhandelser)  # ny i katalogen 2.1
 
@@ -79,8 +79,8 @@ class GeoPackageTests(PlanFileCase):
     def test_the_meta_table_records_versions(self):
         meta = geopackage.read_meta(self.path)
         self.assertEqual(meta["schema_version"], str(model.SCHEMA_VERSION))
-        self.assertEqual(meta["databasmodell"], "0.3")
-        self.assertEqual(meta["opkatalog_version"], "2.2")
+        self.assertEqual(meta["databasmodell"], "0.4")
+        self.assertEqual(meta["opkatalog_version"], "2.3")
 
     def test_an_existing_file_is_never_overwritten(self):
         with self.assertRaises(FileExistsError):

@@ -28,8 +28,8 @@ En översiktsplan som påbörjas 1 januari 2027 eller senare ska kunna tillgäng
 
 ## Vad pluginet gör
 
-- **Ritar planen:** *Ny översiktsplan* skapar en GeoPackage med Boverkets GIS-databasmodell (0.3) och värden ur
-  ÖP-katalogen 2.2. Rita först och tilldela sedan: rita en yta, linje eller punkt och ge den innehåll med verktyget
+- **Ritar planen:** *Ny översiktsplan* skapar en GeoPackage med Boverkets GIS-databasmodell (0.4) och värden ur
+  ÖP-katalogen 2.3. Rita först och tilldela sedan: rita en yta, linje eller punkt och ge den innehåll med verktyget
   *Tilldela innehåll*. Geometri från andra lager kan importeras i stället för att ritas om, och innehåll kan kopieras
   från ett objekt till andra.
 - **Innehåll ur ÖP-katalogen:** innehållstyp, kompletterande innehållstyp, planhändelse och sambandsnivå väljs i

@@ -15,7 +15,7 @@ from qgis.core import QgsProject
 from qgis.PyQt.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox, QFileDialog, QGroupBox, QHBoxLayout, QLabel,
                                  QLineEdit, QListWidget, QPushButton, QVBoxLayout)
 
-from ..core import archive, documents, editing, export_lm, geopackage, storage, underlag
+from ..core import archive, beslut, documents, editing, export_lm, geopackage, model, storage, underlag
 from ..core.content import decision_feature, plain, plan_feature
 from ..core.project import plan_storage
 from .about_dialog import metadata
@@ -66,11 +66,12 @@ def plan_metadata(group) -> dict[str, str]:
     found["typ"] = "Översiktsplan"
     decision = decision_feature(group)
     if decision is not None:
-        for key, column in (("diarienummer", "diarienummer"), ("datumAntagen", "datum_fattat"),
-                            ("datumLagakraft", "datum_laga_kraft")):
-            text = _text(decision[column])
-            if text:
-                found[key] = text
+        if _text(decision["diarienummer"]):
+            found["diarienummer"] = _text(decision["diarienummer"])
+        dates = beslut.read(group, str(decision["objektidentitet"]))
+        for key, kind in (("datumAntagen", model.FATTAT), ("datumLagakraft", model.LAGA_KRAFT)):
+            if dates.get(kind):
+                found[key] = dates[kind].isoformat()
     return found
 
 

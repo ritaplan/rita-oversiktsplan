@@ -32,7 +32,7 @@ from typing import Any, Optional
 from qgis.core import NULL, QgsGeometry, QgsWkbTypes
 from qgis.PyQt.QtCore import QDate, QDateTime
 
-from . import model, opkatalog, relations, rules
+from . import beslut, model, opkatalog, relations, rules
 from .project import draft_layers, layer_in_group, plan_storage
 
 MEDIATYP = "application/vnd.lm.oversiktsplan.v2+json"
@@ -175,6 +175,7 @@ class _Plan:
         self.epsg = storage.epsg
         self.lookups = {lookup.name: storage.read_lookup_values(lookup) for lookup in model.LOOKUPS}
         self.relations = relations.links(group)  # berör annat innehåll
+        self.events = beslut.dates_from_rows(self.rows(model.BESLUT_HANDELSE.name))  # beslutens datum
         self.problems: list[Problem] = []
         self.where: dict[str, tuple[str, int]] = {}  # objektidentitet → (tabell, fid), för att visa ett fynd
 
@@ -207,11 +208,13 @@ def _documents(plan: _Plan) -> dict[str, dict]:
         if doc_id is None:
             continue
         name = _text(row["namn"]) or "Dokument"
+        # databasmodell 0.4 har egna kolumner för producentens identitet, tidsstämpel och vad referensen avser;
+        # är de tomma används det pluginet gjorde förut (tolkningar)
         reference: dict[str, Any] = {"identitet": _text(row["identitet"]) or doc_id,
-                                     "producentensIdentitet": name,
-                                     "tidsstampel": _datetime(row["datumangivelse"])
+                                     "producentensIdentitet": _text(row["producentens_identitet"]) or name,
+                                     "tidsstampel": _datetime(row["tidsstampel"]) or _datetime(row["datumangivelse"])
                                      or datetime.datetime.now().astimezone().replace(microsecond=0).isoformat(),
-                                     "avser": _text(row["kortnamn"]) or "Planhandling"}
+                                     "avser": _text(row["avser"]) or _text(row["kortnamn"]) or "Planhandling"}
         namespace, link = _text(row["namespace"]), _text(row["lank"])
         if namespace and "://" in namespace:
             reference["namnrymd"] = namespace
@@ -294,7 +297,6 @@ def _plan_feature(plan: _Plan, sections: dict, documents: dict) -> tuple[Optiona
 
 
 def _underlag(plan: _Plan, row, documents: dict) -> list[dict]:
-    wanted = _text(row["underlag_id"])
     links: dict[str, list[str]] = {}
     for link in plan.rows("oversiktsplan_underlag_underlag"):
         if _text(link["underlag_id"]) and _text(link["dokumentreferens_id"]):
@@ -302,8 +304,6 @@ def _underlag(plan: _Plan, row, documents: dict) -> list[dict]:
     result = []
     for item in plan.rows("oversiktsplan_underlag"):
         underlag_id = _text(item["underlag_id"])
-        if wanted and underlag_id != wanted:
-            continue
         kind = plan.value(model.UNDERLAGSTYP_LOOKUP.name, item["underlagstyp_varde"], "Underlagstypen",
                           "oversiktsplan_underlag", item.id())
         docs = [documents[d] for d in links.get(underlag_id, []) if d in documents]
@@ -314,13 +314,11 @@ def _underlag(plan: _Plan, row, documents: dict) -> list[dict]:
     return result
 
 
-_EVENTS = (("fattat", "datum_fattat"), ("överklagat", "datum_overklagat"), ("laga kraft", "datum_laga_kraft"))
-
-
 def _pending(plan: _Plan, plan_decision: Optional[str]) -> set[str]:
     """Beslut för ändringar som pågår (utan datum än): de och innehållets hänvisning till dem exporteras inte."""
     return {str(_text(row["objektidentitet"])) for row in plan.rows(model.BESLUT.name)
-            if _text(row["objektidentitet"]) != plan_decision and not any(_date(row[f]) for _, f in _EVENTS)}
+            if _text(row["objektidentitet"]) != plan_decision
+            and not plan.events.get(str(_text(row["objektidentitet"])))}
 
 
 def _decision_features(plan: _Plan, plan_identity: Optional[str], plan_decision: Optional[str],
@@ -337,10 +335,14 @@ def _decision_features(plan: _Plan, plan_identity: Optional[str], plan_decision:
             continue
         if props["objektidentitet"]:
             plan.where[props["objektidentitet"]] = (table, row.id())
-        organisation = _text(row["beslutande_organisation"])
-        props["beslutandeOrganisation"] = {"organisationsnamn": organisation} if organisation else {}
+        organisation = {}
+        _put(organisation, "organisationsnamn", _text(row["beslutande_organisation_namn"]))
+        _put(organisation, "organisationsnummer", _text(row["beslutande_organisation_nummer"]))
+        props["beslutandeOrganisation"] = organisation
         _put(props, "beslutandeInstans", _text(row["beslutande_instans"]))
-        events = [{"handelsetyp": kind, "datum": _date(row[field])} for kind, field in _EVENTS if _date(row[field])]
+        dates = plan.events.get(str(props["objektidentitet"]), {})
+        events = [{"handelsetyp": kind, "datum": dates[kind].isoformat()} for kind in model.BESLUT_HANDELSER
+                  if dates.get(kind)]
         if props["objektidentitet"] and props["objektidentitet"] == plan_decision:
             affected = [{"identitet": plan_identity, "objekttyp": "oversiktsplan"}] if plan_identity else []
         else:
@@ -411,8 +413,7 @@ def _content_features(plan: _Plan, plan_identity: Optional[str], sections: dict,
             scale = row["presentationsskala"]
             _put(props, "presentationsskala", int(scale) if not _blank(scale) else None)
             _put(props, "dokument", sections.get(props["objektidentitet"]))
-            link = _text(row["beror_annat_innehall_id"])
-            _put(props, "berorAnnatInnehall", sorted(plan.relations.get(link, ())) if link else None)
+            _put(props, "berorAnnatInnehall", sorted(plan.relations.get(props["objektidentitet"], ())) or None)
             if "objektidentitet_ri" in names and _text(row["objektidentitet_ri"]):
                 when = _datetime(row["hamtatdatum"]) if "hamtatdatum" in names and _date(row["hamtatdatum"]) \
                     else props.get("versionGiltigFran")

@@ -2,6 +2,41 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.15] – Boverkets databasmodell 0.4 och ÖP-katalogen 2.3
+
+Planens tabeller följer nu Boverkets GIS-databasmodell **0.4** (november 2026) i stället för 0.3, och värdena kommer ur
+**ÖP-katalogen 2.3** i stället för 2.2. En plan från en tidigare version uppgraderas när den öppnas.
+
+- **Allt innehåll pekar på planen.** Varje innehåll, även plangeometrin, har fältet `oversiktsplan` med planens
+  objektidentitet. Det fylls i av sig självt när innehåll ritas, tilldelas, importeras eller hämtas.
+- **Berör annat innehåll** sparas som en rad per koppling, med båda objektens objektidentitet, i
+  `innehall_op_beror_annat_innehall`. Fältet `beror_annat_innehall_id` på innehållet finns inte längre. Ett innehåll
+  som byter typ behåller sina kopplingar.
+- **Beslut i tre tabeller,** som i mallen: `beslut_op` (beslutande organisation med namn och organisationsnummer,
+  instans, diarienummer), `beslut_op_handelse` (en rad per händelse: fattat, överklagat, laga kraft, med datum) och
+  `beslut_op_dokumentreferens`. Planens uppgifter, Ändring av översiktsplanen, exporten, arkivpaketet och översikten
+  över databasplaner läser och skriver datumen där. `rubrik` och `arkividentitet` finns kvar i `beslut_op`, eftersom
+  de finns i Lantmäteriets beslutOP.
+- **Dokumentreferenser** har de nya fälten `producentens_identitet`, `tidsstampel` och `avser`. Producentens identitet
+  får samma värde som identiteten, som Boverket anvisar, och exporten använder fälten när de är ifyllda.
+- **Borttaget, som i mallen:** `dokument_id` på innehållet och planen, `underlag_id` på planen och
+  `extern_referens_ri_id` på riksintressena. Tabellen för externa referenser till riksintressen pekar nu på
+  riksintresset i stället för tvärtom.
+- **ÖP-katalogen 2.3.** Några värden och kategorier har bytt namn men behåller sina id:n: *Fiske* heter *Yrkesfiske*,
+  *Fyndighet av ämnen och material* heter *Fyndighet av ämnen eller material*, LIS heter *Landsbygdsutveckling i
+  strandnära läge*, särskilt värdefull kulturmiljö heter som i föreskrifterna (*Särskilt värdefulla byggnadsverk,
+  allmänna platser och bebyggelseområden*) och *Underlagstyp* heter *Underlag*. Lagren heter som förut i
+  lagerpanelen. Utkastet till planhandling är omgjort för 2.3
+  (`exempel/Planhandling_mall_ÖP-katalogen_2.3.docx`).
+- **Uppgradering av befintliga planer.** En plan i en fil från 0.1.14 eller äldre uppgraderas när den öppnas: datan
+  flyttas till de nya fälten och tabellerna, värdena som bytt namn döps om (de känns igen på sina id:n i katalogen)
+  och planen får ÖP-katalogen 2.3. Innan filen ändras sparas en kopia bredvid den, `<filnamn>_fore_uppgradering.gpkg`.
+  Ett schema i PostGIS uppgraderas på samma sätt för alla planer i schemat, i en transaktion, första gången någon med
+  rätt att ändra tabellerna öppnar en plan i det.
+- **Jämfört med Boverkets fil.** En ny plan har jämförts med `databasmodell_op_0.4.gpkg` tabell för tabell, kolumn för
+  kolumn och värde för värde. Skillnaderna är medvetna och står i [Datamodell](docs/datamodell.md).
+- Exporten följer fortfarande Lantmäteriets test 4. Boverket skriver att 0.4 följer test 5, men den är inte publicerad.
+
 ## [0.1.14] – databasplaner: ny öppna-dialog och utcheckning vid öppning
 
 - **Ny dialog för att öppna en plan från databasen** (som i Rita Detaljplan 0.1.77): en översikt över alla planer i

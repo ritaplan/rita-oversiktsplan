@@ -15,7 +15,7 @@ from rita_oversiktsplan.core import opkatalog, planhandling  # noqa: E402
 CONTENT = ("Utvecklingsinriktning", "Mark- och vattenanvändning", "Kompletterande mark- och vattenanvändning",
            "Riksintresse kommunens ställningstagande", "Miljökvalitetsnormer enligt 5 kap. MB", "Klimatrelaterade risker",
            "Mål, planer och program", "Konsekvenser", "Invändningar i länsstyrelsens granskningsyttrande",
-           "Underlagstyp")
+           "Underlag")
 
 
 class TemplateTests(unittest.TestCase):

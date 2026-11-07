@@ -13,7 +13,7 @@ textavsnitten till planens innehåll, så som Boverkets ÖP-modell och Lantmäte
 
 ## Börja med mallen
 
-[`exempel/Planhandling_mall_ÖP-katalogen_2.2.docx`](../../exempel/Planhandling_mall_ÖP-katalogen_2.2.docx) är en
+[`exempel/Planhandling_mall_ÖP-katalogen_2.3.docx`](../../exempel/Planhandling_mall_ÖP-katalogen_2.3.docx) är en
 planhandling med en rubrik för allt innehåll i ÖP-katalogen, katalogens vägledning i grått och plats för kommunens
 text. Ta bort de rubriker planen inte behöver. Rubrikerna är valda så att programmet föreslår rätt avsnittstyp.
 
