@@ -37,6 +37,11 @@ class PlanRow:
         """Utcheckad av den här användaren på den här datorn (då kan utcheckningen tas upp igen)."""
         return self.lock is not None and checkout.is_own_lock(self.lock)
 
+    @property
+    def locked_by_other(self) -> bool:
+        """Utcheckad av någon annan (kan öppnas skrivskyddad men inte checkas ut)."""
+        return self.locked and not self.locked_by_me
+
 
 def _text(value) -> str:
     """Ett databasvärde som visningstext. NULL och None blir tom text, datum blir ÅÅÅÅ-MM-DD."""
@@ -99,7 +104,7 @@ def _decisions(connection, schema: str) -> tuple[dict[str, dict[str, str]], dict
         identity = _text(row[1])
         values = {"diarienummer": _text(row[2]), "beslut_fattat": events.get((identity, model.FATTAT), ""),
                   "laga_kraft": events.get((identity, model.LAGA_KRAFT), "")}
-        by_id[_text(row[1])] = values
+        by_id[identity] = values
         plan = _text(row[0])
         if plan not in by_plan or values["beslut_fattat"] >= by_plan[plan]["beslut_fattat"]:
             by_plan[plan] = values
@@ -117,7 +122,6 @@ def list_plans(connection_name: str, connection, schema: str) -> list[PlanRow]:
     for plan_id, title in listed:
         own = dict(fields.get(plan_id, {}))
         decision = decisions_by_id.get(own.pop("beslut", ""), decisions_by_plan.get(plan_id, {}))
-        own.setdefault("titel", "")
-        own["titel"] = own["titel"] or title
+        own["titel"] = own.get("titel") or title
         rows.append(PlanRow(connection_name, schema, plan_id, lock=locks.get(plan_id), **own, **decision))
     return rows

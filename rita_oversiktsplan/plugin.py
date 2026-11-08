@@ -6,6 +6,7 @@ tilldela*), och ger den sedan innehåll med verktyget *Tilldela innehåll*. Det 
 from __future__ import annotations
 
 import dataclasses
+from enum import Enum
 from functools import partial
 from pathlib import Path
 from typing import Optional
@@ -45,6 +46,25 @@ from .gui.settings_dialog import SettingsDialog
 from .gui.toolbar import PlanToolBar, icon
 
 MENU = "&Rita Översiktsplan"
+
+
+class Outcome(Enum):
+    """Hur det gick med en plan som öppnades ur databasen."""
+    CHECKED_OUT = "utcheckad"
+    READ_ONLY = "skrivskyddad"
+    LOCKED = "utcheckad av någon annan"
+    ERROR = "kunde inte läsas"
+
+
+@dataclasses.dataclass(frozen=True)
+class OpenResult:
+    plan_id: str
+    outcome: Outcome
+    locked_by: str = ""  # vem som har planen utcheckad (bara när utfallet är LOCKED)
+
+    @property
+    def loaded(self) -> bool:
+        return self.outcome is not Outcome.ERROR
 TITLE = "Rita Översiktsplan"
 BRAND_ICON = Path(__file__).parent / "icon.svg"
 NO_PLAN = "Ingen översiktsplan är öppen. Skapa en med Ny översiktsplan eller öppna en befintlig."
@@ -230,9 +250,8 @@ class OversiktsplanPlugin:
         selections = dialog.selections()
         want_checkout = dialog.checkout_requested is True
         canvas = self.iface.mapCanvas()
-        # Kartan ritas inte om medan planerna läses in: vid utcheckning läses planen först från databasen och pekas sedan
-        # om till den lokala kopian (onödiga läsningar över nätet), och med flera planer ritas den annars om efter
-        # varje plan.
+        # Kartan ritas inte om medan planerna läses in: vid utcheckning pekas lagren om till den lokala kopian, och med
+        # flera planer ritas den annars om efter varje plan.
         freeze = want_checkout or len(selections) > 1
         if freeze:
             canvas.freeze(True)
@@ -244,45 +263,44 @@ class OversiktsplanPlugin:
                 canvas.freeze(False)
                 canvas.refresh()
         self._report_database_plans(results)
-        return any(outcome != "error" for _plan_id, outcome, _detail in results)
+        return any(result.loaded for result in results)
 
-    def _open_one_database_plan(self, connection: str, schema: str, plan_id: str,
-                                want_checkout: bool) -> tuple[str, str, str]:
-        """Läser in en plan ur databasen (och checkar ut den om användaren bad om det). Returnerar (plan-id, utfall,
-        uppgift) där utfallet är ``checked_out``, ``read_only``, ``locked`` (uppgiften är vem som har den) eller
-        ``error``."""
+    def _open_one_database_plan(self, connection: str, schema: str, plan_id: str, want_checkout: bool) -> OpenResult:
+        """Läser in en plan ur databasen (och checkar ut den om användaren bad om det)."""
         plan = storage.PostgisStorage(connection, schema, plan_id)
         if not self._load(plan):
-            return plan_id, "error", ""
+            return OpenResult(plan_id, Outcome.ERROR)
         lock = checkout.read_lock(plan)
         group = find_plan_group(QgsProject.instance(), plan)
         if want_checkout and group is not None and (lock is None or checkout.is_own_lock(lock)):
-            # användaren bad om utcheckning i dialogen: ingen ny fråga, bara själva utcheckningen
+            # Användaren bad om utcheckning i dialogen: ingen ny fråga.
             if self.checkout.check_out(group, ask=False):
-                return plan_id, "checked_out", ""
+                return OpenResult(plan_id, Outcome.CHECKED_OUT)
         if lock is not None:
-            return plan_id, "locked", lock.describe()
-        return plan_id, "read_only", ""
+            return OpenResult(plan_id, Outcome.LOCKED, lock.describe())
+        return OpenResult(plan_id, Outcome.READ_ONLY)
 
-    def _report_database_plans(self, results: list[tuple[str, str, str]]) -> None:
-        loaded = [r for r in results if r[1] != "error"]
+    def _report_database_plans(self, results: list[OpenResult]) -> None:
+        loaded = [r for r in results if r.loaded]
         if not loaded:
             return  # felen är redan visade
         if len(results) == 1:
-            plan_id, outcome, detail = results[0]
-            if outcome == "locked":
-                self._warn(f"Öppnade planen {plan_id}, men den är utcheckad av {detail} och därför skrivskyddad.")
-            elif outcome == "read_only":
-                self._info(f"Öppnade planen {plan_id} från databasen. Den är skrivskyddad: checka ut den för att rita.")
+            result = results[0]
+            if result.outcome is Outcome.LOCKED:
+                self._warn(f"Öppnade planen {result.plan_id}, men den är utcheckad av {result.locked_by} och därför "
+                           "skrivskyddad.")
+            elif result.outcome is Outcome.READ_ONLY:
+                self._info(f"Öppnade planen {result.plan_id} från databasen. Den är skrivskyddad: checka ut den för "
+                           "att rita.")
             return
-        out = sum(1 for r in loaded if r[1] == "checked_out")
+        out = sum(1 for r in loaded if r.outcome is Outcome.CHECKED_OUT)
         text = f"Öppnade {len(loaded)} planer från databasen"
         text += f", {out} utcheckade" if out else ""
         text += f" och {len(loaded) - out} skrivskyddade." if len(loaded) > out else "."
         self._info(text + " Den senast öppnade planen är den aktiva.")
-        for plan_id, outcome, detail in loaded:
-            if outcome == "locked":
-                self._warn(f"{plan_id} är utcheckad av {detail} och därför skrivskyddad.")
+        for result in loaded:
+            if result.outcome is Outcome.LOCKED:
+                self._warn(f"{result.plan_id} är utcheckad av {result.locked_by} och därför skrivskyddad.")
 
     def _ask_open_source(self) -> Optional[str]:
         """En liten meny vid muspekaren (som i Rita Detaljplan): fil eller databas."""

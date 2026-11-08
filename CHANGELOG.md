@@ -2,6 +2,15 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.17] – städning av koden för att öppna planer ur databasen
+
+Inga nya funktioner. Koden som kom till i de senaste versionerna är städad; beteendet ska vara detsamma.
+
+- **Död kod borttagen** i dialogen för att öppna en plan ur databasen och i planöversikten.
+- **Tydligare kod:** resultatet av att öppna en plan är nu en liten dataklass med en uppräkning i stället för tupler med
+  textsträngar, och "utcheckad av någon annan" är en egenskap på planraden i stället för ett villkor på tre ställen.
+- Kortare kommentarer: de säger vad som gäller och varför, inte hur felet hittades.
+
 ## [0.1.16] – GeoPackage blir komplett vid kopiering
 
 - **En kopia av bara `.gpkg`-filen blir komplett.** QGIS håller planens GeoPackage i WAL-läge medan den är öppen, och de

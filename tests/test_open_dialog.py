@@ -115,7 +115,7 @@ class OverviewTests(unittest.TestCase):
         conn = detailed()
         taken = {r.plan_id: r for r in plan_overview.list_plans("db", conn, "op_a")}["op_2"]
         mine = plan_overview.list_plans("db", conn, "op_b")[0]
-        self.assertTrue(taken.locked and not taken.locked_by_me)
+        self.assertTrue(taken.locked_by_other)
         self.assertTrue(mine.locked_by_me)
         self.assertIn("annan", lock_text(taken))
         self.assertTrue(lock_text(mine).startswith("Du"))
@@ -154,7 +154,7 @@ class DialogTests(unittest.TestCase):
         dialog = self.dialog({"a": detailed()})
         self.assertEqual(sorted(self.visible_ids(dialog)), ["gammal", "op_10", "op_2"])
         self.assertIn("Synliga: 3 av 3", dialog.count.text())
-        self.assertIsNone(dialog.selection())
+        self.assertEqual(dialog.selections(), [])
         self.assertFalse(dialog.open_checkout.isEnabled())
         self.assertFalse(dialog.open_readonly.isEnabled())
 
@@ -174,7 +174,7 @@ class DialogTests(unittest.TestCase):
     def test_selecting_a_plan_gives_connection_schema_and_plan(self):
         dialog = self.dialog({"a": detailed()})
         self.select(dialog, "op_10")
-        self.assertEqual(dialog.selection(), ("a", "op_a", "op_10"))
+        self.assertEqual(dialog.selections(), [("a", "op_a", "op_10")])
         self.assertTrue(dialog.open_checkout.isEnabled())
         self.assertTrue(dialog.open_readonly.isEnabled())
 
