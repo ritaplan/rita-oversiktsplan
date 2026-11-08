@@ -2,6 +2,16 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.16] – GeoPackage blir komplett vid kopiering
+
+- **En kopia av bara `.gpkg`-filen blir komplett.** QGIS håller planens GeoPackage i WAL-läge medan den är öppen, och de
+  senaste sparade ändringarna kunde då ligga kvar i filen `<namn>.gpkg-wal` bredvid planfilen. Kopierade någon bara
+  `.gpkg`-filen saknades de, och planen kunde se tom ut. Pluginet skriver nu in dem i `.gpkg`-filen (SQLites
+  `wal_checkpoint`) varje gång ändringar sparats. Planens innehåll påverkas inte. Arkivpaketets GeoPackage var redan hel.
+  Hittat av Martin Wiss när han prövade planerna i Dataspatium.
+- **Handboken (Lagring):** nytt stycke *Skicka planen som fil* om att spara först och helst stänga projektet innan
+  `.gpkg`-filen kopieras.
+
 ## [0.1.15] – Boverkets databasmodell 0.4 och ÖP-katalogen 2.3
 
 Planens tabeller följer nu Boverkets GIS-databasmodell **0.4** (november 2026) i stället för 0.3, och värdena kommer ur

@@ -1,6 +1,7 @@
 """GeoPackage-filen för en ny översiktsplan (kräver QGIS Python för GDAL) och laddningen i ett QGIS-projekt."""
 import datetime
 import re
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -303,6 +304,51 @@ class LoadPlanTests(PlanFileCase):
             con.execute("CREATE TABLE t (a)")
         with self.assertRaisesRegex(project.PlanError, "inte en översiktsplan"):
             project.load_plan(other, QgsProject())
+
+
+class CheckpointTests(unittest.TestCase):
+    """Ren SQLite (som QGIS håller en GeoPackage): en öppen anslutning håller filen i WAL-läge."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.addCleanup(self._tmp.cleanup)
+        self.dir = Path(self._tmp.name)
+        self.db = self.dir / "plan.gpkg"
+        self.qgis = sqlite3.connect(str(self.db))  # "QGIS": håller filen öppen hela tiden
+        self.addCleanup(self.qgis.close)
+        self.qgis.execute("PRAGMA journal_mode=WAL")
+        self.qgis.execute("CREATE TABLE t (x INTEGER)")
+        self.qgis.execute("INSERT INTO t VALUES (1)")
+        self.qgis.commit()
+
+    def rows_in_copy(self) -> int:
+        copy = self.dir / "kopia.gpkg"
+        shutil.copyfile(self.db, copy)  # bara .gpkg-filen, inte -wal
+        with closing(sqlite3.connect(f"file:{copy.as_posix()}?mode=ro", uri=True)) as con:
+            return con.execute("SELECT count(*) FROM t").fetchone()[0]
+
+    def test_without_a_checkpoint_the_latest_changes_are_missing_from_a_copy(self):
+        with self.assertRaises(sqlite3.DatabaseError):  # tabellen ligger själv i -wal-filen
+            self.rows_in_copy()
+
+    def test_after_a_checkpoint_a_copy_of_the_gpkg_alone_is_complete(self):
+        self.assertTrue(geopackage.checkpoint(self.db))
+        self.assertEqual(self.rows_in_copy(), 1)
+
+    def test_the_checkpoint_changes_nothing_in_the_plan_and_can_be_repeated(self):
+        for _ in range(3):
+            self.assertTrue(geopackage.checkpoint(self.db))
+        self.assertEqual(self.qgis.execute("SELECT x FROM t").fetchall(), [(1,)])
+
+    def test_a_missing_file_is_not_created(self):
+        missing = self.dir / "finns_inte.gpkg"
+        self.assertFalse(geopackage.checkpoint(missing))
+        self.assertFalse(missing.exists())
+
+    def test_something_that_is_not_a_database_gives_false_not_an_error(self):
+        junk = self.dir / "skrap.gpkg"
+        junk.write_bytes(b"this is not a database" * 100)
+        self.assertFalse(geopackage.checkpoint(junk))
 
 
 if __name__ == "__main__":

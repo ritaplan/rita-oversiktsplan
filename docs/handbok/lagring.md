@@ -91,6 +91,22 @@ ut planen.
 
 > Spara gärna QGIS-projektet. Det kommer ihåg var planen ligger och om den är utcheckad.
 
+## Skicka planen som fil
+
+Det säkraste sättet att ge planen till någon annan är en **leverans** (*Spara som JSON-fil*) eller ett **arkivpaket**.
+Arkivpaketet innehåller en ögonblicksbild av planens GeoPackage som alltid är hel.
+
+Vill du i stället kopiera själva `.gpkg`-filen gäller detta:
+
+- **Spara först.** Ändringar du inte sparat finns bara i QGIS minne och följer inte med. Klicka på *Spara alla
+  redigeringar* eller avsluta redigeringen.
+- **Stäng helst projektet i QGIS** innan du kopierar. Medan planen är öppen håller QGIS GeoPackage i ett läge där de
+  senaste ändringarna kan ligga i en hjälpfil, `<namn>.gpkg-wal`, bredvid planfilen. En kopia av bara `.gpkg`-filen kan
+  då sakna dem och se tom ut.
+- Pluginet skriver in ändringarna i `.gpkg`-filen varje gång du har sparat, så en kopia ska bli hel även medan planen
+  är öppen. Hittar du ändå en `-wal`-fil bredvid planen: spara en gång till, eller ta med både `.gpkg`- och
+  `-wal`-filen.
+
 ## Mer
 
 Hur lagringen och utcheckningen fungerar tekniskt beskrivs i [Under huven](teknik.md).

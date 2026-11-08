@@ -1,6 +1,7 @@
 """Pluginet i QGIS: meny och verktygsfält, Ny översiktsplan, rita först och tilldela sedan innehåll, Planens
 uppgifter med standardvärden, Spara, och dialogerna."""
 import datetime
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -285,6 +286,21 @@ class PlanCommandTests(unittest.TestCase):
         layer.addFeature(feature)
         self.assertTrue(layer.commitChanges())
         return layer
+
+    def test_a_copy_of_the_gpkg_alone_has_what_was_just_saved(self):
+        """QGIS lämnar sparade ändringar i -wal-filen medan planen är öppen: pluginet skriver in dem i .gpkg-filen."""
+        layer = draft_layers(self.group)["polygon"]
+        layer.startEditing()
+        feature = QgsFeature(layer.fields())
+        feature.setGeometry(QgsGeometry.fromWkt(SQUARE))
+        layer.addFeature(feature)
+        self.assertTrue(layer.commitChanges(False))  # som QGIS egen spara-knapp: redigeringen fortsätter
+        QCoreApplication.processEvents()
+        copy = Path(self.tmp.name) / "kopia.gpkg"
+        shutil.copyfile(self.path, copy)  # bara .gpkg-filen
+        with closing(sqlite3.connect(f"file:{copy.as_posix()}?mode=ro", uri=True)) as con:
+            self.assertEqual(con.execute(f'SELECT count(*) FROM "{model.DRAFT_LAYERS["polygon"].name}"').fetchone()[0], 1)
+        layer.rollBack()
 
     def test_drawing_happens_in_the_unassigned_layer_without_a_form(self):
         self.plugin.draw("line")

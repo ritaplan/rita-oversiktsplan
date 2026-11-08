@@ -6,12 +6,14 @@ tilldela*), och ger den sedan innehåll med verktyget *Tilldela innehåll*. Det 
 from __future__ import annotations
 
 import dataclasses
+from functools import partial
 from pathlib import Path
 from typing import Optional
 
 import json
 
-from qgis.core import Qgis, QgsApplication, QgsPointXY, QgsProject, QgsRectangle, QgsTask, QgsVectorLayer
+from qgis.core import (Qgis, QgsApplication, QgsPointXY, QgsProject, QgsProviderRegistry, QgsRectangle, QgsTask,
+                       QgsVectorLayer)
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtGui import QCursor, QIcon
 from qgis.PyQt.QtWidgets import QAction, QApplication, QFileDialog, QMenu, QMessageBox
@@ -59,6 +61,8 @@ class OversiktsplanPlugin:
         self.relate_source: Optional[content.Candidate] = None  # Berör annat innehåll: innehållet man utgår från
         self.document_window = None  # programmet Skapa bokmärken i planhandling, om det är öppet
         self._tasks: list = []  # leveranser till NGP som pågår i bakgrunden
+        self._commit_slots: dict[str, partial] = {}  # lager-id -> åtgärd vid sparande, för checkpointen
+        self._checkpoint_paths: set[str] = set()  # GeoPackage-filer som väntar på checkpoint
         self.checkout = CheckoutActions(lambda text, warning: (self._warn if warning else self._info)(text),
                                         iface.mainWindow(), after=self.refresh_tools)
 
@@ -117,6 +121,12 @@ class OversiktsplanPlugin:
                         signal.disconnect(self.refresh_tools)
                     except TypeError:
                         pass
+                if layer.id() in self._commit_slots:
+                    try:
+                        layer.afterCommitChanges.disconnect(self._commit_slots[layer.id()])
+                    except TypeError:
+                        pass
+        self._commit_slots.clear()
         if hasattr(self.iface, "currentLayerChanged"):
             try:
                 self.iface.currentLayerChanged.disconnect(self.refresh_tools)
@@ -314,7 +324,28 @@ class OversiktsplanPlugin:
             if isinstance(layer, QgsVectorLayer):
                 layer.editingStarted.connect(self.refresh_tools)
                 layer.editingStopped.connect(self.refresh_tools)
+                if layer.id() not in self._commit_slots:
+                    slot = partial(self._checkpoint_later, layer.id())
+                    self._commit_slots[layer.id()] = slot
+                    layer.afterCommitChanges.connect(slot)
         self.refresh_tools()
+
+    def _checkpoint_later(self, layer_id: str, *_) -> None:
+        """Efter sparade ändringar: skriver in GeoPackage-filens WAL-fil i själva filen, så att en kopia av bara
+        ``.gpkg``-filen blir komplett. En gång per varv i händelseslingan, eftersom ett sparande ger en incheckning per lager."""
+        layer = QgsProject.instance().mapLayer(layer_id)
+        if layer is None or layer.providerType() != "ogr":
+            return
+        path = QgsProviderRegistry.instance().decodeUri("ogr", layer.source()).get("path")
+        if path and path.lower().endswith(".gpkg"):
+            if not self._checkpoint_paths:
+                QTimer.singleShot(0, self._checkpoint)
+            self._checkpoint_paths.add(path)
+
+    def _checkpoint(self) -> None:
+        paths, self._checkpoint_paths = self._checkpoint_paths, set()
+        for path in paths:
+            geopackage.checkpoint(path)
 
     def refresh_tools(self, *_) -> None:
         """Gråar knappar som inte kan användas just nu: allt utom Ny och Öppna kräver en öppen plan, och att rita,
