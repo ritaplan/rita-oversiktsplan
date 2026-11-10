@@ -2,6 +2,12 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.18] – färgerna för detaljplanens användningsområden följer kommunens mall
+
+- **Färgtabellen är densamma som i Rita Detaljplan 0.1.81**: en färgplatta efter BFS 2020:6 med utjämnade akvarellfärger där
+  ingen färg tar över kartan. Beige (Z verksamheter) är nu #d7d79e i stället för en orange ton, Orange (O och R) är #f4b67c och
+  Rosa (Y) en dämpad rosenlack. Det gäller de värden i mark- och vattenanvändningen som tas från detaljplanens färger.
+
 ## [0.1.17] – städning av koden för att öppna planer ur databasen
 
 Inga nya funktioner. Koden som kom till i de senaste versionerna är städad; beteendet ska vara detsamma.

@@ -90,6 +90,13 @@ class StyleTableTests(unittest.TestCase):
         self.assertEqual(styles.MARK_OCH_VATTEN["Verksamheter"].color, (240, 240, 240))  # Topografi 10: industri
         self.assertEqual(styles.MARK_OCH_VATTEN["Service"].color, styles.FARGER["Röd"])
 
+    def test_the_colour_names_have_the_colours_of_rita_detaljplan(self):
+        """Samma färgplatta som i Rita Detaljplan (utjämnade akvarellfärger enligt BFS 2020:6), med Z verksamheter beige."""
+        expected = {"Gul": (250, 238, 145), "Brun": (197, 151, 96), "Beige": (215, 215, 158), "Orange": (244, 182, 124), "Röd": (240, 158, 134), "Rosa": (249, 180, 191), "Lila": (195, 173, 202), "Blå": (191, 230, 254), "Blågrå": (167, 199, 226), "Grön": (155, 205, 165), "Ljusgrön": (199, 237, 185), "Grå": (216, 215, 215), "Ljusgrå": (239, 238, 234)}
+        self.assertEqual(dict(styles.FARGER), expected)
+        red, green, blue = styles.FARGER["Beige"]
+        self.assertLessEqual(abs(red - green), 10, "beige är en dämpad gulbrun ton, inte orange")
+
     def test_everything_else_is_an_overlay_without_solid_fill(self):
         for key, table in styles.STYLES.items():
             if key != "markochvattenanvandning":
