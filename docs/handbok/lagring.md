@@ -51,6 +51,58 @@ en äldre version av pluginet uppgraderas när den öppnas. En plan i en fil fr�
 uppgraderas till Boverkets databasmodell 0.4 och ÖP-katalogen 2.3; en kopia av filen som den var sparas först bredvid
 den, `<filnamn>_fore_uppgradering.gpkg` (se [Datamodell](../datamodell.md)).
 
+## Databashanteraren: importera, exportera, kopiera och ta bort planer
+
+Dialogen för planer i en databas (*Öppna → PostGIS-databas…*) är en **databashanterare**. Den nås också direkt med
+databasknappen *Databashanteraren* i verktygsfältet och med **Rita Översiktsplan → Databashanteraren…**. Under listan har den
+knappar för att hantera planerna: **Importera plan…**, **Exportera valda**, **Kopiera plan…**, **Ta bort plan…** och
+**Bryt lås…**.
+
+### Importera en plan till databasen
+
+Du har en plan som en GeoPackage-fil och vill lägga in den i databasen.
+
+1. Klicka på **Importera plan…**.
+2. Välj **planfilen** (en `.gpkg` som Rita Översiktsplan har skapat).
+3. Välj **databas** och **schema**. Finns schemat redan måste det ha planens koordinatsystem. Skriv ett nytt schemanamn för
+   att skapa ett.
+4. Kontrollera **plan-id**. Det föreslås från filnamnet och måste vara unikt i schemat.
+5. Klicka på **Importera**.
+
+Planen läggs in som en ny plan med alla tabeller och sina uppgifter, i en enda transaktion. Pluginet kontrollerar efteråt att
+varje tabell har lika många rader som filen. Går något fel tas planen bort ur databasen igen. Filen rörs inte, och en plan som
+redan finns skrivs aldrig över. En fil som är gjord med en äldre version av pluginet öppnar du först i pluginet (då
+uppgraderas den) och importerar sedan.
+
+### Exportera planer till filer
+
+1. Markera en eller flera planer i listan (Ctrl eller Skift för flera).
+2. Klicka på **Exportera valda** och välj **Som GeoPackage** eller **Som leverans, JSON** (Lantmäteriets format), och sedan en
+   mapp.
+
+Varje plan sparas som en fil med planens id som namn (`op_2040.gpkg` eller `op_2040.json`). Heter två planer i olika scheman
+lika får filen schemats namn först. Planen låses eller checkas inte ut, och en fil som redan finns i mappen skrivs aldrig över.
+Filen visar planen **som den ligger i databasen**: ändringar som någon har utcheckade men inte checkat in följer inte med.
+Leveransen (JSON) skrivs som den är; kontrollen med fel och varningar gör du i *Leverans och export*.
+
+### Kopiera planer
+
+Markera planerna och klicka på **Kopiera plan…**. Välj databas och schema (ett nytt skapas vid behov) och, för en enda plan, ett
+nytt plan-id. Flera valda planer behåller sina plan-id och måste kopieras till ett annat schema eller en annan databas, till
+exempel från test till produktion. En plan som redan finns skrivs aldrig över, och planerna måste ha samma koordinatsystem som
+schemat de kopieras till.
+
+### Ta bort planer
+
+Markera planerna och klicka på **Ta bort plan…**. Du får bekräfta, och som standard sparas först en **säkerhetskopia** som
+GeoPackage i en mapp du väljer. Går säkerhetskopian inte att spara tas planen inte bort. Det går **inte att ångra**. En plan
+som är utcheckad kan inte tas bort, inte heller din egen: kasta utcheckningen, eller bryt låset, först.
+
+### Bryta lås
+
+Är en utcheckning övergiven, till exempel efter en kraschad dator, markerar du planen och klickar på **Bryt lås…**. Du får se
+vem som har planen och sedan när, och bekräfta. Den som hade planen utcheckad kan då inte längre checka in sina ändringar.
+
 ## Checka ut och checka in
 
 En plan som öppnas från databasen är **skrivskyddad**. Att rita direkt mot en databas över nätet blir långsamt, och två

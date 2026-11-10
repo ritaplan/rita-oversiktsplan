@@ -222,8 +222,9 @@ def _copy_rows(source: QgsVectorLayer, target: QgsVectorLayer, skip=None) -> int
     return len(features)
 
 
-def download(plan: PostgisStorage, path: Path, lock: Lock) -> Path:
-    """Kopierar planens alla tabeller (även ÖP-katalogens värden och metadatan) från databasen till en ny GeoPackage."""
+def copy_to_geopackage(plan: PostgisStorage, path: Path, extra: Optional[dict[str, str]] = None) -> Path:
+    """Kopierar planens alla tabeller (även ÖP-katalogens värden och metadatan, utom låset) från databasen till en ny
+    GeoPackage. ``extra`` läggs till i metadatan."""
     path.parent.mkdir(parents=True, exist_ok=True)
     geopackage.create_geopackage(path, None, epsg=plan.epsg)
     local = storage.GeoPackageStorage(path)
@@ -234,8 +235,15 @@ def download(plan: PostgisStorage, path: Path, lock: Lock) -> Path:
         target = QgsVectorLayer(local.layer_source(table)[0], table.name, "ogr")
         skip = (lambda f: f["key"] == LOCK_KEY) if table.name == model.META_TABLE else None
         _copy_rows(source, target, skip)
-    local.write_meta({"checkout_token": lock.token, "checkout_storage": plan.key, "checkout_since": lock.since})
+    if extra:
+        local.write_meta(extra)
     return path
+
+
+def download(plan: PostgisStorage, path: Path, lock: Lock) -> Path:
+    """Kopierar planen till en lokal GeoPackage som utcheckningens arbetskopia (märkt med låset)."""
+    return copy_to_geopackage(plan, path, {"checkout_token": lock.token, "checkout_storage": plan.key,
+                                           "checkout_since": lock.since})
 
 
 def local_copies(plan: PostgisStorage, directory: Optional[Path] = None) -> list[tuple[Path, dict]]:
@@ -265,7 +273,7 @@ def _remember(group, path: Optional[Path], token: str) -> None:
     group.setCustomProperty(TOKEN_PROPERTY, token)
 
 
-def _remove(path: Path) -> bool:
+def remove_copy(path: Path) -> bool:
     """Tar bort kopian (och SQLites hjälpfiler). Returnerar False om något inte gick att ta bort."""
     clean = True
     for suffix in ("", "-wal", "-shm", "-journal"):
@@ -303,7 +311,7 @@ def check_out(group, directory: Optional[Path] = None) -> Path:
             release_lock(plan, lock.token)
         except Exception:  # noqa: BLE001
             pass
-        _remove(path)
+        remove_copy(path)
         if isinstance(exc, (CheckoutError, PostgisError)):
             raise CheckoutError(f"Kunde inte checka ut planen: {exc}") from exc
         raise
@@ -356,7 +364,7 @@ def check_in(group) -> tuple[Path, bool]:
         raise CheckoutError(f"Kunde inte checka in planen: {exc}") from exc
     _switch(group, plan)
     _remember(group, None, "")
-    return path, _remove(path)
+    return path, remove_copy(path)
 
 
 def discard(group) -> tuple[Path, bool]:
@@ -372,4 +380,4 @@ def discard(group) -> tuple[Path, bool]:
         raise CheckoutError(f"Kunde inte släppa låset i databasen: {exc}") from exc
     _switch(group, plan)
     _remember(group, None, "")
-    return path, _remove(path)
+    return path, remove_copy(path)

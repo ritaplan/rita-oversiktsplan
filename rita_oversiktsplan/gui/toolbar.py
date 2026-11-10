@@ -13,6 +13,7 @@ ICONS = Path(__file__).resolve().parent.parent / "icons"
 TITLE = "Rita Översiktsplan"
 NEW_TIP = "Ny översiktsplan…"
 OPEN_TIP = "Öppna översiktsplan (fil eller databas)…"
+DATABASE_TIP = "Databashanteraren: öppna, importera, exportera, kopiera och ta bort planer i en PostGIS-databas…"
 CHECKOUT_TIP = ("Checka ut: lås planen i databasen och redigera en lokal kopia. En plan som öppnats från en databas är "
                 "skrivskyddad tills den checkas ut.")
 CHECKIN_TIP = ("Checka in: skriv planen tillbaka till databasen, släpp låset och ta bort den lokala kopian (eller "
@@ -71,6 +72,7 @@ class PlanToolBar(QToolBar):
 
         self.act_new = self._action("new.svg", NEW_TIP, h.new_plan)
         self.act_open = self._action("open.svg", "Öppna översiktsplan…", h.open_plan, OPEN_TIP)
+        self.act_database = self._action("database.svg", "Databashanteraren", h.open_database_manager, DATABASE_TIP)
         self.act_checkout = self._action("checkout.svg", "Checka ut", h.toggle_checkout, CHECKOUT_TIP)
         self.addSeparator()
         self.act_start = self._action("start.svg", "Börja redigera", h.start_editing, START_TIP)

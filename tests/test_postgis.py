@@ -451,7 +451,7 @@ class PluginTests(PostgisCase):
     def test_open_shows_a_menu_with_file_and_database(self):
         from qgis.PyQt.QtWidgets import QMenu
 
-        from rita_oversiktsplan.gui.postgis_plan_dialog import PostgisPlanDialog
+        from rita_oversiktsplan.gui.database_manager_dialog import DatabaseManagerDialog
 
         texts = []
 
@@ -459,17 +459,17 @@ class PluginTests(PostgisCase):
             texts.extend(a.text() for a in menu.actions())
             return menu.actions()[1]
 
-        with mock.patch.object(QMenu, "exec", new=choose_database),                 mock.patch.object(PostgisPlanDialog, "exec", return_value=False) as dialog:
+        with mock.patch.object(QMenu, "exec", new=choose_database),                 mock.patch.object(DatabaseManagerDialog, "exec", return_value=False) as dialog:
             self.plugin.open_plan()
         self.assertEqual(texts, ["Lokal fil (GeoPackage)…", "PostGIS-databas…"])
         dialog.assert_called_once()
 
     def open_from_dialog(self, checkout_requested, lock=None, checked_out=True, plan_ids=("op_2040",), load=True):
-        with mock.patch("rita_oversiktsplan.plugin.PostgisPlanDialog") as dialog_cls,                 mock.patch.object(type(self.plugin), "_load", return_value=load) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=lock),                 mock.patch("rita_oversiktsplan.plugin.find_plan_group", return_value=self.group),                 mock.patch.object(self.plugin.checkout, "check_out", return_value=checked_out) as check_out:
+        with mock.patch("rita_oversiktsplan.plugin.DatabaseManagerDialog") as dialog_cls,                 mock.patch.object(type(self.plugin), "_load", return_value=load) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=lock),                 mock.patch("rita_oversiktsplan.plugin.find_plan_group", return_value=self.group),                 mock.patch.object(self.plugin.checkout, "check_out", return_value=checked_out) as check_out:
             dialog_cls.return_value.exec.return_value = True
             dialog_cls.return_value.selections.return_value = [("planer", "oversiktsplan", p) for p in plan_ids]
             dialog_cls.return_value.checkout_requested = checkout_requested
-            result = self.plugin.open_database_plan()
+            result = self.plugin.open_database_manager()
         self.loaded, self.result = loaded, result
         return check_out
 
@@ -515,18 +515,18 @@ class PluginTests(PostgisCase):
         self.assertFalse(canvas.isFrozen(), "kartan är upptinad igen")
 
     def test_a_plan_that_cannot_be_opened_does_not_stop_the_others(self):
-        with mock.patch("rita_oversiktsplan.plugin.PostgisPlanDialog") as dialog_cls,                mock.patch.object(type(self.plugin), "_load", side_effect=[True, False, True]) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=None):
+        with mock.patch("rita_oversiktsplan.plugin.DatabaseManagerDialog") as dialog_cls,                mock.patch.object(type(self.plugin), "_load", side_effect=[True, False, True]) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=None):
             dialog_cls.return_value.exec.return_value = True
             dialog_cls.return_value.selections.return_value = [("planer", "oversiktsplan", p) for p in "abc"]
             dialog_cls.return_value.checkout_requested = False
-            self.assertTrue(self.plugin.open_database_plan())
+            self.assertTrue(self.plugin.open_database_manager())
         self.assertEqual(loaded.call_count, 3)
         self.assertTrue(any("Öppnade 2 planer" in t for t in self.messages_text()))
 
     def test_nothing_is_opened_when_the_dialog_is_cancelled(self):
-        with mock.patch("rita_oversiktsplan.plugin.PostgisPlanDialog") as dialog_cls,                 mock.patch.object(type(self.plugin), "_load") as loaded:
+        with mock.patch("rita_oversiktsplan.plugin.DatabaseManagerDialog") as dialog_cls,                 mock.patch.object(type(self.plugin), "_load") as loaded:
             dialog_cls.return_value.exec.return_value = False
-            self.assertFalse(self.plugin.open_database_plan())
+            self.assertFalse(self.plugin.open_database_manager())
         loaded.assert_not_called()
 
     def test_a_new_plan_can_be_created_in_the_database(self):

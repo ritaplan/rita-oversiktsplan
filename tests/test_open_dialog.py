@@ -20,8 +20,8 @@ from qgis.PyQt.QtCore import QItemSelectionModel, Qt  # noqa: E402
 
 from rita_oversiktsplan.core import checkout as co  # noqa: E402
 from rita_oversiktsplan.core import plan_overview  # noqa: E402
-from rita_oversiktsplan.gui.postgis_plan_dialog import (COLUMN_FIELDS, LOCK_FREE, LOCK_TAKEN, ROW_ROLE,  # noqa: E402
-                                                        PostgisPlanDialog, lock_text, natural_key)
+from rita_oversiktsplan.gui.database_manager_dialog import (COLUMN_FIELDS, LOCK_FREE, LOCK_TAKEN, ROW_ROLE,  # noqa: E402
+                                                        DatabaseManagerDialog, lock_text, natural_key)
 
 
 class OverviewConnection:
@@ -133,7 +133,7 @@ class OverviewTests(unittest.TestCase):
 
 class DialogTests(unittest.TestCase):
     def dialog(self, connections):
-        dialog = PostgisPlanDialog(None, connections)
+        dialog = DatabaseManagerDialog(None, connections)
         self.addCleanup(dialog.deleteLater)
         return dialog
 

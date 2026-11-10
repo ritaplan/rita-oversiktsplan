@@ -105,7 +105,8 @@ class PluginTests(unittest.TestCase):
 
     def test_the_menu_offers_the_commands_the_toolbar_toggle_and_the_about_dialog(self):
         texts = [a.text() for a in self.iface.menus[MENU].actions() if not a.isSeparator()]
-        self.assertEqual(texts, ["Ny översiktsplan…", "Öppna översiktsplan…", "Importera geometri…", "Planens uppgifter…",
+        self.assertEqual(texts, ["Ny översiktsplan…", "Öppna översiktsplan…", "Databashanteraren…", "Importera geometri…",
+                                 "Planens uppgifter…",
                                  "Ändring av översiktsplanen…", "Hämta riksintressen…",
                                  "Skapa kommunens ställningstagande för markerade riksintressen",
                                  "Markanvändning från Topografi 10…",
@@ -118,7 +119,7 @@ class PluginTests(unittest.TestCase):
         (toolbar,) = self.iface.toolbars
         self.assertEqual(toolbar.objectName(), "RitaOversiktsplanToolBar")
         texts = [a.text() for a in toolbar.actions() if not a.isSeparator()]
-        self.assertEqual(texts, ["Ny översiktsplan…", "Öppna översiktsplan…", "Checka ut", "Börja redigera",
+        self.assertEqual(texts, ["Ny översiktsplan…", "Öppna översiktsplan…", "Databashanteraren", "Checka ut", "Börja redigera",
                                  "Avsluta redigering",
                                  "Planens uppgifter", "Leverans och export", "Skapa bokmärken i planhandling", "Markera",
                                  "Avmarkera alla", "Dölj texter", "Rita yta", "Rita linje", "Rita punkt", "Importera geometri",

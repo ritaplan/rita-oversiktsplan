@@ -40,7 +40,7 @@ from .gui.import_dialog import ImportDialog
 from .gui.messages import push
 from .gui.new_plan_dialog import DATABASE, NewPlanDialog
 from .gui.plan_info_dialog import PlanInfoDialog
-from .gui.postgis_plan_dialog import PostgisPlanDialog
+from .gui.database_manager_dialog import DatabaseManagerDialog
 from .gui.select_tool import SelectTool
 from .gui.settings_dialog import SettingsDialog
 from .gui.toolbar import PlanToolBar, icon
@@ -105,6 +105,7 @@ class OversiktsplanPlugin:
 
         self._add_action("Ny översiktsplan…", self.new_plan, icon("new.svg"))  # samma ikoner som i verktygsfältet
         self._add_action("Öppna översiktsplan…", self.open_plan, icon("open.svg"))
+        self._add_action("Databashanteraren…", self.open_database_manager, icon("database.svg"))
         self._add_action("Importera geometri…", self.import_geometry, icon("import.svg"))
         self._add_action("Planens uppgifter…", self.open_info, icon("info.svg"))
         self._add_action("Ändring av översiktsplanen…", self.open_andring)
@@ -234,7 +235,7 @@ class OversiktsplanPlugin:
         """Öppnar en plan från en fil, eller (om QGIS har PostgreSQL-anslutningar) från en databas."""
         source = self._ask_open_source() if storage.postgis_connections() else "file"
         if source == "database":
-            self.open_database_plan()
+            self.open_database_manager()
             return
         if source != "file":
             return
@@ -243,8 +244,10 @@ class OversiktsplanPlugin:
         if path and self._load(Path(path)):
             self._info(f"Öppnade {Path(path).name}.")
 
-    def open_database_plan(self) -> bool:
-        dialog = PostgisPlanDialog(self.iface.mainWindow())
+    def open_database_manager(self) -> bool:
+        """Databashanteraren: planerna i en PostGIS-databas. Härifrån öppnas planer (utcheckade eller skrivskyddade), och
+        planer importeras, exporteras, kopieras och tas bort (det sista sköter dialogen själv)."""
+        dialog = DatabaseManagerDialog(self.iface.mainWindow())
         if not dialog.exec() or not dialog.selections():
             return False
         selections = dialog.selections()

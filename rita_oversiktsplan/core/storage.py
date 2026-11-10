@@ -513,6 +513,17 @@ def create_postgis_plan(connection_name: str, schema: str, plan_id: str, plan: g
     """Lägger in en ny plan i ett schema i databasen. Schemat och tabellerna skapas om de inte finns. Planen byggs
     först som en tillfällig GeoPackage (med ÖP-katalogen och planens uppgifter) och skrivs sedan till databasen i en
     enda transaktion. Avbryter utan ändringar om plan-id:t redan finns i schemat."""
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
+        path = geopackage.create_geopackage(Path(folder) / "ny.gpkg", plan)
+        return create_postgis_plan_from_file(connection_name, schema, plan_id, path, plan.epsg, connection)
+
+
+def create_postgis_plan_from_file(connection_name: str, schema: str, plan_id: str, path: Path, epsg: int,
+                                  connection=None, skip_meta=()) -> PostgisStorage:
+    """Lägger in planen i GeoPackage-filen ``path`` (koordinatsystem ``epsg``) som en ny plan i ett schema i databasen.
+    Schemat och tabellerna skapas om de inte finns; finns schemat måste det ha samma koordinatsystem. Allt skrivs i en
+    enda transaktion. Avbryter utan ändringar om plan-id:t redan finns i schemat. Metadatanycklarna i ``skip_meta`` (t.ex.
+    en utcheckad kopias) tas inte med."""
     if not is_valid_schema(schema):
         raise PostgisError("Schemanamnet får bara innehålla gemener a–z, siffror och understreck och måste börja med "
                            "en bokstav.")
@@ -528,24 +539,25 @@ def create_postgis_plan(connection_name: str, schema: str, plan_id: str, plan: g
     existed = schema in list_plugin_schemas(target.connection)
     if existed:  # alla planer i ett schema delar tabeller och därmed koordinatsystem
         existing = schema_epsg(target.connection, schema) or model.EPSG
-        if existing != plan.epsg:
+        if existing != epsg:
             raise PostgisError(f"Schemat {schema} har koordinatsystem EPSG:{existing}. Alla planer i samma schema "
                                f"delar koordinatsystem: välj EPSG:{existing}, eller ett annat schema.")
     schema_was_there = existed or schema in list_schemas(target.connection)  # då rör vi aldrig schemat i övrigt
     if existed and plan_exists(target.connection, schema, plan_id):
         raise PostgisError(f"Det finns redan en plan med id {plan_id} i schemat {schema}.")
     try:
-        for statement in ensure_schema_sql(schema, plan.epsg):
+        for statement in ensure_schema_sql(schema, epsg):
             target.sql(statement)
         if not existed:
             target.sql(f"INSERT INTO {target.table(SCHEMA_TABLE)} (\"key\", \"value\") VALUES "
-                       f"('schema_version', {literal(model.SCHEMA_VERSION)}), ('epsg', {literal(plan.epsg)}) "
+                       f"('schema_version', {literal(model.SCHEMA_VERSION)}), ('epsg', {literal(epsg)}) "
                        "ON CONFLICT (\"key\") DO NOTHING")
-        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
-            path = geopackage.create_geopackage(Path(folder) / "ny.gpkg", plan)
-            parts = []
-            for table in tables():
-                parts += replace_rows_sql(schema, plan_id, table, read_file_rows(path, table), epsg=plan.epsg)
+        parts = []
+        for table in tables():
+            rows = read_file_rows(path, table)
+            if table.name == model.META_TABLE:
+                rows = [row for row in rows if row.get("key") not in skip_meta]
+            parts += replace_rows_sql(schema, plan_id, table, rows, epsg=epsg)
         target.sql(transaction_sql(parts))
     except PostgisError:
         if not schema_was_there:  # ett halvskapat schema som vi själva skapade är värre än inget: ta bort det

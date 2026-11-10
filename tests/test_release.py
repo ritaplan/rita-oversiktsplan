@@ -124,7 +124,7 @@ class ZipTests(unittest.TestCase):
                      "gui/copy_tool.py", "gui/export_dialog.py", "icons/start.svg", "icons/stop.svg",
                      "icons/select.svg", "icons/deselect.svg", "icons/copy.svg", "icons/export.svg",
                      "icons/import.svg", "core/storage.py", "core/checkout.py", "gui/checkout_actions.py",
-                     "gui/postgis_plan_dialog.py", "icons/checkout.svg", "icons/checkin.svg", "core/underlag.py",
+                     "gui/database_manager_dialog.py", "gui/import_plan_dialog.py", "gui/copy_plan_dialog.py", "gui/database_target.py", "core/transfer.py", "json_transfer.py", "icons/database.svg", "icons/checkout.svg", "icons/checkin.svg", "core/underlag.py",
                      "core/archive.py", "core/relations.py", "core/sld.py", "icons/labels.svg", "core/ngp_client.py", "core/settings.py",
                      "gui/archive_dialog.py", "gui/delivery_dialog.py", "gui/settings_dialog.py", "icons/relate.svg",
                      "core/rules.py", "core/andring.py", "core/riksintressen.py", "gui/andring_dialog.py",

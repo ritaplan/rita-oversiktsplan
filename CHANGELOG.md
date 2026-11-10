@@ -2,6 +2,25 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.20] – databashanteraren, som i Rita Detaljplan 0.1.83
+
+- **Dialogen för planer i en databas är en databashanterare**, med knapparna *Importera plan…*, *Exportera valda*,
+  *Kopiera plan…*, *Ta bort plan…* och *Bryt lås…*. Den öppnas fortfarande med *Öppna → PostGIS-databas…*, och nu också med en
+  egen knapp i verktygsfältet och med **Rita Översiktsplan → Databashanteraren…**.
+- **Importera plan…** lägger en plan ur en GeoPackage som en ny plan i ett schema i databasen (ett nytt skapas om det behövs).
+  Allt skrivs i en transaktion, antalet rader i varje tabell kontrolleras efteråt, och går något fel tas planen bort igen. En
+  plan som redan finns skrivs aldrig över.
+- **Exportera valda** sparar planerna som GeoPackage-filer eller som leveranser (JSON) i en mapp, utan att checka ut dem.
+- **Kopiera plan…** gör nya planer av de valda, i samma eller en annan databas eller ett annat schema.
+- **Ta bort plan…** tar bort planerna ur databasen i en transaktion, efter en bekräftelse och med en säkerhetskopia
+  (GeoPackage) först som standard. En utcheckad plan kan inte tas bort. **Bryt lås…** tar bort en övergiven utcheckning.
+- Knapparna har ikoner och ligger på en egen rad under listan, och meddelanden visas som färgade rader.
+- **Dialogen Leverans och export har fått ett modernare utseende:** varje val är ett kort med ikon, rubrik och förklaring, det
+  valda kortet har en färgad ram, och kontrollen överst visar resultatet med en tydlig markering (✔ ▲ ✘).
+- Fil för fil: `core/transfer.py`, `json_transfer.py`, `gui/database_manager_dialog.py` (förut `postgis_plan_dialog.py`),
+  `gui/import_plan_dialog.py`, `gui/copy_plan_dialog.py`, `gui/database_target.py` och `gui/choice_card.py`. Prov i
+  `tests/test_transfer.py`.
+
 ## [0.1.19] – färgerna följer kommunens palett
 
 - **Färgtabellen är densamma som i Rita Detaljplan 0.1.82.** Kulörerna är nu kommunens egen palett (kolumnen *Kulör* i tabellen över användningar): Gul #ffe485, Brun #b3a994,

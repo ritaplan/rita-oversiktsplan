@@ -1,5 +1,6 @@
-"""Dialogen Leverans och export (uppbyggd som i Rita Detaljplan): kontrollen av planen i en egen blå ruta överst, och
-tre alternativ i var sin ruta: leverera planen till NGP, spara den som JSON-fil eller samla den i ett arkivpaket.
+"""Dialogen Leverans och export (uppbyggd som i Rita Detaljplan): kontrollen av planen i en egen ruta överst, med en kant i
+resultatets färg, och tre alternativ som kort med ikon: leverera planen till NGP, spara den som JSON-fil eller samla den i
+ett arkivpaket. Det valda kortet har en färgad ram.
 
 Dialogen öppnas alltid, även om inställningarna för leverans till NGP inte är gjorda: då går leveransen inte att välja,
 rutan säger vad som saknas och har en knapp till inställningarna, medan fil och arkivpaket fungerar ändå."""
@@ -8,23 +9,27 @@ from __future__ import annotations
 from typing import Callable, Optional
 
 from qgis.PyQt.QtCore import QSize, Qt
-from qgis.PyQt.QtGui import QBrush, QColor
+from qgis.PyQt.QtGui import QBrush, QColor, QIcon
 from qgis.PyQt.QtWidgets import (QButtonGroup, QCheckBox, QDialog, QDialogButtonBox, QGroupBox, QHBoxLayout, QLabel,
                                  QListWidget, QListWidgetItem, QPushButton, QRadioButton, QVBoxLayout)
 
 from ..core import export_lm
 from ..core.ngp_client import NgpConfig
+from .choice_card import CARD_STYLE, ICONS, ChoiceCard, muted
 from .delivery_dialog import confirmation_text
 
 MARKS = {export_lm.FEL: "✘", export_lm.VARNING: "▲"}
 COLORS = {export_lm.FEL: QColor(179, 38, 30), export_lm.VARNING: QColor(176, 110, 0)}
 UPLOAD, FILE, ARCHIVE = "upload", "file", "archive"
-# kontrollen är inte ett av alternativen: egen ruta i en egen färg (genomskinlig, så att den fungerar i ljust och mörkt tema)
+# kontrollen är inte ett av alternativen och får inte se ut som ett valt kort (blå ram): en grå ruta med en bred kant i
+# resultatets färg (genomskinlig, så att den fungerar i ljust och mörkt tema)
 CHECK_BOX_STYLE = """
-QGroupBox#checkBox { background-color: rgba(30, 110, 200, 28); border: 1px solid rgba(30, 110, 200, 150);
-                     border-radius: 4px; margin-top: 14px; padding-top: 6px; }
-QGroupBox#checkBox::title { subcontrol-origin: margin; subcontrol-position: top left; left: 8px; padding: 0 4px; }
+QGroupBox#checkBox { background-color: rgba(128, 128, 128, 22); border: 1px solid rgba(128, 128, 128, 70);
+                     border-left: 5px solid rgba(%s); border-radius: 4px; margin-top: 8px; padding-top: 4px; }
+QGroupBox#checkBox::title { subcontrol-origin: margin; subcontrol-position: top left; left: 10px; padding: 0 4px; }
 """
+CHECK_COLOURS = {"good": "27, 127, 59, 230", "warning": "214, 140, 0, 230", "error": "179, 38, 30, 230"}
+MARKS_RESULT = {"good": ("✔", "#1b7f3b"), "warning": ("▲", "#b06e00"), "error": ("✘", "#b3261e")}
 
 
 def summary(collection: dict, problems: list[export_lm.Problem]) -> str:
@@ -52,13 +57,6 @@ class _ProblemList(QListWidget):
         return QSize(400, 120)
 
 
-def _info(text: str) -> QLabel:
-    label = QLabel(text)
-    label.setWordWrap(True)
-    label.setEnabled(False)  # dämpad färg: förklaring, inte ett val
-    return label
-
-
 class ExportDialog(QDialog):
     """``show`` anropas med (tabell, fid) när man dubbelklickar på en anmärkning som gäller ett objekt. ``save``,
     ``deliver`` och ``archive`` gör jobbet och returnerar en text när det gick (då stängs dialogen) eller None (då
@@ -73,6 +71,8 @@ class ExportDialog(QDialog):
                  resuming: Optional[Callable[[NgpConfig], bool]] = None):
         super().__init__(parent)
         self.setWindowTitle("Leverans och export")
+        self.setWindowIcon(QIcon(str(ICONS / "export.svg")))
+        self.setStyleSheet(CARD_STYLE)
         self.setMinimumWidth(640)
         self.problems = problems
         self.plan = next((f["properties"] for f in collection.get("features", [])
@@ -82,6 +82,12 @@ class ExportDialog(QDialog):
         self._settings, self._config, self._resuming = settings, config, resuming
 
         # kontrollen
+        self.check_mark = QLabel()  # ✔ ▲ ✘: resultatet av kontrollen med en blick
+        self.check_mark.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        result = "error" if self.errors else "warning" if problems else "good"
+        mark, colour = MARKS_RESULT[result]
+        self.check_mark.setText(mark)
+        self.check_mark.setStyleSheet(f"color: {colour}; font-size: 18px; font-weight: bold; min-width: 20px;")
         self.summary = QLabel(summary(collection, problems))
         self.summary.setWordWrap(True)
         self.list = _ProblemList()
@@ -96,13 +102,17 @@ class ExportDialog(QDialog):
             self.list.addItem(item)
         self.list.setVisible(bool(problems))
         self.list.itemDoubleClicked.connect(self._double_clicked)
-        self.list_hint = _info("Dubbelklicka på en anmärkning för att visa objektet i kartan.")
+        self.list_hint = muted("Dubbelklicka på en anmärkning för att visa objektet i kartan.")
         self.list_hint.setVisible(bool(problems))
         self.check_box = QGroupBox("Kontroll av planen")
         self.check_box.setObjectName("checkBox")
-        self.check_box.setStyleSheet(CHECK_BOX_STYLE)
+        self.check_box.setStyleSheet(CHECK_BOX_STYLE % CHECK_COLOURS[result])
         check_layout = QVBoxLayout(self.check_box)
-        check_layout.addWidget(self.summary)
+        summary_row = QHBoxLayout()
+        summary_row.setSpacing(10)
+        summary_row.addWidget(self.check_mark)
+        summary_row.addWidget(self.summary, 1)
+        check_layout.addLayout(summary_row)
         check_layout.addWidget(self.list, 1)
         check_layout.addWidget(self.list_hint)
 
@@ -118,33 +128,27 @@ class ExportDialog(QDialog):
         self.settings_button.setToolTip("Inställningar för leverans till NGP: miljö, adresser och inloggning.")
         self.settings_button.clicked.connect(self._open_settings)
         self.understand = QCheckBox("Jag förstår att en godkänd plan publiceras i produktionsmiljön")
-        self.upload_box = QGroupBox()
-        upload_layout = QVBoxLayout(self.upload_box)
-        upload_layout.addWidget(self.upload)
-        upload_layout.addWidget(self.upload_info)
-        upload_layout.addWidget(self.upload_problems)
+        self.upload_box = ChoiceCard(self.upload, "export.svg")
+        self.upload_box.body.addWidget(self.upload_info)
+        self.upload_box.body.addWidget(self.upload_problems)
         settings_row = QHBoxLayout()
         settings_row.addWidget(self.settings_button)
         settings_row.addStretch(1)
-        upload_layout.addLayout(settings_row)
-        upload_layout.addWidget(self.understand)
+        self.upload_box.body.addLayout(settings_row)
+        self.upload_box.body.addWidget(self.understand)
         self.upload_box.setVisible(deliver is not None)
 
         self.file = QRadioButton("Spara som JSON-fil")
-        file_box = QGroupBox()
-        file_layout = QVBoxLayout(file_box)
-        file_layout.addWidget(self.file)
-        file_layout.addWidget(_info(f"Skriver planen i Lantmäteriets format för översiktsplan (Översiktsplan 2.0, "
-                                    f"testversion, {export_lm.MEDIATYP}) till en fil. Den kan granskas, skickas till "
-                                    "NGP-supporten eller laddas upp av en producent."))
+        self.file_box = ChoiceCard(self.file, "file_json.svg")
+        self.file_box.body.addWidget(muted(f"Skriver planen i Lantmäteriets format för översiktsplan (Översiktsplan 2.0, "
+                                           f"testversion, {export_lm.MEDIATYP}) till en fil. Den kan granskas, skickas till "
+                                           "NGP-supporten eller laddas upp av en producent."))
 
         self.archive_radio = QRadioButton("Skapa arkivpaket")
-        self.archive_box = QGroupBox()
-        archive_layout = QVBoxLayout(self.archive_box)
-        archive_layout.addWidget(self.archive_radio)
-        archive_layout.addWidget(_info("Samlar planen och dess handlingar (planhandlingen, underlagen och egna dokument) "
-                                       "i ett arkivpaket med bevarandemetadata för långtidsbevarande, enligt Boverkets "
-                                       "specifikation. Inget levereras till NGP."))
+        self.archive_box = ChoiceCard(self.archive_radio, "archive.svg")
+        self.archive_box.body.addWidget(muted("Samlar planen och dess handlingar (planhandlingen, underlagen och egna "
+                                              "dokument) i ett arkivpaket med bevarandemetadata för långtidsbevarande, "
+                                              "enligt Boverkets specifikation. Inget levereras till NGP."))
         self.archive_box.setVisible(archive is not None)
 
         self.group = QButtonGroup(self)  # alternativen ligger i olika rutor: koppla ihop dem
@@ -157,13 +161,15 @@ class ExportDialog(QDialog):
         self.result.setWordWrap(True)
         self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("Stäng")
+        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setDefault(True)
         self.buttons.accepted.connect(self.run)
         self.buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout(self)
+        layout.setSpacing(8)
         layout.addWidget(self.check_box, 1)
         layout.addWidget(self.upload_box)
-        layout.addWidget(file_box)
+        layout.addWidget(self.file_box)
         layout.addWidget(self.archive_box)
         layout.addWidget(self.result)
         layout.addWidget(self.buttons)
@@ -189,7 +195,7 @@ class ExportDialog(QDialog):
         problems = self.delivery_problems()
         can_upload = self._deliver is not None and not problems
         config = self.config()
-        self.upload.setEnabled(can_upload)
+        self.upload_box.set_available(can_upload)
         self.upload_problems.setText("\n".join(problems))
         self.upload_problems.setVisible(bool(problems))
         self.settings_button.setVisible(self._settings is not None)
@@ -238,12 +244,15 @@ class ExportDialog(QDialog):
         config = self.config()
         if choice == UPLOAD:
             ok.setText("Leverera")
+            ok.setIcon(QIcon(str(ICONS / "export.svg")))
             ok.setEnabled(config is None or not config.is_production or self.understand.isChecked())
         elif choice == ARCHIVE:
             ok.setText("Skapa arkivpaket…")
+            ok.setIcon(QIcon(str(ICONS / "archive.svg")))
             ok.setEnabled(True)
         else:
             ok.setText("Spara fil…")
+            ok.setIcon(QIcon(str(ICONS / "file_json.svg")))
             ok.setEnabled(True)
         self.understand.setEnabled(choice == UPLOAD)
 
