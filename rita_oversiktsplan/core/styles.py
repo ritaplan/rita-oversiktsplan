@@ -39,19 +39,19 @@ RGB = tuple[int, int, int]
 # Boverkets färgnamn för detaljplanens användningsområden (samma värden som FARGER i Rita Detaljplan, hämtade ur
 # stilbiblioteket "Detaljplaner (Bfs 2020:6)").
 FARGER: dict[str, RGB] = {
-    "Gul": (250, 238, 145),
-    "Brun": (197, 151, 96),
-    "Beige": (215, 215, 158),
-    "Orange": (244, 182, 124),
-    "Röd": (240, 158, 134),
+    "Gul": (255, 228, 133),
+    "Brun": (179, 169, 148),
+    "Beige": (220, 207, 166),
+    "Orange": (235, 181, 127),
+    "Röd": (219, 154, 142),
     "Rosa": (249, 180, 191),
-    "Lila": (195, 173, 202),
-    "Blå": (191, 230, 254),
-    "Blågrå": (167, 199, 226),
-    "Grön": (155, 205, 165),
-    "Ljusgrön": (199, 237, 185),
-    "Grå": (216, 215, 215),
-    "Ljusgrå": (239, 238, 234),
+    "Lila": (195, 177, 214),
+    "Blå": (169, 207, 234),
+    "Blågrå": (154, 172, 184),
+    "Grön": (143, 203, 138),
+    "Ljusgrön": (169, 224, 155),
+    "Grå": (187, 191, 189),
+    "Ljusgrå": (220, 224, 221),
 }
 
 OVERLAY_ALPHA = 46  # fyllningens täckning för överlägg, av 255 (ca 18 %)

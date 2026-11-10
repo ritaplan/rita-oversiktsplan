@@ -2,6 +2,16 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.19] – färgerna följer kommunens palett
+
+- **Färgtabellen är densamma som i Rita Detaljplan 0.1.82.** Kulörerna är nu kommunens egen palett (kolumnen *Kulör* i tabellen över användningar): Gul #ffe485, Brun #b3a994,
+  Beige #dccfa6, Orange #ebb57f, Röd #db9a8e, Lila #c3b1d6, Blå #a9cfea, Blågrå #9aacb8, Grön #8fcb8a, Ljusgrön #a9e09b,
+  Grå #bbbfbd och Ljusgrå #dce0dd. Rosa (Y, annan kvartersmark) saknas i tabellen och är oförändrad. Färgnamnen och vilka
+  användningar som har dem följer fortfarande BFS 2020:6. Alla färger är ljusa och dämpade (ljushet 0,73 till 0,92 och
+  mättnad högst 0,12 i OKLCH, inget par närmare än 5). Parkering på kvartersmark (P) är Grå enligt BFS 2020:6 och får
+  därför gråns färg, inte den ljusare grå som tabellen anger för P. Sparade projekt får de nya färgerna när de öppnas.
+  Det gäller de värden i mark- och vattenanvändningen som tas från detaljplanens färger.
+
 ## [0.1.18] – färgerna för detaljplanens användningsområden följer kommunens mall
 
 - **Färgtabellen är densamma som i Rita Detaljplan 0.1.81**: en färgplatta efter BFS 2020:6 med utjämnade akvarellfärger där
