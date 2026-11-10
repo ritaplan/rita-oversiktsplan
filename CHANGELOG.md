@@ -2,6 +2,15 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.21] – klick i kartan träffar planen även när kartan visas i ett annat koordinatsystem
+
+- **Tilldela innehåll, Markera och Kopiera innehåll hittade ingenting när kartan visades i ett annat koordinatsystem än
+  planen**, till exempel webb-Mercator (EPSG:3857) med en bakgrundskarta. Klickpunkten är i kartans koordinatsystem men
+  jämfördes direkt med planens objekt, så meddelandet *Inget ritat här* kom fast geometrin fanns. Klickpunkten, klicktoleransen
+  och markeringsrutan räknas nu om till planens koordinatsystem. Visas kartan i planens eget koordinatsystem är beteendet
+  oförändrat. Hör ihop med ärende 3 (planen i PostGIS).
+- Prov i `tests/test_tools.py` (`MapCrsTests`): klick, rektangel, toleransen, kopiera och tilldela med kartan i EPSG:3857.
+
 ## [0.1.20] – databashanteraren, som i Rita Detaljplan 0.1.83
 
 - **Dialogen för planer i en databas är en databashanterare**, med knapparna *Importera plan…*, *Exportera valda*,

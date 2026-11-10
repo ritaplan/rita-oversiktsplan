@@ -15,13 +15,15 @@ from qgis_app import get_app  # noqa: E402
 
 get_app()
 
-from qgis.core import QgsFeature, QgsGeometry, QgsPointXY, QgsProject, QgsRectangle  # noqa: E402
+from qgis.core import (QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsPointXY,  # noqa: E402
+                       QgsProject, QgsRectangle)
 from qgis.PyQt.QtCore import QDate  # noqa: E402
 from qgis.PyQt.QtWidgets import QMessageBox  # noqa: E402
 
 from rita_oversiktsplan import classFactory  # noqa: E402
 from rita_oversiktsplan.core import content, documents, editing, export_lm, geopackage, model  # noqa: E402
 from rita_oversiktsplan.core.project import active_plan_group, draft_layers, load_plan  # noqa: E402
+from rita_oversiktsplan.gui.assign_dialog import AssignDialog  # noqa: E402
 from rita_oversiktsplan.gui.export_dialog import ExportDialog  # noqa: E402
 from test_plugin import FakeIface  # noqa: E402
 
@@ -156,7 +158,7 @@ class NoPlanTests(unittest.TestCase):
         plugin.initGui()
         self.addCleanup(plugin.unload)
         enabled = [a.text() for a in plugin.toolbar.actions() if not a.isSeparator() and a.isEnabled()]
-        self.assertEqual(enabled, ["Ny översiktsplan…", "Öppna översiktsplan…"])
+        self.assertEqual(enabled, ["Ny översiktsplan…", "Öppna översiktsplan…", "Databashanteraren"])
 
 
 class SelectTests(ToolCase):
@@ -180,6 +182,61 @@ class SelectTests(ToolCase):
         self.assertIs(self.iface.canvas.mapTool(), self.plugin.map_tools["select"])
         self.plugin.toolbar.act_assign.setChecked(True)
         self.assertFalse(self.plugin.toolbar.act_select.isChecked())
+
+
+class MapCrsTests(ToolCase):
+    """Kartan visas i ett annat koordinatsystem än planen (webb-Mercator, som en bakgrundskarta kräver): klicken ska ändå
+    träffa planens objekt. Verktygen får klickpunkten i kartans koordinatsystem, och planens objekt ligger i planens."""
+
+    def setUp(self):
+        super().setUp()
+        self.iface.canvas.setDestinationCrs(QgsCoordinateReferenceSystem("EPSG:3857"))
+        self.to_map = QgsCoordinateTransform(QgsCoordinateReferenceSystem(f"EPSG:{model.EPSG}"),
+                                             QgsCoordinateReferenceSystem("EPSG:3857"), QgsProject.instance())
+
+    def on_map(self, x, y):
+        return self.to_map.transform(QgsPointXY(x, y))
+
+    def test_a_click_selects_the_object_under_it(self):
+        candidate = self.assigned()
+        chosen = self.plugin.select_at(self.on_map(50, 50), 1)
+        self.assertEqual((chosen.layer, chosen.fid), (candidate.layer, candidate.fid))
+
+    def test_a_click_far_from_every_object_selects_nothing(self):
+        self.assigned()
+        self.assertIsNone(self.plugin.select_at(self.on_map(5000, 5000), 1))
+
+    def test_the_click_tolerance_follows_to_the_plans_units(self):
+        """Linjer och punkter träffas inom några pixlar. Toleransen är i kartans enheter och räknas om till planens."""
+        line = self.draft("MULTILINESTRING((0 0, 100 0))", "line")
+        near = self.on_map(50, 0.4)  # 0,4 plan-meter från linjen
+        far = self.on_map(50, 60)
+        self.assertEqual(self.plugin.select_at(near, 1).layer, line.layer)  # 1 kartenhet är mer än 0,4 plan-meter
+        self.assertIsNone(self.plugin.select_at(far, 1))
+
+    def test_a_rectangle_selects_everything_it_touches(self):
+        self.assigned()
+        self.draft(OTHER)
+        corner_a, corner_b = self.on_map(-10, -10), self.on_map(400, 400)
+        self.assertEqual(self.plugin.select_rect(QgsRectangle(corner_a, corner_b)), 2)
+
+    def test_content_is_copied_between_objects_clicked_in_the_map_crs(self):
+        self.assigned()
+        self.draft(OTHER)
+        self.assertFalse(self.plugin.copy_at(self.on_map(50, 50), 1))
+        self.assertTrue(self.plugin.copy_at(self.on_map(250, 50), 1))
+
+    def test_assigning_finds_the_geometry_instead_of_saying_nothing_is_drawn(self):
+        self.draft()
+        with mock.patch.object(AssignDialog, "exec", new=lambda dialog: 0):
+            self.plugin.assign_at(self.on_map(50, 50), 1)
+        self.iface.bar.pushMessage.assert_not_called()
+
+    def test_assigning_far_from_the_geometry_says_nothing_is_drawn_there(self):
+        self.draft()
+        with mock.patch.object(AssignDialog, "exec", new=lambda dialog: 0):
+            self.plugin.assign_at(self.on_map(5000, 5000), 1)
+        self.assertIn("Inget ritat här", self.iface.bar.pushMessage.call_args[0][1])
 
 
 class CopyTests(ToolCase):

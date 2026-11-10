@@ -13,8 +13,8 @@ from typing import Optional
 
 import json
 
-from qgis.core import (Qgis, QgsApplication, QgsPointXY, QgsProject, QgsProviderRegistry, QgsRectangle, QgsTask,
-                       QgsVectorLayer)
+from qgis.core import (Qgis, QgsApplication, QgsCoordinateTransform, QgsCsException, QgsPointXY, QgsProject,
+                       QgsProviderRegistry, QgsRectangle, QgsTask, QgsVectorLayer)
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtGui import QCursor, QIcon
 from qgis.PyQt.QtWidgets import QAction, QApplication, QFileDialog, QMenu, QMessageBox
@@ -955,6 +955,38 @@ class OversiktsplanPlugin:
         box.setDefaultButton(QMessageBox.StandardButton.Save)
         return QMessageBox.StandardButton(box.exec())
 
+    # -- klick i kartan -----------------------------------------------------------------
+    def _canvas_to_plan(self, group) -> Optional[QgsCoordinateTransform]:
+        """Omvandlingen från kartans koordinatsystem till planens, eller None när de är samma (eller något saknas)."""
+        layer = draft_layers(group).get("polygon")  # ett lager med geometri: planens uppgifter (``oversiktsplan``) har ingen
+        canvas_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
+        if layer is None or not canvas_crs.isValid() or not layer.crs().isValid() or canvas_crs == layer.crs():
+            return None
+        return QgsCoordinateTransform(canvas_crs, layer.crs(), QgsProject.instance())
+
+    def _in_plan_crs(self, group, point: QgsPointXY, tolerance: float) -> tuple[QgsPointXY, float]:
+        """Klickpunkten och klicktoleransen (i kartans enheter) i planens koordinatsystem. Visas kartan i ett annat
+        koordinatsystem än planen (till exempel webb-Mercator med en bakgrundskarta) ligger klicket annars på helt fel
+        ställe jämfört med planens objekt, och inget träffas."""
+        transform = self._canvas_to_plan(group)
+        if transform is None:
+            return point, tolerance
+        try:
+            moved = transform.transform(point)
+            edge = transform.transform(QgsPointXY(point.x() + tolerance, point.y()))
+        except QgsCsException:
+            return point, tolerance
+        return moved, moved.distance(edge)
+
+    def _rect_in_plan_crs(self, group, rect: QgsRectangle) -> QgsRectangle:
+        transform = self._canvas_to_plan(group)
+        if transform is None:
+            return rect
+        try:
+            return transform.transformBoundingBox(rect)
+        except QgsCsException:
+            return rect
+
     # -- markera ----------------------------------------------------------------------
     def select_at(self, point: QgsPointXY, tolerance: float, add: bool = False) -> Optional[content.Candidate]:
         """Klick med Markera: markerar objektet under klicket (en meny om flera ligger på varandra) och gör dess lager
@@ -962,7 +994,7 @@ class OversiktsplanPlugin:
         group = self._group()
         if group is None:
             return None
-        candidates = content.candidates_at(group, point, tolerance)
+        candidates = content.candidates_at(group, *self._in_plan_crs(group, point, tolerance))
         if not candidates:
             if not add:
                 editing.clear_selection(group)
@@ -976,7 +1008,7 @@ class OversiktsplanPlugin:
 
     def select_rect(self, rect: QgsRectangle, add: bool = False) -> int:
         group = self._group()
-        return editing.select_in_rect(group, rect, add) if group is not None else 0
+        return editing.select_in_rect(group, self._rect_in_plan_crs(group, rect), add) if group is not None else 0
 
     def deselect_all(self) -> None:
         group = self._group()
@@ -1023,7 +1055,7 @@ class OversiktsplanPlugin:
         if source is not None and not source.layer.getFeature(source.fid).isValid():
             self.reset_relate_source()
             source = None
-        assigned = [c for c in content.candidates_at(group, point, tolerance) if c.assigned]
+        assigned = [c for c in content.candidates_at(group, *self._in_plan_crs(group, point, tolerance)) if c.assigned]
         if source is None:
             if not assigned:
                 self._warn("Klicka på ett innehåll (otilldelad geometri kan inte beröra något).")
@@ -1068,7 +1100,7 @@ class OversiktsplanPlugin:
         if source is not None and not source.layer.getFeature(source.fid).isValid():
             self.reset_copy_source()
             source = None
-        candidates = content.candidates_at(group, point, tolerance)
+        candidates = content.candidates_at(group, *self._in_plan_crs(group, point, tolerance))
         if source is None:
             assigned = [c for c in candidates if c.assigned]
             if not assigned:
@@ -1108,7 +1140,7 @@ class OversiktsplanPlugin:
         group = self._group()
         if group is None:
             return
-        candidates = content.candidates_at(group, point, tolerance)
+        candidates = content.candidates_at(group, *self._in_plan_crs(group, point, tolerance))
         if not candidates:
             self._warn("Inget ritat här. Rita en yta, linje eller punkt först, eller klicka på ett objekt i planen.")
             return
