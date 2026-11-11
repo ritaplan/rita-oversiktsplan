@@ -50,6 +50,8 @@ class FakePg:
         self.postgis = True
         self.epsg = None  # schemats koordinatsystem, om schemat redan finns
         self.refuse_upgrade = False  # som en användare utan rätt att ändra tabellerna
+        self.may_create_schemas = True  # rätten CREATE på databasen
+        self.may_create_tables = True  # rätten CREATE på scheman som finns
 
     def uri(self):
         return "dbname='planer' host=localhost port=5432 user='eric' sslmode=disable"
@@ -62,6 +64,14 @@ class FakePg:
             return [["3.4"]]
         if "information_schema." in sql:
             return [[s] for s in self.schemas]
+        if "pg_namespace" in sql:  # schema_exists
+            return [[1]] if re.search(r"nspname = '([^']*)'", sql).group(1) in self.schemas else []
+        if sql.startswith("SELECT has_database_privilege"):
+            return [[self.may_create_schemas]]
+        if sql.startswith("SELECT has_schema_privilege"):
+            return [[self.may_create_tables]]
+        if sql.startswith("CREATE SCHEMA") and not self.may_create_schemas:  # som PostgreSQL, även om schemat finns
+            raise RuntimeError("permission denied for database planer")
         if sql.startswith('SELECT "value" FROM') and "rita_oversiktsplan_schema" in sql:
             return [[str(self.epsg)]] if self.epsg else []
         if sql.startswith('SELECT "key", "value" FROM'):
@@ -276,6 +286,30 @@ class NewDatabasePlanTests(unittest.TestCase):
         with self.assertRaises(storage.PostgisError):
             storage.create_postgis_plan("planer", "oversiktsplan", "op_2040", PLAN, self.conn)
         self.assertFalse(any(sql.startswith("DROP") for sql in self.conn.sql))
+
+    def test_a_plan_in_an_own_schema_works_without_the_right_to_create_schemas(self):
+        self.conn.schemas = ["lukas"]  # ett tomt schema som användaren fått av kommunen
+        self.conn.may_create_schemas = False
+        storage.create_postgis_plan("planer", "lukas", "op_2040", PLAN, self.conn)
+        self.assertFalse(any(sql.startswith("CREATE SCHEMA") for sql in self.conn.sql))
+        self.assertIn('CREATE TABLE IF NOT EXISTS "lukas"."oversiktsplan"', " ".join(self.conn.sql))
+        self.assertIn('INSERT INTO "lukas"."oversiktsplan"', self.conn.sql[-1])
+
+    def test_without_the_right_to_create_schemas_a_missing_schema_is_explained(self):
+        self.conn.may_create_schemas = False
+        with self.assertRaisesRegex(storage.PostgisError, "får inte skapa nya scheman"):
+            storage.create_postgis_plan("planer", "oversiktsplan", "op_2040", PLAN, self.conn)
+        self.assertFalse(any(sql.startswith("CREATE") for sql in self.conn.sql))
+
+    def test_without_the_right_to_create_tables_an_existing_schema_is_explained(self):
+        self.conn.schemas = ["lukas"]
+        self.conn.may_create_tables = False
+        with self.assertRaisesRegex(storage.PostgisError, "rätt att skapa tabeller i schemat lukas"):
+            storage.create_postgis_plan("planer", "lukas", "op_2040", PLAN, self.conn)
+        self.assertFalse(any(sql.startswith(("CREATE", "DROP")) for sql in self.conn.sql))
+
+    def test_an_upgrade_never_tries_to_create_the_schema(self):
+        self.assertNotIn("CREATE SCHEMA", storage.upgrade_schema_sql("lukas", 3006))
 
     def test_bad_names_are_refused_before_anything_is_sent(self):
         with self.assertRaises(storage.PostgisError):

@@ -20,6 +20,7 @@ samma planer.
 2. Välj **Ny översiktsplan** och **PostGIS-databas** under *Lagras i*.
 3. Välj **Anslutning**, ange ett **Schema** och ett **Plan-id**.
    - Schemat delas av flera planer: finns det redan läggs planen till där, annars skapas det.
+   - Har du bara rätt i ett eget schema (vanligt i kommuner), ange det schemat. Du behöver inte få skapa nya scheman.
    - Plan-id:t föreslås utifrån titeln och får bara innehålla gemener a–z, siffror och understreck.
 
 Alla planer i samma schema ligger i samma tabeller och delar koordinatsystem. En dold kolumn `plan` skiljer dem åt.

@@ -2,6 +2,19 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.23] – plan i ett eget PostGIS-schema utan rätt att skapa scheman
+
+- **Rättat:** en ny plan gick inte att lägga i ett schema som redan fanns om man inte fick skapa scheman i databasen,
+  till exempel när kommunen ger varje användare ett eget schema. Pluginet skickade alltid `CREATE SCHEMA IF NOT
+  EXISTS`, och PostgreSQL kräver rätten att skapa scheman även när schemat redan finns. Nu skapas schemat bara när det
+  saknas, och en uppgradering av ett äldre schema försöker aldrig skapa det
+  ([#4](https://github.com/ritaplan/rita-oversiktsplan/issues/4)).
+- Innan något skapas frågar pluginet databasen om rättigheterna och säger vad som saknas: rätt att skapa tabeller i
+  schemat, eller rätt att skapa nya scheman när schemat inte finns.
+- Om schemat finns kontrolleras nu i PostgreSQL:s systemkatalog (`pg_namespace`), som visar alla scheman, i stället
+  för `information_schema`, som bara visar dem man har någon rätt i.
+- Fil för fil: `core/storage.py` (`schema_exists`, `may_create`, `ensure_schema_sql(create_schema=…)`).
+
 ## [0.1.22] – skrivskydd för planer som inte får ändras, som i Rita Detaljplan
 
 - **Skrivskydda…** i databashanteraren markerar planer som inte får ändras, till exempel antagna översiktsplaner. Du kan

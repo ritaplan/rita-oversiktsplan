@@ -121,12 +121,14 @@ def literal(value) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
-def ensure_schema_sql(schema: str, epsg: int = model.EPSG) -> list[str]:
-    """SQL som skapar schemat med alla tabeller, om de inte redan finns (en ny plan i ett befintligt schema lägger
-    bara till sina rader)."""
-    statements = [f"CREATE SCHEMA IF NOT EXISTS {quote(schema)}",
-                  f'CREATE TABLE IF NOT EXISTS {quote(schema)}.{quote(SCHEMA_TABLE)} ("key" text PRIMARY KEY, '
-                  '"value" text)']
+def ensure_schema_sql(schema: str, epsg: int = model.EPSG, create_schema: bool = True) -> list[str]:
+    """SQL som skapar alla tabeller i schemat, om de inte redan finns (en ny plan i ett befintligt schema lägger bara
+    till sina rader). Med ``create_schema`` skapas också schemat. Det ska bara göras när schemat saknas:
+    PostgreSQL kräver rätt att skapa scheman i databasen även för ``CREATE SCHEMA IF NOT EXISTS`` på ett schema som
+    finns, och många kommuner ger användarna rätt bara i ett eget schema."""
+    statements = [f"CREATE SCHEMA IF NOT EXISTS {quote(schema)}"] if create_schema else []
+    statements.append(f'CREATE TABLE IF NOT EXISTS {quote(schema)}.{quote(SCHEMA_TABLE)} ("key" text PRIMARY KEY, '
+                      '"value" text)')
     for table in tables():
         name = f"{quote(schema)}.{quote(db_name(table.name))}"
         columns = ['"fid" serial PRIMARY KEY', '"plan" text NOT NULL']
@@ -190,7 +192,7 @@ def upgrade_schema_sql(schema: str, epsg: int) -> str:
     datan flyttas till databasmodell 0.4 och alla planer i schemat (de delar tabeller) får den nya versionen. En
     transaktion: går något fel är schemat som förut."""
     version = literal(model.SCHEMA_VERSION)
-    parts = [statement + ";" for statement in ensure_schema_sql(schema, epsg)]
+    parts = [statement + ";" for statement in ensure_schema_sql(schema, epsg, create_schema=False)]
     parts += [statement + ";" for statement in migration_sql(schema)]
     parts.append(f'UPDATE {quote(schema)}.{quote(model.META_TABLE)} SET "value" = {version} '
                  "WHERE \"key\" = 'schema_version';")
@@ -481,6 +483,26 @@ def list_schemas(connection) -> list[str]:
     return [row[0] for row in _execute(connection, "SELECT schema_name FROM information_schema.schemata")]
 
 
+def schema_exists(connection, schema: str) -> bool:
+    """Om schemat finns i databasen. Frågar systemkatalogen, som visar alla scheman: ``information_schema`` visar bara
+    dem som användaren har någon rätt i."""
+    return bool(_execute(connection, f"SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = {literal(schema)}"))
+
+
+def may_create(connection, schema: Optional[str] = None) -> Optional[bool]:
+    """Om användaren får skapa tabeller i ``schema`` (som ska finnas), eller utan schema: skapa nya scheman i
+    databasen. None när databasen inte svarar på frågan (då försöker pluginet ändå och visar databasens fel)."""
+    sql = (f"SELECT has_schema_privilege({literal(schema)}, 'CREATE')" if schema
+           else "SELECT has_database_privilege(current_database(), 'CREATE')")
+    try:
+        rows = _execute(connection, sql)
+    except PostgisError:
+        return None
+    if not rows or rows[0][0] is None:
+        return None
+    return str(rows[0][0]).lower() in ("true", "t", "1")
+
+
 def list_plugin_schemas(connection) -> list[str]:
     """Scheman som pluginet har skapat (har tabellen med schemats nycklar)."""
     rows = _execute(connection, "SELECT table_schema FROM information_schema.tables WHERE table_name = "
@@ -545,11 +567,18 @@ def create_postgis_plan_from_file(connection_name: str, schema: str, plan_id: st
         if existing != epsg:
             raise PostgisError(f"Schemat {schema} har koordinatsystem EPSG:{existing}. Alla planer i samma schema "
                                f"delar koordinatsystem: välj EPSG:{existing}, eller ett annat schema.")
-    schema_was_there = existed or schema in list_schemas(target.connection)  # då rör vi aldrig schemat i övrigt
+    schema_was_there = existed or schema_exists(target.connection, schema)  # då rör vi aldrig schemat i övrigt
     if existed and plan_exists(target.connection, schema, plan_id):
         raise PostgisError(f"Det finns redan en plan med id {plan_id} i schemat {schema}.")
+    if schema_was_there and may_create(target.connection, schema) is False:
+        raise PostgisError(f"Du har inte rätt att skapa tabeller i schemat {schema}. Välj ett schema där du har den "
+                           "rätten, eller be den som sköter databasen om den (CREATE på schemat).")
+    if not schema_was_there and may_create(target.connection) is False:
+        raise PostgisError(f"Schemat {schema} finns inte, och du får inte skapa nya scheman i databasen. Välj ett "
+                           "schema som redan finns och som du har rätt att skapa tabeller i, eller be den som sköter "
+                           "databasen om ett.")
     try:
-        for statement in ensure_schema_sql(schema, epsg):
+        for statement in ensure_schema_sql(schema, epsg, create_schema=not schema_was_there):
             target.sql(statement)
         if not existed:
             target.sql(f"INSERT INTO {target.table(SCHEMA_TABLE)} (\"key\", \"value\") VALUES "
