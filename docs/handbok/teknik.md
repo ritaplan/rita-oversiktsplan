@@ -105,6 +105,7 @@ Tabellen är en nyckel–värde-tabell. Några nycklar:
 | `utbyggnadsordning` | Planens etapper som JSON: en lista med `{"namn", "period"}`. |
 | `andring_beslut`, `andring_paborjat`, `andring_planhandelse`, `andring_planhandelse_datum` | Den pågående ändringen. Tas bort när ändringen antas. |
 | `checkout` | Låset, när planen är utcheckad från en databas. |
+| `skrivskydd` | Skrivskyddet, när planen inte får ändras (JSON: `user`, `host`, `since`, `reason`). |
 
 Etapperna och ändringen ligger i metadatan i stället för i nya tabeller, så att planen behåller samma tabeller som
 Boverkets mall.
@@ -177,6 +178,21 @@ i schemat, se [Datamodell](../datamodell.md).
 - Raderna får nya `fid` i databasen. Det gör ingenting, eftersom alla kopplingar går via `objektidentitet`.
 - **Återuppta** efter en krasch: den lokala kopian har samma `token` i sin metadata. När du checkar ut igen erbjuds
   kopian om låset fortfarande är ditt.
+
+### Skrivskydd
+
+Ett skrivskydd är en rad `skrivskydd` i `rita_oversiktsplan_meta` med JSON (`user`, `host`, `since`, `reason`), se
+`core/protection.py`. Det är skilt från låset: ett lås tillhör den som redigerar och släpps vid incheckning, ett skydd
+ligger kvar tills någon bryter det.
+
+- **Utcheckningen** (`checkout.acquire_lock`) lägger bara in sitt lås om varken `checkout` eller `skrivskydd` finns, i
+  samma steg som metadatatabellen är låst. Finns skyddet kastas `ProtectedError`.
+- **Skydda** (`checkout.protect`) kontrollerar i samma block att inget lås finns, och lägger sedan in raden. En redan
+  skyddad plan lämnas som den är.
+- **Ta bort** (`transfer.delete_sql`) vägrar planer med skydd, på samma sätt som planer med lås.
+- En skyddsrad som inte går att tolka räknas ändå som ett skydd.
+- Skyddet följer **inte** med när en plan exporteras, kopieras eller importeras: det är en ny plan.
+- Skyddet gäller i pluginet, inte som behörighet i databasen. Databasens egna rättigheter är det som stänger det helt.
 
 ## Projektfilen, inställningar och cache
 

@@ -2,6 +2,23 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.22] – skrivskydd för planer som inte får ändras, som i Rita Detaljplan
+
+- **Skrivskydda…** i databashanteraren markerar planer som inte får ändras, till exempel antagna översiktsplaner. Du kan
+  skriva ett skäl. En skrivskyddad plan kan öppnas, exporteras och kopieras (kopian är en ny plan utan skydd), men **inte
+  checkas ut och inte tas bort**, varken i databashanteraren eller med *Checka ut* i verktygsfältet. Kontrollen görs i
+  databasen medan planens metadata är låst, så att ingen hinner checka ut planen mitt i.
+- **Bryt skrivskydd…** tar bort skyddet, efter en bekräftelse som visar vem som skyddade planen, när och varför.
+- Listan har en ny kolumn **Skrivskydd** (en sköld, med vem, när och varför som verktygstips) och ett nytt filter
+  (*Bara skrivskyddade* / *Bara redigerbara*).
+- En utcheckad plan kan inte skrivskyddas (checka in den eller bryt låset först). Öppnar du en skyddad plan och ber om
+  utcheckning öppnas den skrivskyddad, och du får veta vem som skyddade den och varför.
+- Skyddet gäller i pluginet och är ingen behörighet i databasen. Fil för fil: `core/protection.py` (nytt),
+  `core/checkout.py`, `core/transfer.py`, `core/plan_overview.py`, `gui/database_manager_dialog.py`, `plugin.py`.
+- **Rättat:** en ny plan i en mapp som angetts relativt fick lager med relativ adress. När QGIS arbetsmapp byttes efter att
+  projektet sparats gick lagren inte att öppna för redigering ("Kan inte återöppna datakälla i uppdateringsläge"). Planens och
+  projektfilens sökvägar görs nu alltid absoluta (`core/storage.py`, `gui/new_plan_dialog.py`).
+
 ## [0.1.21] – klick i kartan träffar planen även när kartan visas i ett annat koordinatsystem
 
 - **Tilldela innehåll, Markera och Kopiera innehåll hittade ingenting när kartan visades i ett annat koordinatsystem än

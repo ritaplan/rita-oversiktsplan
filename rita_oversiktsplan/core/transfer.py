@@ -8,7 +8,8 @@ Detaljplan).
   är planen som den ligger i databasen, inte någons utcheckade arbetskopia.
 * **Kopiera** gör en ny plan av en plan i databasen, i samma eller en annan databas eller ett annat schema (exporterar
   till en tillfällig fil och importerar den).
-* **Ta bort** tar bort en plan ur databasen, i en transaktion och bara om ingen har den utcheckad.
+* **Ta bort** tar bort en plan ur databasen, i en transaktion och bara om ingen har den utcheckad och den inte är
+  skrivskyddad (se ``core.protection``).
 
 En befintlig plan skrivs aldrig över: importen och kopieringen avbryts om plan-id:t redan finns i schemat (se
 ``storage.create_postgis_plan_from_file``), och exporten om filen redan finns.
@@ -21,12 +22,16 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import checkout, geopackage, model, storage
+from .protection import PROTECT_KEY
 from .storage import PostgisError, PostgisStorage, literal
 
-# uppgifter i filens metadata som inte hör till planen i databasen: en utcheckad kopias och själva låset
-_NOT_PLAN_META = (checkout.LOCK_KEY, *checkout.LOCAL_KEYS)
+# uppgifter i filens metadata som inte hör till planen i databasen: en utcheckad kopias, själva låset och skrivskyddet
+# (en importerad plan är en ny plan som får ändras)
+_NOT_PLAN_META = (checkout.LOCK_KEY, PROTECT_KEY, *checkout.LOCAL_KEYS)
 LOCKED_ADVICE = "Kasta utcheckningen eller bryt låset först."
 LOCKED_MESSAGE = "Planen är utcheckad och kan inte tas bort. " + LOCKED_ADVICE
+PROTECTED_ADVICE = "Bryt skrivskyddet först."
+PROTECTED_MESSAGE = "Planen är skrivskyddad och kan inte tas bort. " + PROTECTED_ADVICE
 
 
 class TransferError(RuntimeError):
@@ -151,14 +156,16 @@ def copy_plan(source: PostgisStorage, connection_name: str, schema: str, plan_id
 
 
 def delete_sql(plan: PostgisStorage) -> str:
-    """Ett enda SQL-block som i en transaktion tar bort planens rader i alla tabeller, om ingen har den utcheckad.
-    Metadatatabellen låses medan det görs, så att ingen hinner checka ut planen mitt i (se ``checkout.acquire_lock``).
-    Andra planers rader i samma tabeller rörs inte."""
+    """Ett enda SQL-block som i en transaktion tar bort planens rader i alla tabeller, om ingen har den utcheckad och den
+    inte är skrivskyddad. Metadatatabellen låses medan det görs, så att ingen hinner checka ut eller skydda planen mitt i
+    (se ``checkout.acquire_lock``). Andra planers rader i samma tabeller rörs inte."""
     meta = plan.table(model.META_TABLE)
     plan_id = literal(plan.plan_id)
     parts = [f"LOCK TABLE {meta} IN EXCLUSIVE MODE;",
              f"IF EXISTS (SELECT 1 FROM {meta} WHERE \"plan\" = {plan_id} AND \"key\" = {literal(checkout.LOCK_KEY)}) THEN "
-             f"RAISE EXCEPTION '{LOCKED_MESSAGE}'; END IF;"]
+             f"RAISE EXCEPTION '{LOCKED_MESSAGE}'; END IF;",
+             f"IF EXISTS (SELECT 1 FROM {meta} WHERE \"plan\" = {plan_id} AND \"key\" = {literal(PROTECT_KEY)}) THEN "
+             f"RAISE EXCEPTION '{PROTECTED_MESSAGE}'; END IF;"]
     parts += [f'DELETE FROM {plan.table(table.name)} WHERE "plan" = {plan_id};' for table in storage.tables()
               if table.name != model.META_TABLE]
     parts.append(f'DELETE FROM {meta} WHERE "plan" = {plan_id};')
@@ -166,13 +173,17 @@ def delete_sql(plan: PostgisStorage) -> str:
 
 
 def delete_plan(plan: PostgisStorage) -> None:
-    """Tar bort planen ur databasen. Kastar ``TransferError`` om planen inte finns eller är utcheckad (av någon, även dig:
-    kasta utcheckningen eller bryt låset först). Det går inte att ångra: spara en kopia först om planen kan behövas."""
+    """Tar bort planen ur databasen. Kastar ``TransferError`` om planen inte finns, är utcheckad (av någon, även dig:
+    kasta utcheckningen eller bryt låset först) eller är skrivskyddad (bryt skrivskyddet först). Det går inte att ångra:
+    spara en kopia först om planen kan behövas."""
     if not plan.read_meta():
         raise TransferError(f"Planen {plan.plan_id} finns inte i schemat {plan.schema}.")
     lock = checkout.read_lock(plan)
     if lock is not None:
         raise TransferError(f"Planen {plan.plan_id} är utcheckad av {lock.describe()}. {LOCKED_ADVICE}")
+    protection = checkout.read_protection(plan)
+    if protection is not None:
+        raise TransferError(f"Planen {plan.plan_id} är skrivskyddad av {protection.describe()}. {PROTECTED_ADVICE}")
     try:
         plan.sql(delete_sql(plan))
     except PostgisError as exc:

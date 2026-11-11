@@ -53,6 +53,7 @@ class Outcome(Enum):
     CHECKED_OUT = "utcheckad"
     READ_ONLY = "skrivskyddad"
     LOCKED = "utcheckad av någon annan"
+    PROTECTED = "skyddad mot ändringar"
     ERROR = "kunde inte läsas"
 
 
@@ -61,6 +62,7 @@ class OpenResult:
     plan_id: str
     outcome: Outcome
     locked_by: str = ""  # vem som har planen utcheckad (bara när utfallet är LOCKED)
+    protected_by: str = ""  # vem som har skrivskyddat planen (bara när utfallet är PROTECTED)
 
     @property
     def loaded(self) -> bool:
@@ -274,7 +276,10 @@ class OversiktsplanPlugin:
         if not self._load(plan):
             return OpenResult(plan_id, Outcome.ERROR)
         lock = checkout.read_lock(plan)
+        protection = checkout.read_protection(plan)
         group = find_plan_group(QgsProject.instance(), plan)
+        if protection is not None:  # en skrivskyddad plan checkas inte ut, även om användaren bad om det
+            return OpenResult(plan_id, Outcome.PROTECTED, protected_by=protection.describe())
         if want_checkout and group is not None and (lock is None or checkout.is_own_lock(lock)):
             # Användaren bad om utcheckning i dialogen: ingen ny fråga.
             if self.checkout.check_out(group, ask=False):
@@ -292,6 +297,9 @@ class OversiktsplanPlugin:
             if result.outcome is Outcome.LOCKED:
                 self._warn(f"Öppnade planen {result.plan_id}, men den är utcheckad av {result.locked_by} och därför "
                            "skrivskyddad.")
+            elif result.outcome is Outcome.PROTECTED:
+                self._warn(f"Öppnade planen {result.plan_id}, men den är skrivskyddad ({result.protected_by}). Bryt "
+                           "skrivskyddet i Databashanteraren för att kunna redigera den.")
             elif result.outcome is Outcome.READ_ONLY:
                 self._info(f"Öppnade planen {result.plan_id} från databasen. Den är skrivskyddad: checka ut den för "
                            "att rita.")
@@ -304,6 +312,8 @@ class OversiktsplanPlugin:
         for result in loaded:
             if result.outcome is Outcome.LOCKED:
                 self._warn(f"{result.plan_id} är utcheckad av {result.locked_by} och därför skrivskyddad.")
+            elif result.outcome is Outcome.PROTECTED:
+                self._warn(f"{result.plan_id} är skrivskyddad ({result.protected_by}).")
 
     def _ask_open_source(self) -> Optional[str]:
         """En liten meny vid muspekaren (som i Rita Detaljplan): fil eller databas."""

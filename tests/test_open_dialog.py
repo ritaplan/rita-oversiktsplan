@@ -34,6 +34,12 @@ class OverviewConnection:
         self.fail_on = fail_on
         self.sql = []
 
+    @staticmethod
+    def _protection_text(plan) -> str:
+        """Skyddet som det ligger i databasen: JSON (eller en text som inte går att tolka, för att prova det)."""
+        value = plan["protection"]
+        return value if isinstance(value, str) else value.to_json()
+
     def executeSql(self, sql):  # noqa: N802 - samma namn som QGIS anslutningar
         self.sql.append(sql)
         if self.fail_on and self.fail_on in sql:
@@ -47,6 +53,25 @@ class OverviewConnection:
             return [[plan_id, p.get("titel")] for plan_id, p in sorted(plans.items())]
         if sql.startswith('SELECT "plan", "value"') and "'checkout'" in sql:
             return [[plan_id, p["lock"].to_json()] for plan_id, p in sorted(plans.items()) if p.get("lock")]
+        if sql.startswith('SELECT "plan", "value"') and "'skrivskydd'" in sql:
+            return [[plan_id, self._protection_text(p)] for plan_id, p in sorted(plans.items()) if p.get("protection")]
+        if sql.startswith('SELECT "key", "value" FROM'):  # planens metadata (för att skydda och bryta skyddet)
+            p = plans.get(re.search(r"\"plan\" = '([^']*)'", sql).group(1))
+            if p is None:
+                return []
+            rows = [["kommun", "Eskilstuna"]]
+            rows += [["checkout", p["lock"].to_json()]] if p.get("lock") else []
+            rows += [["skrivskydd", self._protection_text(p)]] if p.get("protection") else []
+            return rows
+        if sql.startswith("DO $op$ BEGIN LOCK TABLE") and "kan inte skrivskyddas" in sql:  # skrivskydda planen
+            plan_id, value = re.search(r"VALUES \('([^']*)', 'skrivskydd', '(.*)'\); END IF", sql).groups()
+            if plans[plan_id].get("lock"):
+                raise RuntimeError("Planen är utcheckad och kan inte skrivskyddas. Checka in den eller bryt låset först.")
+            plans[plan_id].setdefault("protection", value.replace("''", "'"))
+            return []
+        if sql.startswith("DELETE FROM") and "'skrivskydd'" in sql:  # bryt skrivskyddet
+            plans[re.search(r"\"plan\" = '([^']*)'", sql).group(1)].pop("protection", None)
+            return []
         if sql.startswith('SELECT "plan", "planens_titel"'):
             return [[plan_id, p.get("titel"), p.get("planhandelse"), p.get("planhandelse_datum"), p.get("paborjad"),
                      p.get("beslut")] for plan_id, p in sorted(plans.items())]
@@ -99,6 +124,17 @@ class OverviewTests(unittest.TestCase):
         ten = self.rows()["op_10"]
         self.assertEqual((ten.diarienummer, ten.beslut_fattat, ten.laga_kraft), ("KS 2025/9", "2025-11-20", ""))
 
+    def test_the_overview_tells_which_plans_are_protected_and_a_row_that_cannot_be_read_still_counts(self):
+        conn = detailed()
+        conn.plans["op_a"]["op_10"]["protection"] = co.Protection("anna", "ANNAS-DATOR", "2026-11-01T09:00:00", "Antagen")
+        conn.plans["op_a"]["op_2"]["protection"] = "skräp"
+        rows = {r.plan_id: r for r in plan_overview.list_plans("db", conn, "op_a")}
+        self.assertTrue(rows["op_10"].protected)
+        self.assertEqual(rows["op_10"].protection.reason, "Antagen")
+        self.assertTrue(rows["op_2"].protected, "en skyddsrad som inte går att tolka räknas som ett skydd")
+        self.assertEqual(rows["op_2"].protection.user, "okänd")
+        self.assertFalse(plan_overview.list_plans("db", detailed(), "op_a")[0].protected)
+
     def test_a_plan_without_details_is_still_listed_with_its_title(self):
         conn = OverviewConnection(plans={"s": {"p": {"titel": "Bara titel"}}})
         row = plan_overview.list_plans("db", conn, "s")[0]
@@ -123,7 +159,7 @@ class OverviewTests(unittest.TestCase):
     def test_the_overview_uses_a_few_queries_per_schema_not_one_per_plan(self):
         conn = detailed()
         plan_overview.list_plans("db", conn, "op_a")
-        self.assertEqual(len(conn.sql), 5, conn.sql)  # planer, lås, uppgifter, beslut och beslutens datum
+        self.assertEqual(len(conn.sql), 6, conn.sql)  # planer, lås, skrivskydd, uppgifter, beslut och beslutens datum
 
     def test_the_lock_check_matches_the_user_and_the_computer(self):
         self.assertTrue(co.is_own_lock(co.new_lock()))

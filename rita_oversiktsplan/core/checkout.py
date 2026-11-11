@@ -29,6 +29,7 @@ from . import geopackage, model, storage
 from .project import CHECKOUT_PATH_PROPERTY as PATH_PROPERTY
 from .project import CHECKOUT_TOKEN_PROPERTY as TOKEN_PROPERTY
 from .project import PLAN_PROPERTY, TABLE_PROPERTY, hide_plan_column
+from .protection import PROTECT_KEY, Protection
 from .storage import PostgisError, PostgisStorage, literal
 
 LOCK_KEY = "checkout"
@@ -72,6 +73,15 @@ class LockedError(CheckoutError):
         super().__init__(f"Planen är utcheckad av {who}. Bara en kan redigera planen åt gången.")
 
 
+class ProtectedError(CheckoutError):
+    """Planen är skrivskyddad och kan inte checkas ut förrän skrivskyddet bryts (se ``core.protection``)."""
+
+    def __init__(self, protection: Optional[Protection]):
+        self.protection = protection
+        by = f" av {protection.describe()}" if protection is not None else ""
+        super().__init__(f"Planen är skrivskyddad{by}. Bryt skrivskyddet i databashanteraren för att kunna redigera den.")
+
+
 # -- låset i databasen -------------------------------------------------------------------------------------------------
 def _token_pattern(token: str) -> str:
     """LIKE-mönster som hittar låsraden med nyckeln (ingen JSON-tolkning: andra rader i tabellen är inte JSON)."""
@@ -106,18 +116,24 @@ def is_own_lock(lock: Lock) -> bool:
 
 
 def acquire_lock(plan: PostgisStorage) -> Lock:
-    """Låser planen. Kastar ``LockedError`` om den redan är låst. Metadatatabellen låses kort medan raden läggs in, så
-    att två som checkar ut samtidigt inte båda får låset."""
+    """Låser planen. Kastar ``LockedError`` om den redan är låst och ``ProtectedError`` om den är skrivskyddad.
+    Metadatatabellen låses kort medan raden läggs in, så att två som checkar ut samtidigt inte båda får låset, och
+    skrivskyddet kontrolleras i samma steg, så att ingen hinner skydda planen mitt i."""
     lock = new_lock()
     meta = plan.table(model.META_TABLE)
     plan_id = literal(plan.plan_id)
     plan.sql(storage.transaction_sql([
         f"LOCK TABLE {meta} IN EXCLUSIVE MODE;",
-        f"IF NOT EXISTS (SELECT 1 FROM {meta} WHERE \"plan\" = {plan_id} AND \"key\" = {literal(LOCK_KEY)}) THEN "
+        f"IF NOT EXISTS (SELECT 1 FROM {meta} WHERE \"plan\" = {plan_id} "
+        f"AND \"key\" IN ({literal(LOCK_KEY)}, {literal(PROTECT_KEY)})) THEN "
         f"INSERT INTO {meta} (\"plan\", \"key\", \"value\") VALUES ({plan_id}, {literal(LOCK_KEY)}, "
         f"{literal(lock.to_json())}); END IF;"]))
     current = read_lock(plan)
     if current is None or current.token != lock.token:
+        if current is None:  # inget lås fick plats: planen är skrivskyddad
+            protection = read_protection(plan)
+            if protection is not None:
+                raise ProtectedError(protection)
         raise LockedError(current)
     return lock
 
@@ -132,6 +148,48 @@ def break_lock(plan: PostgisStorage) -> None:
     """Tar bort låset oavsett vems det är. Den som hade planen utcheckad kan då inte checka in den."""
     plan.sql(f"DELETE FROM {plan.table(model.META_TABLE)} WHERE \"plan\" = {literal(plan.plan_id)} "
              f"AND \"key\" = {literal(LOCK_KEY)}")
+
+
+# -- skrivskydd -----------------------------------------------------------------------------------------------------------
+def read_protection(plan: PostgisStorage) -> Optional[Protection]:
+    """Planens skrivskydd, eller None. En skyddsrad som inte går att tolka räknas ändå som ett skydd (hellre för mycket
+    skydd än för lite)."""
+    text = plan.read_meta().get(PROTECT_KEY)
+    if text is None:
+        return None
+    return Protection.from_json(text) or Protection("okänd", "okänd dator", "")
+
+
+def protect(plan: PostgisStorage, reason: str = "") -> Protection:
+    """Skrivskyddar planen. Kastar ``CheckoutError`` om planen inte finns eller är utcheckad (checka in den eller bryt
+    låset först). En plan som redan är skyddad lämnas som den är. Kontrollen av låset och införandet av skyddet görs i
+    samma steg medan metadatatabellen är låst, så att ingen hinner checka ut planen mitt i."""
+    if not plan.read_meta():
+        raise CheckoutError(f"Planen {plan.plan_id} finns inte i schemat {plan.schema}.")
+    protection = Protection(_user(), _host(), datetime.now().isoformat(timespec="seconds"), reason.strip())
+    meta = plan.table(model.META_TABLE)
+    plan_id = literal(plan.plan_id)
+    try:
+        plan.sql(storage.transaction_sql([
+            f"LOCK TABLE {meta} IN EXCLUSIVE MODE;",
+            f"IF EXISTS (SELECT 1 FROM {meta} WHERE \"plan\" = {plan_id} AND \"key\" = {literal(LOCK_KEY)}) THEN "
+            f"RAISE EXCEPTION 'Planen är utcheckad och kan inte skrivskyddas. Checka in den eller bryt låset först.'; "
+            f"END IF;",
+            f"IF NOT EXISTS (SELECT 1 FROM {meta} WHERE \"plan\" = {plan_id} AND \"key\" = {literal(PROTECT_KEY)}) THEN "
+            f"INSERT INTO {meta} (\"plan\", \"key\", \"value\") VALUES ({plan_id}, {literal(PROTECT_KEY)}, "
+            f"{literal(protection.to_json())}); END IF;"]))
+    except PostgisError as exc:
+        raise CheckoutError(str(exc)) from exc
+    return read_protection(plan) or protection
+
+
+def unprotect(plan: PostgisStorage) -> None:
+    """Bryter skrivskyddet. Planen kan sedan checkas ut och tas bort igen."""
+    try:
+        plan.sql(f"DELETE FROM {plan.table(model.META_TABLE)} WHERE \"plan\" = {literal(plan.plan_id)} "
+                 f"AND \"key\" = {literal(PROTECT_KEY)}")
+    except PostgisError as exc:
+        raise CheckoutError(str(exc)) from exc
 
 
 # -- var planen ligger -------------------------------------------------------------------------------------------------
@@ -223,8 +281,8 @@ def _copy_rows(source: QgsVectorLayer, target: QgsVectorLayer, skip=None) -> int
 
 
 def copy_to_geopackage(plan: PostgisStorage, path: Path, extra: Optional[dict[str, str]] = None) -> Path:
-    """Kopierar planens alla tabeller (även ÖP-katalogens värden och metadatan, utom låset) från databasen till en ny
-    GeoPackage. ``extra`` läggs till i metadatan."""
+    """Kopierar planens alla tabeller (även ÖP-katalogens värden och metadatan, utom låset och skrivskyddet: en kopia är
+    en ny plan som får ändras) från databasen till en ny GeoPackage. ``extra`` läggs till i metadatan."""
     path.parent.mkdir(parents=True, exist_ok=True)
     geopackage.create_geopackage(path, None, epsg=plan.epsg)
     local = storage.GeoPackageStorage(path)
@@ -233,7 +291,7 @@ def copy_to_geopackage(plan: PostgisStorage, path: Path, extra: Optional[dict[st
         if not source.isValid():
             raise CheckoutError(f"Kunde inte läsa tabellen {table.name} i databasen.")
         target = QgsVectorLayer(local.layer_source(table)[0], table.name, "ogr")
-        skip = (lambda f: f["key"] == LOCK_KEY) if table.name == model.META_TABLE else None
+        skip = (lambda f: f["key"] in (LOCK_KEY, PROTECT_KEY)) if table.name == model.META_TABLE else None
         _copy_rows(source, target, skip)
     if extra:
         local.write_meta(extra)

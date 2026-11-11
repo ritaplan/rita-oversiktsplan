@@ -33,18 +33,21 @@ Klicka på **Öppna översiktsplan** (mappen). Finns det databasanslutningar vis
 - **PostGIS-databas…** – visar en översikt över alla planer i databasen.
 
 Översikten (alla scheman som skapats med pluginet) har en rad per plan och kolumner för titel, planhändelse och dess
-datum, påbörjad, diarienummer, beslut fattat, laga kraft och vem som har planen utcheckad. Listan är sorterad på titel,
+datum, påbörjad, diarienummer, beslut fattat, laga kraft, skrivskydd och vem som har planen utcheckad. Listan är sorterad på titel,
 där tal räknas som tal (ÖP 2 före ÖP 10). Klicka på en kolumnrubrik för att sortera på något annat.
 
 - **Filtrera** genom att skriva i rutan (delar av titel, diarienummer, planhändelse …, flera ord kan kombineras) och med
-  listorna för schema (bredvid databasvalet), planhändelse och utcheckning (*Bara lediga* / *Bara utcheckade*). Under
-  listan står hur många planer som syns av alla och hur många som är valda.
+  listorna för schema (bredvid databasvalet), planhändelse, utcheckning (*Bara lediga* / *Bara utcheckade*) och
+  skrivskydd (*Bara skrivskyddade* / *Bara redigerbara*). Under listan står hur många planer som syns av alla och hur
+  många som är valda.
 - **Välj flera planer** med Ctrl eller Skift och öppna dem på en gång. De läggs till bredvid varandra, och den sist
   öppnade planen blir den aktiva.
 - **Checka ut och öppna** låser planen och skapar en lokal kopia som du redigerar. Har du valt flera hämtas och låses de
   en i taget. Knappen är grå om någon av dem har checkats ut av någon annan.
 - **Öppna skrivskyddad** visar planerna direkt från databasen utan att låsa dem. Det är också vad dubbelklick gör. Du kan
   checka ut en plan senare med knappen **Checka ut** i verktygsfältet.
+- En **skrivskyddad** plan (se *Skrivskydda planer som inte får ändras* nedan) kan bara öppnas skrivskyddad. Knappen
+  *Checka ut och öppna* är grå så länge någon av de valda planerna är skyddad.
 
 Sparar du QGIS-projektet följer planens lager med, och då behöver du inte öppna planen på nytt. En plan som skapats med
 en äldre version av pluginet uppgraderas när den öppnas. En plan i en fil från version 0.1.14 eller äldre
@@ -55,8 +58,8 @@ den, `<filnamn>_fore_uppgradering.gpkg` (se [Datamodell](../datamodell.md)).
 
 Dialogen för planer i en databas (*Öppna → PostGIS-databas…*) är en **databashanterare**. Den nås också direkt med
 databasknappen *Databashanteraren* i verktygsfältet och med **Rita Översiktsplan → Databashanteraren…**. Under listan har den
-knappar för att hantera planerna: **Importera plan…**, **Exportera valda**, **Kopiera plan…**, **Ta bort plan…** och
-**Bryt lås…**.
+knappar för att hantera planerna: **Importera plan…**, **Exportera valda**, **Kopiera plan…**, **Ta bort plan…**,
+**Skrivskydda…**, **Bryt skrivskydd…** och **Bryt lås…**.
 
 ### Importera en plan till databasen
 
@@ -96,7 +99,38 @@ schemat de kopieras till.
 
 Markera planerna och klicka på **Ta bort plan…**. Du får bekräfta, och som standard sparas först en **säkerhetskopia** som
 GeoPackage i en mapp du väljer. Går säkerhetskopian inte att spara tas planen inte bort. Det går **inte att ångra**. En plan
-som är utcheckad kan inte tas bort, inte heller din egen: kasta utcheckningen, eller bryt låset, först.
+som är utcheckad kan inte tas bort, inte heller din egen: kasta utcheckningen, eller bryt låset, först. En plan som är
+skrivskyddad (nedan) kan inte heller tas bort förrän skyddet bryts.
+
+### Skrivskydda planer som inte får ändras
+
+En översiktsplan som har antagits ska normalt inte ändras. Då markerar du planen som **skrivskyddad**:
+
+1. Markera en eller flera planer. Tips: filtrera på planhändelsen *antagen* och markera alla.
+2. Klicka på **Skrivskydda…**, skriv gärna ett skäl (till exempel *Antagen av kommunfullmäktige 2026-10-01*) och bekräfta.
+
+Planen får då en sköld i kolumnen *Skrivskydd*, och när du håller musen över den ser du vem som skyddade planen, på vilken
+dator, när och varför. En skrivskyddad plan:
+
+- **kan öppnas** (skrivskyddad), **exporteras** och **kopieras**. Kopian och exportfilen är nya planer utan skrivskydd, så att
+  de går att arbeta vidare med,
+- **kan inte checkas ut**, vare sig i databashanteraren eller med knappen *Checka ut* i verktygsfältet. Du får veta vem
+  som har skyddat planen och varför,
+- **kan inte tas bort**.
+
+Med listan *Alla, med och utan skrivskydd* kan du visa bara de skyddade eller bara de redigerbara planerna.
+
+En utcheckad plan kan inte skrivskyddas: checka in den eller bryt låset först.
+
+#### Bryta skrivskyddet
+
+Behöver en skyddad plan ändras ändå, till exempel vid en ändring av planen, markerar du den och klickar på **Bryt
+skrivskydd…**. Du får se vem som skyddade planen och varför, och bekräfta. Planen kan sedan checkas ut och ändras som
+vanligt. Skydda den igen när du är klar.
+
+> Skrivskyddet gäller i Rita Översiktsplan. Det är ingen behörighetsstyrning i databasen: den som har direkt skrivåtkomst
+> till databasen, eller en äldre version av pluginet, kan fortfarande ändra planens tabeller. Vill ni stänga det också
+> behöver databasens egna rättigheter sättas för användarna.
 
 ### Bryta lås
 

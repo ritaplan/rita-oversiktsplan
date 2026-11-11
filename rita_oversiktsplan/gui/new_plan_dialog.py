@@ -4,6 +4,7 @@ som tas fram med pluginet är ny och har digitalt ursprung (det går att ändra 
 from __future__ import annotations
 
 import datetime
+import os
 import re
 from pathlib import Path
 
@@ -192,12 +193,16 @@ class NewPlanDialog(QDialog):
         """(anslutning, schema, planens id) när planen ska läggas i en databas."""
         return self.connection.currentData(), self.schema.text().strip(), self.plan_id.text().strip()
 
+    def _folder(self) -> Path:
+        """Vald mapp som absolut sökväg: en relativ tolkas mot processens arbetsmapp, som QGIS och filväljare byter."""
+        return Path(os.path.abspath(self.folder.filePath()))
+
     def target(self) -> Path:
-        return Path(self.folder.filePath()) / f"{safe_filename(self.filnamn.text())}.gpkg"
+        return self._folder() / f"{safe_filename(self.filnamn.text())}.gpkg"
 
     def project_file(self) -> Path:
         """QGIS-projektfilen, som sparas direkt när planen skapats (samma namn och mapp som planfilen)."""
-        return Path(self.folder.filePath()) / f"{safe_filename(self.filnamn.text())}.qgz"
+        return self._folder() / f"{safe_filename(self.filnamn.text())}.qgz"
 
     def epsg(self) -> int:
         return int(self.crs.currentData())

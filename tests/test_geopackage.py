@@ -124,6 +124,32 @@ class CoordinateSystemTests(unittest.TestCase):
                 geopackage.create_geopackage(Path(folder) / "x.gpkg", dataclasses.replace(PLAN, epsg=4326))
 
 
+class RelativePathTests(PlanFileCase):
+    def test_a_relative_path_gives_layers_that_survive_a_change_of_working_directory(self):
+        """Regression: en plan i en relativt angiven mapp fick lager med relativ adress; när arbetsmappen byttes gick de
+        inte att öppna för redigering ("Kan inte återöppna datakälla i uppdateringsläge")."""
+        import os
+
+        from rita_oversiktsplan.core import storage
+        before = os.getcwd()
+        try:
+            os.chdir(self.tmp.name)
+            relative = Path("rel mapp") / "plan.gpkg"
+            (Path(self.tmp.name) / relative.parent).mkdir()
+            geopackage.create_geopackage(Path(self.tmp.name) / relative, PLAN)
+            self.assertTrue(storage.GeoPackageStorage(relative).path.is_absolute())
+            holder = QgsProject()
+            layers = project.load_plan(relative, holder)  # måste behållas i en variabel, annars städas lagren bort
+            layer = next(iter(layers.values()))
+            self.assertTrue(Path(layer.source().split("|")[0]).is_absolute(), layer.source())
+            os.chdir(before)  # arbetsmappen byts (QGIS och filväljare gör det)
+            self.assertTrue(layer.startEditing())
+            layer.rollBack()
+            holder.removeAllMapLayers()
+        finally:
+            os.chdir(before)
+
+
 class LoadPlanTests(PlanFileCase):
     def setUp(self):
         super().setUp()

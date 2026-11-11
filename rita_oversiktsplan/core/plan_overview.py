@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from . import checkout, model, storage
+from .protection import PROTECT_KEY, Protection
 from .storage import PostgisError, literal, quote
 
 
@@ -27,6 +28,12 @@ class PlanRow:
     beslut_fattat: str = ""
     laga_kraft: str = ""
     lock: Optional[checkout.Lock] = None
+    protection: Optional[Protection] = None
+
+    @property
+    def protected(self) -> bool:
+        """Skrivskyddad: planen får inte ändras och kan inte checkas ut eller tas bort (se ``core.protection``)."""
+        return self.protection is not None
 
     @property
     def locked(self) -> bool:
@@ -82,6 +89,13 @@ def _locks(connection, schema: str) -> dict[str, checkout.Lock]:
     return locks
 
 
+def _protections(connection, schema: str) -> dict[str, Protection]:
+    rows = _query(connection, f'SELECT "plan", "value" FROM {_table(schema, model.META_TABLE)} '
+                              f'WHERE "key" = {literal(PROTECT_KEY)}')
+    # en rad som inte går att tolka räknas ändå som ett skydd (se checkout.read_protection)
+    return {_text(row[0]): Protection.from_json(_text(row[1])) or Protection("okänd", "okänd dator", "") for row in rows}
+
+
 def _plan_fields(connection, schema: str) -> dict[str, dict[str, str]]:
     rows = _query(connection, 'SELECT "plan", "planens_titel", "planhandelse_varde", "planhandelse_datum", '
                               f'"datum_paborjat", "beslut" FROM {_table(schema, model.OVERSIKTSPLAN.name)}')
@@ -116,6 +130,7 @@ def list_plans(connection_name: str, connection, schema: str) -> list[PlanRow]:
     lista planerna."""
     listed = storage.list_plans(connection, schema)  # (plan-id, titel)
     locks = _locks(connection, schema)
+    protections = _protections(connection, schema)
     fields = _plan_fields(connection, schema)
     decisions_by_id, decisions_by_plan = _decisions(connection, schema)
     rows = []
@@ -123,5 +138,6 @@ def list_plans(connection_name: str, connection, schema: str) -> list[PlanRow]:
         own = dict(fields.get(plan_id, {}))
         decision = decisions_by_id.get(own.pop("beslut", ""), decisions_by_plan.get(plan_id, {}))
         own["titel"] = own.get("titel") or title
-        rows.append(PlanRow(connection_name, schema, plan_id, lock=locks.get(plan_id), **own, **decision))
+        rows.append(PlanRow(connection_name, schema, plan_id, lock=locks.get(plan_id),
+                            protection=protections.get(plan_id), **own, **decision))
     return rows

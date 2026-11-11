@@ -121,6 +121,11 @@ class ImportTests(unittest.TestCase):
         self.assertNotIn("checkout_token", self.conn.writes[0])
         self.assertNotIn("checkout_since", self.conn.writes[0])
 
+    def test_a_protection_in_the_file_does_not_make_the_new_plan_protected(self):
+        storage.GeoPackageStorage(self.path).write_meta({"skrivskydd": "{}"})
+        self.import_it()
+        self.assertNotIn("skrivskydd", self.conn.writes[0])
+
     def test_a_row_count_that_does_not_match_removes_the_plan_again(self):
         self.conn.count_override = {model.OVERSIKTSPLAN.name: self.expected[model.OVERSIKTSPLAN.name] + 1}
         with self.assertRaisesRegex(transfer.TransferError, "inte komplett"):
@@ -187,6 +192,12 @@ class ExportTests(PostgisCase):
         path = transfer.export_plan(self.plan, self.dir / "ut.gpkg")
         self.assertFalse([key for key in geopackage.read_meta(path) if key.startswith("checkout")])
         self.assertEqual(co.read_lock(self.plan), other_lock())
+
+    def test_a_protected_plan_can_be_exported_and_the_file_carries_no_protection(self):
+        self.conn.meta["skrivskydd"] = co.Protection("anna", "ANNAS-DATOR", "2026-11-01T09:00:00", "Laga kraft").to_json()
+        path = transfer.export_plan(self.plan, self.dir / "ut.gpkg")
+        self.assertNotIn("skrivskydd", geopackage.read_meta(path))
+        self.assertIn("skrivskydd", self.conn.meta, "originalet är fortfarande skyddat")
 
     def test_a_file_that_exists_is_never_overwritten(self):
         target = self.dir / "ut.gpkg"
@@ -265,6 +276,13 @@ class CopyTests(PostgisCase):
         self.assertEqual(result.plan, storage.PostgisStorage("db2", "op_kopia", "kopia"))
         self.assertEqual(len(self.target.writes), 1)
 
+    def test_a_protected_plan_can_be_copied_and_the_copy_is_not_protected(self):
+        protection = co.Protection("anna", "ANNAS-DATOR", "2026-11-01T09:00:00", "Antagen")
+        self.conn.meta["skrivskydd"] = protection.to_json()
+        transfer.copy_plan(self.plan, "db2", "op_kopia", "kopia", self.target)
+        self.assertNotIn("skrivskydd", self.target.writes[0], "kopian är en ny plan som får ändras")
+        self.assertEqual(co.read_protection(self.plan), protection, "originalet är fortfarande skyddat")
+
     def test_the_source_is_not_changed_and_a_lock_is_not_copied(self):
         self.conn.meta["checkout"] = other_lock().to_json()
         before = len(self.conn.sql)
@@ -301,10 +319,22 @@ class DeletePg:
         if sql.startswith("SELECT 1 FROM"):
             plan = re.search(r"\"plan\" = '([^']*)'", sql).group(1)
             return [[1]] if plan in self.meta.get(schema, {}) else []
+        if sql.startswith("DELETE FROM") and "'skrivskydd'" in sql:  # bryt skrivskyddet
+            plan = re.search(r"\"plan\" = '([^']*)'", sql).group(1)
+            self.meta[schema][plan].pop("skrivskydd", None)
+            return []
+        if sql.startswith("DO $op") and "LOCK TABLE" in sql and "kan inte skrivskyddas" in sql:  # skrivskydda planen
+            plan, value = re.search(r"VALUES \('([^']*)', 'skrivskydd', '(.*)'\); END IF", sql).groups()
+            if "checkout" in self.meta[schema][plan]:
+                raise RuntimeError("Planen är utcheckad och kan inte skrivskyddas. Checka in den eller bryt låset först.")
+            self.meta[schema][plan].setdefault("skrivskydd", value.replace("''", "'"))
+            return []
         if sql.startswith("DO $op") and "RAISE EXCEPTION" in sql and "LOCK TABLE" in sql:
             plan = re.search(r"\"plan\" = '([^']*)'", sql).group(1)
             if "checkout" in self.meta[schema][plan]:
                 raise RuntimeError(transfer.LOCKED_MESSAGE)
+            if "skrivskydd" in self.meta[schema][plan]:
+                raise RuntimeError(transfer.PROTECTED_MESSAGE)
             self.removals.append(sql)
             del self.meta[schema][plan]
         return []
@@ -341,6 +371,29 @@ class DeleteTests(unittest.TestCase):
             with self.assertRaisesRegex(transfer.TransferError, "utcheckad och kan inte tas bort"):
                 transfer.delete_plan(self.plan)
         self.assertIn("op_1", self.conn.meta["op_a"])
+
+    def test_a_protected_plan_is_never_removed_until_the_protection_is_lifted(self):
+        co.protect(self.plan, "Antagen")
+        with self.assertRaisesRegex(transfer.TransferError, "skrivskyddad av .*Antagen.*Bryt skrivskyddet"):
+            transfer.delete_plan(self.plan)
+        self.assertIn("op_1", self.conn.meta["op_a"])
+        self.assertEqual(self.conn.removals, [])
+        co.unprotect(self.plan)
+        transfer.delete_plan(self.plan)
+        self.assertNotIn("op_1", self.conn.meta["op_a"])
+
+    def test_a_protection_set_just_before_the_removal_stops_it(self):
+        """Någon hinner skydda planen mellan kontrollen och borttagningen: databasen vägrar."""
+        self.conn.meta["op_a"]["op_1"]["skrivskydd"] = co.Protection("anna", "ANNAS-DATOR", "2026-11-01T09:00:00").to_json()
+        with mock.patch.object(co, "read_protection", return_value=None):
+            with self.assertRaisesRegex(transfer.TransferError, "skrivskyddad och kan inte tas bort"):
+                transfer.delete_plan(self.plan)
+        self.assertIn("op_1", self.conn.meta["op_a"])
+
+    def test_the_removal_sql_checks_the_protection_while_the_meta_table_is_locked(self):
+        sql = transfer.delete_sql(self.plan)
+        self.assertLess(sql.index("LOCK TABLE"), sql.index("'skrivskydd'"))
+        self.assertLess(sql.index("'skrivskydd'"), sql.index('DELETE FROM "op_a"."'))
 
     def test_a_plan_that_does_not_exist_cannot_be_removed(self):
         with self.assertRaisesRegex(transfer.TransferError, "finns inte"):
@@ -458,6 +511,161 @@ class DatabaseManagerTests(unittest.TestCase):
         self.assertEqual((dialog.import_plan.text(), dialog.export_plans.text()), ("Importera plan…", "Exportera valda"))
         self.assertEqual([a.text() for a in dialog.export_plans.menu().actions()],
                          ["Som GeoPackage (.gpkg)…", "Som leverans, JSON (.json)…"])
+
+    def protected_manager(self):
+        dialog, conn = self.manager()
+        conn.plans["op_a"]["op_10"]["protection"] = co.Protection("anna", "ANNAS-DATOR", "2026-11-01T09:00:00", "Antagen")
+        dialog.reload()
+        return dialog, conn
+
+    def rows_by_id(self, dialog):
+        return {row.plan_id: row for row in dialog._rows}
+
+    def shown(self, dialog):
+        return sorted(dialog.model.item(dialog.proxy.mapToSource(dialog.proxy.index(i, 0)).row(), 0).data(ROW_ROLE).plan_id
+                      for i in range(dialog.proxy.rowCount()))
+
+    def test_the_overview_shows_which_plans_are_protected_and_by_whom(self):
+        dialog, _conn = self.protected_manager()
+        rows = self.rows_by_id(dialog)
+        self.assertFalse(rows["op_2"].protected)
+        self.assertTrue(rows["op_10"].protected)
+        self.assertEqual(rows["op_10"].protection.reason, "Antagen")
+        shield, key = manager.COLUMN_FIELDS.index("skrivskydd"), manager.COLUMN_FIELDS.index("plan_id")
+        texts = {dialog.model.item(r, key).text(): dialog.model.item(r, shield).text() for r in range(dialog.model.rowCount())}
+        self.assertEqual(texts, {"op_10": "Skrivskyddad", "op_2": "", "gammal": ""})
+        row = next(r for r in range(dialog.model.rowCount()) if dialog.model.item(r, key).text() == "op_10")
+        self.assertIn("Skrivskyddad av anna på ANNAS-DATOR", dialog.model.item(row, shield).toolTip())
+
+    def test_the_filter_shows_only_protected_or_only_editable_plans(self):
+        dialog, _conn = self.protected_manager()
+        self.assertEqual(self.shown(dialog), ["gammal", "op_10", "op_2"])
+        dialog.filter_protect.setCurrentIndex(dialog.filter_protect.findData(manager.PROTECTED))
+        self.assertEqual(self.shown(dialog), ["op_10"])
+        dialog.filter_protect.setCurrentIndex(dialog.filter_protect.findData(manager.EDITABLE))
+        self.assertEqual(self.shown(dialog), ["gammal", "op_2"])
+
+    def test_the_protect_buttons_follow_the_selection(self):
+        dialog, _conn = self.protected_manager()  # op_10 är skyddad och ledig, op_2 utcheckad av någon annan
+        buttons = (dialog.protect_plans, dialog.unprotect_plans, dialog.delete_plans, dialog.open_checkout, dialog.open_readonly)
+        self.assertEqual([b.isEnabled() for b in buttons], [False, False, False, False, False], "inget valt")
+        self.select(dialog, "op_10")
+        self.assertEqual([b.isEnabled() for b in buttons], [False, True, False, False, True],
+                         "skyddad: kan inte tas bort eller checkas ut, men öppnas skrivskyddad")
+        self.select(dialog, "op_2")
+        self.assertEqual([b.isEnabled() for b in buttons], [True, False, False, False, True], "utcheckad och oskyddad")
+        self.select(dialog, "op_10", "op_2")
+        self.assertEqual([b.isEnabled() for b in buttons], [True, True, False, False, True], "en skyddad bland de valda")
+        free, _conn = self.manager()
+        self.select(free, "op_10")
+        self.assertEqual([b.isEnabled() for b in (free.protect_plans, free.unprotect_plans, free.delete_plans, free.open_checkout)],
+                         [True, False, True, True], "ledig och oskyddad")
+
+    def test_the_hint_explains_why_a_protected_plan_cannot_be_checked_out(self):
+        dialog, _conn = self.protected_manager()
+        self.select(dialog, "op_10")
+        self.assertIn("skrivskyddad", dialog.hint.text())
+        self.assertIn("Antagen", dialog.hint.text())
+
+    def test_a_protected_plan_is_not_checked_out_from_the_dialog(self):
+        dialog, _conn = self.protected_manager()
+        self.select(dialog, "op_10")
+        dialog._accept_with(True)
+        self.assertFalse(dialog.checkout_requested)
+        self.assertNotEqual(dialog.result(), dialog.DialogCode.Accepted)
+
+    def test_a_protected_plan_is_never_passed_to_the_removal(self):
+        dialog, _conn = self.protected_manager()
+        self.select(dialog, "op_10")
+        with mock.patch.object(manager.transfer, "delete_plan") as deleted, \
+                mock.patch.object(dialog, "_confirm_delete") as confirm:
+            dialog._delete_plans()
+        deleted.assert_not_called()
+        confirm.assert_not_called()
+
+    def test_selected_plans_are_protected_with_the_reason_and_the_list_is_reloaded(self):
+        dialog, _conn = self.manager()
+        self.select(dialog, "op_10", "gammal")
+        with mock.patch.object(dialog, "_ask_protect", return_value="Antagen") as ask, \
+                mock.patch.object(manager.checkout, "protect") as protect:
+            dialog.protect_plans.click()
+        self.assertEqual(sorted(r.plan_id for r in ask.call_args.args[0]), ["gammal", "op_10"])
+        self.assertEqual(sorted((c.args[0].plan_id, c.args[1]) for c in protect.call_args_list),
+                         [("gammal", "Antagen"), ("op_10", "Antagen")])
+        self.assertIn("Skrivskyddade 2 av 2 planer", dialog.notice.text())
+        self.assertEqual(dialog.error.text(), "")
+
+    def test_cancelling_the_question_protects_nothing(self):
+        dialog, _conn = self.manager()
+        self.select(dialog, "op_10")
+        with mock.patch.object(dialog, "_ask_protect", return_value=None), \
+                mock.patch.object(manager.checkout, "protect") as protect:
+            dialog.protect_plans.click()
+        protect.assert_not_called()
+
+    def test_plans_that_are_already_protected_are_left_out_when_protecting(self):
+        dialog, _conn = self.protected_manager()
+        self.select(dialog, "op_10", "gammal")
+        with mock.patch.object(dialog, "_ask_protect", return_value="") as ask, \
+                mock.patch.object(manager.checkout, "protect") as protect:
+            dialog.protect_plans.click()
+        self.assertEqual([r.plan_id for r in ask.call_args.args[0]], ["gammal"])
+        self.assertEqual([c.args[0].plan_id for c in protect.call_args_list], ["gammal"])
+
+    def test_a_plan_that_cannot_be_protected_is_reported_and_the_others_are_still_protected(self):
+        dialog, _conn = self.manager()
+        self.select(dialog, "op_10", "gammal")
+
+        def protect(plan, reason):
+            if plan.plan_id == "gammal":
+                raise manager.checkout.CheckoutError("Planen är utcheckad och kan inte skrivskyddas.")
+
+        with mock.patch.object(dialog, "_ask_protect", return_value=""), \
+                mock.patch.object(manager.checkout, "protect", side_effect=protect):
+            dialog.protect_plans.click()
+        self.assertIn("Skrivskyddade 1 av 2", dialog.notice.text())
+        self.assertIn("Gammal ÖP: Planen är utcheckad och kan inte skrivskyddas.", dialog.error.text())
+
+    def test_the_protection_is_lifted_only_after_confirming(self):
+        dialog, _conn = self.protected_manager()
+        self.select(dialog, "op_10")
+        with mock.patch.object(dialog, "_confirm_unprotect", return_value=True) as confirm, \
+                mock.patch.object(manager.checkout, "unprotect") as lift:
+            dialog.unprotect_plans.click()
+        self.assertEqual([r.plan_id for r in confirm.call_args.args[0]], ["op_10"])
+        lift.assert_called_once()
+        self.assertEqual(lift.call_args.args[0].plan_id, "op_10")
+        self.assertIn("Bröt skrivskyddet på 1 av 1 planer", dialog.notice.text())
+
+    def test_declining_the_confirmation_leaves_the_protection_alone(self):
+        dialog, _conn = self.protected_manager()
+        self.select(dialog, "op_10")
+        with mock.patch.object(dialog, "_confirm_unprotect", return_value=False), \
+                mock.patch.object(manager.checkout, "unprotect") as lift:
+            dialog.unprotect_plans.click()
+        lift.assert_not_called()
+
+    def test_protecting_and_lifting_work_against_the_database_and_show_in_the_list(self):
+        dialog, conn = self.manager()
+        self.select(dialog, "op_10")
+        with mock.patch.object(dialog, "_ask_protect", return_value="Antagen"):
+            dialog.protect_plans.click()
+        self.assertTrue(self.rows_by_id(dialog)["op_10"].protected)
+        self.assertIn("Antagen", conn.plans["op_a"]["op_10"]["protection"])
+        self.select(dialog, "op_10")
+        with mock.patch.object(dialog, "_confirm_unprotect", return_value=True):
+            dialog.unprotect_plans.click()
+        self.assertFalse(self.rows_by_id(dialog)["op_10"].protected)
+        self.assertNotIn("protection", conn.plans["op_a"]["op_10"])
+
+    def test_a_checked_out_plan_is_refused_by_the_database_when_protecting(self):
+        dialog, conn = self.manager()
+        self.select(dialog, "op_2")
+        with mock.patch.object(dialog, "_ask_protect", return_value=""):
+            dialog.protect_plans.click()
+        self.assertEqual(dialog.notice.text(), "")
+        self.assertIn("utcheckad och kan inte skrivskyddas", dialog.error.text())
+        self.assertNotIn("protection", conn.plans["op_a"]["op_2"])
 
     def test_the_buttons_follow_the_selection_and_the_locks(self):
         dialog, _conn = self.manager()  # op_10 är ledig, op_2 utcheckad av någon annan

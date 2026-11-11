@@ -77,9 +77,16 @@ class FakePg:
             columns = sql[len("SELECT "):sql.index(" FROM")]
             with closing(sqlite3.connect(str(self.database))) as con:
                 return [list(r) for r in con.execute(f'SELECT {columns} FROM "{table}" ORDER BY fid')]
-        if sql.startswith("DO $op$ BEGIN LOCK TABLE"):
+        if sql.startswith("DO $op$ BEGIN LOCK TABLE") and "kan inte skrivskyddas" in sql:  # skrivskydda planen
+            if "checkout" in self.meta:
+                raise RuntimeError("Planen är utcheckad och kan inte skrivskyddas. Checka in den eller bryt låset först.")
+            match = re.search(r"VALUES \('[^']*', 'skrivskydd', '(.*)'\); END IF", sql)
+            if "skrivskydd" not in self.meta:
+                self.meta["skrivskydd"] = match.group(1).replace("''", "'")
+            return []
+        if sql.startswith("DO $op$ BEGIN LOCK TABLE"):  # låsa planen: går inte om den är låst eller skrivskyddad
             match = re.search(r"VALUES \('[^']*', 'checkout', '(.*)'\); END IF", sql)
-            if "checkout" not in self.meta:
+            if "checkout" not in self.meta and "skrivskydd" not in self.meta:
                 self.meta["checkout"] = match.group(1).replace("''", "'")
             return []
         if sql.startswith("DO $op") and "ADD COLUMN IF NOT EXISTS" in sql:  # uppgradering av schemat
@@ -95,6 +102,9 @@ class FakePg:
                 raise RuntimeError("Låset på planen tillhör inte längre dig. Planen har inte checkats in.")
             self.checkins.append(sql)
             del self.meta["checkout"]
+            return []
+        if sql.startswith("DELETE FROM") and "'skrivskydd'" in sql:  # bryt skrivskyddet
+            self.meta.pop("skrivskydd", None)
             return []
         if sql.startswith("DELETE FROM") and "'checkout'" in sql:
             token = re.search(r'"token": "([0-9a-f]+)"', sql)
@@ -395,6 +405,112 @@ class CheckoutTests(PostgisCase):
         self.assertEqual(found[0], path)
 
 
+class ProtectionTests(PostgisCase):
+    """Skrivskydd: en plan som inte får ändras kan inte checkas ut förrän skyddet bryts."""
+
+    def test_a_plan_is_protected_with_who_when_and_why(self):
+        self.assertIsNone(co.read_protection(self.plan))
+        protection = co.protect(self.plan, "  Antagen 2026-10-01  ")
+        self.assertEqual(co.read_protection(self.plan), protection)
+        self.assertTrue(protection.user)
+        self.assertRegex(protection.since, r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d$")
+        self.assertEqual(protection.reason, "Antagen 2026-10-01", "skälet trimmas")
+        self.assertIn("sedan", protection.describe())
+        self.assertTrue(protection.describe().endswith(": Antagen 2026-10-01"))
+
+    def test_the_reason_is_optional(self):
+        protection = co.protect(self.plan)
+        self.assertEqual(protection.reason, "")
+        self.assertEqual(protection.describe(),
+                         f"{protection.user} på {protection.host} sedan {protection.since.replace('T', ' ')}")
+
+    def test_protecting_is_done_while_the_meta_table_is_locked_and_checks_the_lock_in_the_same_step(self):
+        co.protect(self.plan)
+        sql = next(s for s in self.conn.sql if "kan inte skrivskyddas" in s)
+        self.assertIn('LOCK TABLE "oversiktsplan".', sql)
+        self.assertIn("IN EXCLUSIVE MODE", sql)
+        self.assertLess(sql.index("'checkout'"), sql.index("'skrivskydd'"), "låset kontrolleras före skyddet läggs in")
+
+    def test_a_protected_plan_stays_as_it_was_protected_if_protected_again(self):
+        first = co.protect(self.plan, "första")
+        second = co.protect(self.plan, "andra")
+        self.assertEqual(second, first)
+        self.assertEqual(co.read_protection(self.plan).reason, "första")
+
+    def test_a_checked_out_plan_cannot_be_protected(self):
+        self.conn.meta["checkout"] = other_lock().to_json()
+        with self.assertRaisesRegex(co.CheckoutError, "utcheckad och kan inte skrivskyddas"):
+            co.protect(self.plan)
+        self.assertIsNone(co.read_protection(self.plan))
+        self.assertEqual(co.read_lock(self.plan), other_lock(), "den andras lås är orört")
+
+    def test_a_plan_that_is_not_in_the_database_cannot_be_protected(self):
+        self.conn.meta.clear()
+        with self.assertRaisesRegex(co.CheckoutError, "finns inte"):
+            co.protect(self.plan)
+
+    def test_a_protected_plan_cannot_be_locked_and_the_error_says_who_protected_it(self):
+        co.protect(self.plan, "Antagen")
+        with self.assertRaises(co.ProtectedError) as caught:
+            co.acquire_lock(self.plan)
+        self.assertEqual(caught.exception.protection, co.read_protection(self.plan))
+        self.assertIn("skrivskyddad av", str(caught.exception))
+        self.assertIn("Antagen", str(caught.exception))
+        self.assertIn("Bryt skrivskyddet", str(caught.exception))
+        self.assertIsNone(co.read_lock(self.plan), "inget lås lades in")
+
+    def test_the_lock_is_only_taken_if_the_plan_is_neither_locked_nor_protected(self):
+        co.protect(self.plan)
+        with self.assertRaises(co.ProtectedError):
+            co.acquire_lock(self.plan)
+        sql = [s for s in self.conn.sql if s.startswith("DO $op$ BEGIN LOCK TABLE") and "'checkout', '{" in s][-1]
+        self.assertIn("IN ('checkout', 'skrivskydd')", sql, "skyddet kontrolleras i samma steg som låset läggs in")
+
+    def test_a_plan_open_from_the_database_cannot_be_checked_out_while_protected(self):
+        co.protect(self.plan, "Antagen")
+        with self.assertRaises(co.ProtectedError):
+            co.check_out(self.group)
+        self.assertEqual(co.state(self.group), co.DATABASE)
+        self.assertIsNone(co.read_lock(self.plan))
+        self.assertFalse(self.copies.exists() and list(self.copies.iterdir()), "ingen kopia lämnas kvar")
+
+    def test_lifting_the_protection_lets_the_plan_be_checked_out_again(self):
+        co.protect(self.plan)
+        co.unprotect(self.plan)
+        self.assertIsNone(co.read_protection(self.plan))
+        co.check_out(self.group)
+        self.assertEqual(co.state(self.group), co.LOCAL)
+
+    def test_lifting_a_protection_that_is_not_there_does_nothing(self):
+        co.unprotect(self.plan)
+        self.assertIsNone(co.read_protection(self.plan))
+
+    def test_a_protection_row_that_cannot_be_read_still_protects(self):
+        self.conn.meta["skrivskydd"] = "skräp"
+        protection = co.read_protection(self.plan)
+        self.assertIsNotNone(protection)
+        self.assertEqual(protection.user, "okänd")
+        with self.assertRaises(co.ProtectedError):
+            co.acquire_lock(self.plan)
+
+    def test_the_protection_is_not_copied_to_the_local_copy(self):
+        self.conn.meta["skrivskydd"] = co.Protection("anna", "ANNAS-DATOR", "2026-11-01T09:00:00", "x").to_json()
+        path = co.copy_to_geopackage(self.plan, self.dir / "kopia.gpkg")
+        self.assertNotIn("skrivskydd", geopackage.read_meta(path))
+
+    def test_database_errors_become_checkout_errors(self):
+        original = self.conn.executeSql
+
+        def failing(sql):
+            if "LOCK TABLE" in sql:
+                raise RuntimeError("syntaxfel nära LOCK")
+            return original(sql)
+
+        with mock.patch.object(self.conn, "executeSql", failing):
+            with self.assertRaises(co.CheckoutError):
+                co.protect(self.plan)
+
+
 class ActionTests(PostgisCase):
     def actions(self, answers=True, check_in=CHECK_IN):
         self.messages = []
@@ -408,6 +524,17 @@ class ActionTests(PostgisCase):
         self.conn.meta["checkout"] = other_lock().to_json()
         self.assertTrue(self.actions().check_out(self.group))
         self.assertEqual(co.state(self.group), co.LOCAL)
+
+    def test_a_protected_plan_is_not_checked_out_and_the_reason_is_reported(self):
+        co.protect(self.plan, "Antagen")
+        actions = self.actions()
+        self.assertFalse(actions.check_out(self.group))
+        self.assertEqual(co.state(self.group), co.DATABASE)
+        text, warning = self.messages[-1]
+        self.assertTrue(warning)
+        self.assertIn("skrivskyddad", text)
+        self.assertIn("Antagen", text)
+        self.assertIsNone(co.read_lock(self.plan))
 
     def test_discarding_asks_and_leaves_the_database_unchanged(self):
         actions = self.actions(check_in=DISCARD)
@@ -464,8 +591,9 @@ class PluginTests(PostgisCase):
         self.assertEqual(texts, ["Lokal fil (GeoPackage)…", "PostGIS-databas…"])
         dialog.assert_called_once()
 
-    def open_from_dialog(self, checkout_requested, lock=None, checked_out=True, plan_ids=("op_2040",), load=True):
-        with mock.patch("rita_oversiktsplan.plugin.DatabaseManagerDialog") as dialog_cls,                 mock.patch.object(type(self.plugin), "_load", return_value=load) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=lock),                 mock.patch("rita_oversiktsplan.plugin.find_plan_group", return_value=self.group),                 mock.patch.object(self.plugin.checkout, "check_out", return_value=checked_out) as check_out:
+    def open_from_dialog(self, checkout_requested, lock=None, checked_out=True, plan_ids=("op_2040",), load=True,
+                         protection=None):
+        with mock.patch("rita_oversiktsplan.plugin.DatabaseManagerDialog") as dialog_cls,                 mock.patch.object(type(self.plugin), "_load", return_value=load) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=lock),                 mock.patch("rita_oversiktsplan.plugin.checkout.read_protection", return_value=protection),                 mock.patch("rita_oversiktsplan.plugin.find_plan_group", return_value=self.group),                 mock.patch.object(self.plugin.checkout, "check_out", return_value=checked_out) as check_out:
             dialog_cls.return_value.exec.return_value = True
             dialog_cls.return_value.selections.return_value = [("planer", "oversiktsplan", p) for p in plan_ids]
             dialog_cls.return_value.checkout_requested = checkout_requested
@@ -492,6 +620,30 @@ class PluginTests(PostgisCase):
         check_out.assert_not_called()
         self.assertTrue(any("anna" in t and "skrivskyddad" in t for t in self.messages_text()))
 
+    def test_a_protected_plan_is_opened_read_only_even_if_checkout_was_asked_for(self):
+        protection = co.Protection("anna", "ANNAS-DATOR", "2026-11-01T09:00:00", "Antagen")
+        check_out = self.open_from_dialog(True, protection=protection)
+        check_out.assert_not_called()
+        self.assertTrue(any("skrivskyddad" in t and "anna på ANNAS-DATOR" in t and "Antagen" in t
+                            and "Databashanteraren" in t for t in self.messages_text()), self.messages_text())
+
+    def test_several_plans_where_one_is_protected_check_out_the_others(self):
+        protection = co.Protection("anna", "ANNAS-DATOR", "2026-11-01T09:00:00", "Antagen")
+        values = {"a": None, "b": protection}
+        with mock.patch("rita_oversiktsplan.plugin.DatabaseManagerDialog") as dialog_cls, \
+                mock.patch.object(type(self.plugin), "_load", return_value=True), \
+                mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=None), \
+                mock.patch("rita_oversiktsplan.plugin.checkout.read_protection",
+                           side_effect=lambda plan: values[plan.plan_id]), \
+                mock.patch("rita_oversiktsplan.plugin.find_plan_group", return_value=self.group), \
+                mock.patch.object(self.plugin.checkout, "check_out", return_value=True) as check_out:
+            dialog_cls.return_value.exec.return_value = True
+            dialog_cls.return_value.selections.return_value = [("planer", "oversiktsplan", p) for p in ("a", "b")]
+            dialog_cls.return_value.checkout_requested = True
+            self.plugin.open_database_manager()
+        self.assertEqual(check_out.call_count, 1, "bara den oskyddade planen checkas ut")
+        self.assertTrue(any("b är skrivskyddad" in t for t in self.messages_text()), self.messages_text())
+
     def test_a_declined_or_failed_checkout_leaves_the_plan_open_read_only(self):
         self.open_from_dialog(True, checked_out=False)
         self.assertTrue(any("skrivskyddad" in t for t in self.messages_text()))
@@ -515,7 +667,7 @@ class PluginTests(PostgisCase):
         self.assertFalse(canvas.isFrozen(), "kartan är upptinad igen")
 
     def test_a_plan_that_cannot_be_opened_does_not_stop_the_others(self):
-        with mock.patch("rita_oversiktsplan.plugin.DatabaseManagerDialog") as dialog_cls,                mock.patch.object(type(self.plugin), "_load", side_effect=[True, False, True]) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=None):
+        with mock.patch("rita_oversiktsplan.plugin.DatabaseManagerDialog") as dialog_cls,                mock.patch.object(type(self.plugin), "_load", side_effect=[True, False, True]) as loaded,                 mock.patch("rita_oversiktsplan.plugin.checkout.read_lock", return_value=None), mock.patch("rita_oversiktsplan.plugin.checkout.read_protection", return_value=None):
             dialog_cls.return_value.exec.return_value = True
             dialog_cls.return_value.selections.return_value = [("planer", "oversiktsplan", p) for p in "abc"]
             dialog_cls.return_value.checkout_requested = False
