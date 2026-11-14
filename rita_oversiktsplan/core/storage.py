@@ -18,7 +18,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-from qgis.core import Qgis, QgsDataSourceUri, QgsProviderRegistry, QgsVectorLayer
+from qgis.core import Qgis, QgsCredentials, QgsDataSourceUri, QgsProviderRegistry, QgsVectorLayer
 
 from . import geopackage, model
 
@@ -281,6 +281,20 @@ def read_file_rows(path: Path, table: Table) -> list[dict]:
 
 
 # -- lagringssätt ---------------------------------------------------------------------------------------------------
+def layer_address(uri: QgsDataSourceUri) -> str:
+    """Lagrets adress, utan lösenord. Adressen sparas i projektfilen, så ett lösenord får aldrig stå i den: det skulle ligga
+    i klartext för alla som får filen. En inloggningskonfiguration (``authcfg``) står kvar som en hänvisning, men skrivs
+    inte ut som användarnamn och lösenord. Ett lösenord som anslutningen har sparat lämnas i stället till QGIS
+    inloggningscache (bara i minnet, bara medan QGIS är igång), som lagren frågar innan de ber om lösenordet, så att man
+    inte behöver skriva det igen. Öppnas projektet i ett nytt QGIS frågar QGIS en gång efter lösenordet, som vanligt."""
+    user, password = uri.username(), uri.password()
+    uri.setPassword("")
+    if password:
+        # nyckeln är adressen utan lösenord, så som QGIS letar upp den när lagret ansluter
+        QgsCredentials.instance().put(uri.connectionInfo(False), user, password)
+    return uri.uri(False)
+
+
 class Storage:
     """Där en plans tabeller finns."""
     kind = ""
@@ -456,7 +470,7 @@ class PostgisStorage(Storage):
         if layer_def.geometry:
             uri.setSrid(str(self.epsg))
             uri.setWkbType(_WKB[layer_def.geometry])
-        return uri.uri(True)
+        return layer_address(uri)
 
     def layer_source(self, layer_def: model.LayerDef) -> tuple[str, str]:
         return self.layer_uri(layer_def), PROVIDER

@@ -177,7 +177,41 @@ class PostgisCase(unittest.TestCase):
         return layer
 
 
+class PasswordConnection:
+    """En anslutning vars adress har ett sparat lösenord (som QGIS anslutningar kan ha) eller en inloggningskonfiguration."""
+
+    def __init__(self, text):
+        self.text = text
+
+    def uri(self):
+        return self.text
+
+
 class StorageTests(unittest.TestCase):
+    def test_a_layer_address_never_contains_the_password_and_the_login_goes_to_the_qgis_cache_instead(self):
+        text = "dbname='planer' host=localhost port=5432 user='eric' password='hemligt' sslmode=disable"
+        plan = storage.PostgisStorage("db", "oversiktsplan", "op_2040", PasswordConnection(text))
+        with mock.patch.object(storage.QgsCredentials, "instance") as instance, \
+                mock.patch.object(storage.PostgisStorage, "epsg", new_callable=mock.PropertyMock, return_value=3006):
+            addresses = [plan.layer_uri(table) for table in storage.tables()]
+        for address in addresses:
+            self.assertNotIn("hemligt", address, "lösenordet hamnar annars i klartext i projektfilen")
+            self.assertNotIn("password", address)
+            self.assertIn("user='eric'", address, "användarnamnet behövs för att ansluta")
+        realm = "dbname='planer' host=localhost port=5432 user='eric' sslmode=disable"
+        instance.return_value.put.assert_called_with(realm, "eric", "hemligt")
+
+    def test_a_connection_with_a_login_configuration_keeps_only_the_reference(self):
+        text = "dbname='planer' host=localhost port=5432 authcfg='abc1234' sslmode=disable"
+        plan = storage.PostgisStorage("db", "oversiktsplan", "op_2040", PasswordConnection(text))
+        with mock.patch.object(storage.QgsCredentials, "instance") as instance, \
+                mock.patch.object(storage.PostgisStorage, "epsg", new_callable=mock.PropertyMock, return_value=3006):
+            address = plan.layer_uri(storage.tables()[0])
+        self.assertIn("authcfg=abc1234", address, "hänvisningen till QGIS krypterade inloggning står kvar")
+        self.assertNotIn("password", address)
+        self.assertNotIn("user=", address)
+        instance.return_value.put.assert_not_called()
+
     def test_names_become_identifiers(self):
         self.assertEqual(storage.identifier("ÖP 2040 – Eskilstuna"), "op_2040_eskilstuna")
         self.assertEqual(storage.identifier("2040"), "op_2040")

@@ -2,6 +2,16 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.24] – databaslösenordet sparas inte längre i projektfilen
+
+- **Säkerhet:** lagrens adress innehöll användarnamn och lösenord i klartext (`uri.uri(True)`) och sparades i .qgz-filen,
+  så alla som fick filen kunde läsa lösenordet. Nu innehåller adressen inget lösenord. En hänvisning till QGIS krypterade
+  inloggning (`authcfg`) står kvar, och ett lösenord som anslutningen sparat lämnas bara till QGIS inloggningscache i
+  minnet. Öppnas ett projekt i ett nytt QGIS kan QGIS fråga efter lösenordet en gång.
+- **Projektfiler som sparats av äldre versioner har fortfarande lösenordet i klartext:** spara om dem med den här
+  versionen och byt lösenord på databaskontot.
+- Fil för fil: `core/storage.py` (`layer_address`).
+
 ## [0.1.23] – plan i ett eget PostGIS-schema utan rätt att skapa scheman
 
 - **Rättat:** en ny plan gick inte att lägga i ett schema som redan fanns om man inte fick skapa scheman i databasen,
