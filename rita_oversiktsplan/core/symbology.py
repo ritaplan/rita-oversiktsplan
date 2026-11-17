@@ -300,7 +300,11 @@ def apply_labels(layer: QgsVectorLayer, category: model.Category, stages=()) -> 
     if geometry == QgsWkbTypes.GeometryType.PolygonGeometry and group is not None and group.names == "perimeter":
         settings.placement = Qgis.LabelPlacement.PerimeterCurved  # längs kanten, i bården
     elif geometry == QgsWkbTypes.GeometryType.PolygonGeometry:
-        settings.placement = Qgis.LabelPlacement.Horizontal
+        # Fast plats: en punkt inne i hela ytan, inte i den del som syns. Med ``Horizontal`` letade QGIS en plats i den
+        # synliga delen av ytan, så namnet hoppade när man panorerade eller zoomade.
+        settings.placement = Qgis.LabelPlacement.OverPoint
+        settings.centroidInside = True
+        settings.centroidWhole = True
     elif geometry == QgsWkbTypes.GeometryType.LineGeometry:
         settings.placement = Qgis.LabelPlacement.Curved
     else:

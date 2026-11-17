@@ -2,6 +2,13 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.25] – namnen på ytorna står still när man zoomar och panorerar
+
+- **Namnen på mark- och vattenanvändningens ytor står still.** Namnet placerades i den del av ytan som syntes i
+  fönstret, så det hoppade när man panorerade eller zoomade. Nu ligger det på en fast punkt inne i hela ytan (också för
+  smala eller L-formade ytor), oavsett vilken del av kartan som visas. Namn som följer kanten (riksintressen) och namn på
+  linjer följer fortfarande det som syns. Fil för fil: `core/symbology.py` (`apply_labels`).
+
 ## [0.1.24] – databaslösenordet sparas inte längre i projektfilen
 
 - **Säkerhet:** lagrens adress innehöll användarnamn och lösenord i klartext (`uri.uri(True)`) och sparades i .qgz-filen,

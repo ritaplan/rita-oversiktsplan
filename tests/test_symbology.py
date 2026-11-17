@@ -16,7 +16,7 @@ from qgis_app import get_app  # noqa: E402
 
 get_app()
 
-from qgis.core import (Qgis, QgsExpression, QgsExpressionContext, QgsFeature, QgsProject,  # noqa: E402
+from qgis.core import (Qgis, QgsExpression, QgsExpressionContext, QgsFeature, QgsGeometry, QgsProject,  # noqa: E402
                        QgsRuleBasedRenderer, QgsSldExportContext)
 
 from rita_oversiktsplan import classFactory  # noqa: E402
@@ -253,6 +253,53 @@ class MapTests(PlanCase):
         self.assertIn("<se:TextSymbolizer>", text)
         self.assertIn("<se:MaxScaleDenominator>100000</se:MaxScaleDenominator>", text)
         self.assertIn('fill-opacity">0.8<', text)
+
+
+class FixedLabelTests(PlanCase):
+    """Namnet på en yta står på samma ställe oavsett vilken del av kartan som syns."""
+
+    def label_positions(self, layer, extent):
+        from qgis.core import QgsMapRendererParallelJob, QgsMapSettings, QgsRectangle
+        from qgis.PyQt.QtCore import QEventLoop, QSize, QTimer
+        from qgis.PyQt.QtGui import QColor
+        settings = QgsMapSettings()
+        settings.setLayers([layer])
+        settings.setDestinationCrs(layer.crs())
+        settings.setExtent(QgsRectangle(*extent))
+        settings.setOutputSize(QSize(600, 600))
+        settings.setBackgroundColor(QColor(255, 255, 255))
+        job = QgsMapRendererParallelJob(settings)
+        loop = QEventLoop()
+        job.finished.connect(loop.quit)
+        QTimer.singleShot(30000, loop.quit)
+        job.start()
+        loop.exec()
+        self.assertFalse(job.isActive(), "renderingen blev inte klar")
+        results = job.takeLabelingResults()
+        self.assertIsNotNone(results)
+        return {label.labelText: (round(label.labelRect.center().x()), round(label.labelRect.center().y()))
+                for label in results.allLabels()}
+
+    def test_a_name_does_not_move_when_the_map_is_panned_or_zoomed(self):
+        layer = self.layers[MVA]
+        layer.setScaleBasedVisibility(False)
+        layer.startEditing()
+        for wkt, name in (("MultiPolygon(((0 0, 4000 0, 4000 1500, 1500 1500, 1500 4000, 0 4000, 0 0)))", "LANDYTA"),
+                          ("MultiPolygon(((5000 0, 9000 0, 9000 3000, 5000 3000, 5000 0)))", "RUTA")):  # L-form och rektangel
+            feature = QgsFeature(layer.fields())
+            feature.setGeometry(QgsGeometry.fromWkt(wkt))
+            feature["namn"] = name
+            layer.addFeature(feature)
+        self.assertTrue(layer.commitChanges(), layer.commitErrors())
+        settings = layer.labeling().settings()
+        self.assertEqual(settings.placement, Qgis.LabelPlacement.OverPoint)
+        self.assertTrue(settings.centroidWhole, "punkten räknas på hela ytan, inte på den synliga delen")
+        whole = self.label_positions(layer, (-500, -500, 9500, 4500))
+        self.assertEqual(set(whole), {"LANDYTA", "RUTA"})
+        # utsnitt som klipper ytorna på olika sätt
+        for extent in ((-500, -500, 3000, 4500), (500, -500, 9500, 4500), (-500, 1000, 4500, 4500), (6000, 500, 8500, 2500)):
+            for name, position in self.label_positions(layer, extent).items():
+                self.assertEqual(position, whole[name], f"{name} flyttade sig i utsnittet {extent}")
 
 
 class RiksintressenMapTests(PlanCase):
