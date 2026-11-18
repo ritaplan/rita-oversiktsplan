@@ -111,7 +111,7 @@ class PluginTests(unittest.TestCase):
                                  "Skapa kommunens ställningstagande för markerade riksintressen",
                                  "Markanvändning från Topografi 10…",
                                  "Leverans och export…", "Skapa arkivpaket…", "Kontrollera arkivpaket…",
-                                 "Inställningar för leverans till NGP…", "Spara stilar för GeoServer (SLD)…",
+                                 "Inställning anslutning NGP…", "Spara stilar för GeoServer (SLD)…",
                                  "Skapa bokmärken i planhandling…", "Spara alla redigeringar", "Rita Översiktsplan",
                                  "Om Rita Översiktsplan…"])
 

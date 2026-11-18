@@ -108,7 +108,7 @@ Samma kommandon finns under **Insticksprogram → Rita Översiktsplan**. Där fi
 - **Ändring av översiktsplanen…** – se [Ändring av planen](andring.md),
 - **Skapa kommunens ställningstagande för markerade riksintressen** – se [Hämta underlag](hamta-underlag.md),
 - **Skapa arkivpaket…** och **Kontrollera arkivpaket…** – se [Arkivpaket](arkivpaket.md),
-- **Inställningar för leverans till NGP…** – se [Leverera](leverera.md),
+- **Inställning anslutning NGP…** – se [Leverera](leverera.md),
 - **Spara stilar för GeoServer (SLD)…** – se [Kartan](kartan.md),
 - **Spara alla redigeringar** – sparar utan att avsluta redigeringen,
 - **Om Rita Översiktsplan…** – version, licens och länkar.

@@ -2,6 +2,18 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.26] – ny inställningsdialog för anslutningen till NGP
+
+- **Inställning anslutning NGP: en flik per miljö och en kontroll som visar om anslutningen är aktiv.** Dialogen heter nu
+  *Inställning anslutning NGP* och har en flik för **Produktion** och en för **Verifiering**, var och en med egna
+  adresser och egen nyckel. Överst väljer man vilken miljö leveransen går till. **Kontrollera anslutningen** loggar in och
+  ber tjänsten om hälsan: grön prick = aktiv, röd = fel med förklaring (till exempel att en konsumentnyckel inte har
+  behörighet att leverera). Prickarna syns också på flikarna, och **Kontrollera alla** prövar alla flikar som har en
+  nyckel. Det ersätter *Testa anslutning*, vars hälsokontroll saknade inloggning och därför gav missvisande fel.
+  Tidigare inställningar gäller fortfarande för den miljö som var vald, och en tidigare egen adress flyttas till
+  Verifiering. Samma dialog som i Rita Detaljplan, som också har en flik för sökning. Fil för fil:
+  `gui/settings_dialog.py`, `core/settings.py` (`ngp_environment_config`), `core/ngp_client.py` (`Health`, `check`).
+
 ## [0.1.25] – namnen på ytorna står still när man zoomar och panorerar
 
 - **Namnen på mark- och vattenanvändningens ytor står still.** Namnet placerades i den del av ytan som syntes i

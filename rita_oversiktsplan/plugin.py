@@ -117,7 +117,7 @@ class OversiktsplanPlugin:
         self._add_action("Leverans och export…", self.export_plan, icon("export.svg"))
         self._add_action("Skapa arkivpaket…", self.open_archive)
         self._add_action("Kontrollera arkivpaket…", self.verify_archive)
-        self._add_action("Inställningar för leverans till NGP…", self.open_settings)
+        self._add_action("Inställning anslutning NGP…", self.open_settings)
         self._add_action("Spara stilar för GeoServer (SLD)…", self.export_sld)
         self._add_action("Skapa bokmärken i planhandling…", self.open_document, icon("planhandling.svg"))
         self._add_action("Spara alla redigeringar", self.save_all, icon("save.svg"))

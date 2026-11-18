@@ -56,11 +56,16 @@ Du kan spara filen även om kontrollen hittat fel, men då följer filen inte fo
 
 ### Ställ in leveransen första gången
 
-1. Klicka på **Inställningar…** i leveransrutan, eller välj **Insticksprogram → Rita Översiktsplan → Inställningar för
-   leverans till NGP…**.
-2. Välj **miljö**: Lantmäteriets **verifieringsmiljö**, där man provar, eller **produktion**.
-3. Välj en **autentiseringskonfiguration** i QGIS med nyckeln och hemligheten från Lantmäteriets API-portal.
-   Uppgifterna sparas i QGIS autentiseringsdatabas, inte av pluginet.
+1. Klicka på **Inställningar…** i leveransrutan, eller välj **Insticksprogram → Rita Översiktsplan → Inställning
+   anslutning NGP…**. Dialogen har en flik för **Produktion** och en för **Verifiering**, var och en med egna adresser
+   och egen nyckel.
+2. Välj överst vilken miljö **leveransen går till**: Lantmäteriets **verifieringsmiljö**, där man provar, eller
+   **produktion**.
+3. Välj en **autentiseringskonfiguration** i QGIS med nyckeln och hemligheten från Lantmäteriets API-portal, på fliken
+   för den miljön. Uppgifterna sparas i QGIS autentiseringsdatabas, inte av pluginet. Leverans kräver en nyckel med
+   producentbehörighet.
+4. Klicka på **Kontrollera anslutningen**. Pluginet loggar in och ber tjänsten om hälsan, och fliken visar en grön
+   prick (aktiv) eller en röd (med förklaring). **Kontrollera alla** prövar alla flikar som har en nyckel.
 
 Saknas inställningarna, eller kommunen i planens uppgifter, går leveransen inte att välja och rutan säger vad som
 saknas. Då är *Spara som JSON-fil* förvalt.

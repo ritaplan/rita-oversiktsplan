@@ -437,9 +437,7 @@ class SettingsTests(unittest.TestCase):
 
     @staticmethod
     def _clear():
-        store = QgsSettings()
-        for key in ("environment", "base_url", "token_url", "authcfg"):
-            store.remove(settings.KEY_NGP + key)
+        QgsSettings().remove(settings.KEY_NGP.rstrip("/"))
 
     def test_the_default_is_the_verification_environment_without_a_login(self):
         config = settings.ngp_config()
@@ -452,8 +450,26 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual((config.environment, config.base_url, config.authcfg), ("prod", ngp.PROD_BASE, "cfg42"))
         self.assertTrue(config.is_production)
 
+    def test_every_environment_has_its_own_settings(self):
+        settings.set_ngp_config(ngp.NgpConfig("prod", ngp.PROD_BASE, ngp.PROD_TOKEN, "produktion"))
+        settings.set_ngp_config(ngp.NgpConfig("ver", ngp.VER_BASE, "https://annan/token", "verifiering"))
+        settings.set_ngp_active("prod")
+        self.assertEqual(settings.ngp_config().authcfg, "produktion")
+        ver = settings.ngp_environment_config("ver")
+        self.assertEqual((ver.authcfg, ver.token_url), ("verifiering", "https://annan/token"))
+        settings.set_ngp_active("ver")
+        self.assertEqual(settings.ngp_config().authcfg, "verifiering")
+
+    def test_settings_saved_before_the_split_still_apply_to_the_environment_that_was_chosen(self):
+        store = QgsSettings()
+        store.setValue(settings.KEY_NGP + "environment", "prod")
+        store.setValue(settings.KEY_NGP + "authcfg", "gammal")
+        self.assertEqual(settings.ngp_config().authcfg, "gammal")
+        self.assertEqual(settings.ngp_environment_config("ver").authcfg, "", "den andra miljön fick ingen nyckel")
+
     def test_an_own_address_is_kept_as_typed(self):
         settings.set_ngp_config(ngp.NgpConfig("egen", " https://min.server/api ", "", "cfg"))
+        settings.set_ngp_active("egen")
         config = settings.ngp_config()
         self.assertEqual((config.environment, config.base_url, config.token_url), ("egen", "https://min.server/api", ""))
 
@@ -463,6 +479,47 @@ class SettingsTests(unittest.TestCase):
             self.assertEqual(settings.auth_configs(), [])
 
 
+class HealthTests(ServerCase):
+    """Är anslutningen aktiv? Svaret är alltid en ``Health``, aldrig ett undantag."""
+
+    def test_a_healthy_service_is_active(self):
+        health = self.new_client().check()
+        self.assertTrue(health.ok)
+        self.assertIn("Aktiv", health.text)
+
+    def test_missing_settings_are_explained_without_calling_the_service(self):
+        health = ngp.NgpClient(ngp.NgpConfig("ver", ngp.VER_BASE, ngp.VER_TOKEN, "")).check()
+        self.assertFalse(health.ok)
+        self.assertIn("autentiseringskonfiguration", health.text)
+
+    def test_a_down_service_is_an_error(self):
+        self.fake.health = "DOWN"
+        health = self.new_client().check()
+        self.assertFalse(health.ok)
+        self.assertIn("DOWN", health.text)
+
+    def test_a_key_without_producer_rights_is_told_so_after_a_working_login(self):
+        def refuse(method, url, headers, body, authcfg):
+            if url.endswith("/token"):
+                return ngp.Response(200, {}, json.dumps({"access_token": "tok", "expires_in": 300}).encode())
+            return ngp.Response(403, {}, b"{}")
+
+        config = ngp.NgpConfig("ver", ngp.VER_BASE, ngp.VER_TOKEN, "konsument")
+        health = ngp.NgpClient(config, transport=refuse, sleep=no_sleep).check()
+        self.assertFalse(health.ok)
+        self.assertIn("Inloggningen fungerar", health.text)
+        self.assertIn("producent", health.text)
+
+    def test_a_rejected_login_is_an_error_with_the_explanation(self):
+        def reject(method, url, headers, body, authcfg):
+            return ngp.Response(401, {}, b"{}")
+
+        config = ngp.NgpConfig("ver", ngp.VER_BASE, ngp.VER_TOKEN, "fel")
+        health = ngp.NgpClient(config, transport=reject, sleep=no_sleep).check()
+        self.assertFalse(health.ok)
+        self.assertIn("Inloggningen avvisades", health.text)
+
+
 class SettingsDialogTests(SettingsTests):
     def dialog(self):
         with mock.patch.object(settings, "auth_configs", return_value=[("abc1234", "NGP-nyckel"), ("def5678", "Annan")]):
@@ -470,57 +527,94 @@ class SettingsDialogTests(SettingsTests):
         self.addCleanup(dialog.deleteLater)
         return dialog
 
-    def test_the_section_lists_environments_and_authentication_configurations(self):
-        dialog = self.dialog()
-        self.assertEqual([dialog.ngp_env.itemText(i) for i in range(dialog.ngp_env.count())],
-                         ["Verifiering", "Produktion", "Egen adress"])
-        self.assertEqual([dialog.ngp_auth.itemData(i) for i in range(dialog.ngp_auth.count())], ["", "abc1234", "def5678"])
-        self.assertIn("Grundläggande autentisering", dialog.ngp_note.text())
-        self.assertIn("inte verifierad", dialog.ngp_note.text())
+    def pick(self, combo, data):
+        combo.setCurrentIndex(combo.findData(data))
 
-    def test_choosing_an_environment_fills_the_addresses_and_locks_them(self):
+    def test_the_dialog_has_a_tab_each_for_production_and_verification(self):
         dialog = self.dialog()
-        dialog.ngp_env.setCurrentIndex(dialog.ngp_env.findData("prod"))
-        self.assertEqual((dialog.ngp_base.text(), dialog.ngp_token.text()), (ngp.PROD_BASE, ngp.PROD_TOKEN))
-        self.assertTrue(dialog.ngp_base.isReadOnly())
-        dialog.ngp_env.setCurrentIndex(dialog.ngp_env.findData("egen"))
-        self.assertFalse(dialog.ngp_base.isReadOnly() or dialog.ngp_token.isReadOnly())
+        self.assertEqual(dialog.windowTitle(), "Inställning anslutning NGP")
+        self.assertEqual([dialog.tabs.tabText(i) for i in range(dialog.tabs.count())], ["Produktion", "Verifiering"])
+        self.assertEqual([dialog.ngp_env.itemText(i) for i in range(dialog.ngp_env.count())], ["Produktion", "Verifiering"])
+        tab = dialog.delivery["prod"]
+        self.assertEqual([tab.auth.itemData(i) for i in range(tab.auth.count())], ["", "abc1234", "def5678"])
+        self.assertIn("Grundläggande autentisering", tab.note.text())
+        self.assertIn("producent", tab.note.text())
 
-    def test_saving_writes_the_ngp_settings(self):
+    def test_every_tab_starts_with_the_addresses_of_its_environment_and_is_not_yet_checked(self):
         dialog = self.dialog()
-        dialog.ngp_env.setCurrentIndex(dialog.ngp_env.findData("prod"))
-        dialog.ngp_auth.setCurrentIndex(dialog.ngp_auth.findData("def5678"))
+        self.assertEqual((dialog.delivery["prod"].base.text(), dialog.delivery["prod"].token.text()), (ngp.PROD_BASE, ngp.PROD_TOKEN))
+        self.assertEqual((dialog.delivery["ver"].base.text(), dialog.delivery["ver"].token.text()), (ngp.VER_BASE, ngp.VER_TOKEN))
+        for tab in dialog.delivery.values():
+            self.assertIn("Inte kontrollerad", tab.status.text())
+
+    def test_the_standard_addresses_can_be_restored(self):
+        dialog = self.dialog()
+        tab = dialog.delivery["prod"]
+        tab.base.setText("https://fel")
+        tab.token.setText("https://fel/token")
+        tab.reset.click()
+        self.assertEqual((tab.base.text(), tab.token.text()), (ngp.PROD_BASE, ngp.PROD_TOKEN))
+
+    def test_saving_writes_the_settings_of_every_environment_and_the_active_one(self):
+        dialog = self.dialog()
+        self.pick(dialog.delivery["prod"].auth, "abc1234")
+        self.pick(dialog.delivery["ver"].auth, "def5678")
+        dialog.delivery["ver"].token.setText("https://annan/token")
+        self.pick(dialog.ngp_env, "prod")
         dialog.accept()
         config = settings.ngp_config()
-        self.assertEqual((config.environment, config.authcfg), ("prod", "def5678"))
+        self.assertEqual((config.environment, config.authcfg), ("prod", "abc1234"))
+        ver = settings.ngp_environment_config("ver")
+        self.assertEqual((ver.authcfg, ver.token_url), ("def5678", "https://annan/token"))
 
-    def test_the_saved_authentication_configuration_is_selected_when_reopened(self):
-        settings.set_ngp_config(ngp.NgpConfig("ver", ngp.VER_BASE, ngp.VER_TOKEN, "abc1234"))
-        self.assertEqual(self.dialog().ngp_auth.currentData(), "abc1234")
-
-    def test_a_config_from_a_deleted_authentication_entry_is_still_shown(self):
+    def test_the_saved_settings_are_shown_when_reopened(self):
+        settings.set_ngp_config(ngp.NgpConfig("prod", ngp.PROD_BASE, ngp.PROD_TOKEN, "abc1234"))
         settings.set_ngp_config(ngp.NgpConfig("ver", ngp.VER_BASE, ngp.VER_TOKEN, "borttagen"))
-        self.assertEqual(self.dialog().ngp_auth.currentData(), "borttagen")
-
-    def test_the_connection_test_explains_what_is_missing(self):
+        settings.set_ngp_active("prod")
         dialog = self.dialog()
-        self.assertFalse(dialog.test_connection())
-        self.assertIn("autentiseringskonfiguration", dialog.ngp_result.text())
+        self.assertEqual(dialog.ngp_env.currentData(), "prod")
+        self.assertEqual(dialog.delivery["prod"].auth.currentData(), "abc1234")
+        self.assertEqual(dialog.delivery["ver"].auth.currentData(), "borttagen", "en borttagen konfiguration visas ändå")
 
-    def test_the_connection_test_reports_success_and_failure(self):
+    def test_an_earlier_own_address_moves_to_the_verification_tab(self):
+        settings.set_ngp_config(ngp.NgpConfig("egen", "https://min.server/api", "", "cfg"))
+        settings.set_ngp_active("egen")
         dialog = self.dialog()
-        dialog.ngp_auth.setCurrentIndex(dialog.ngp_auth.findData("abc1234"))
-        good = mock.Mock()
-        good.health.return_value = "UP"
-        with mock.patch.object(dialog, "_client", return_value=good):
-            self.assertTrue(dialog.test_connection())
-        self.assertIn("Tjänsten är UP och inloggningen fungerar", dialog.ngp_result.text())
-        good.token.assert_called_once()
-        bad = mock.Mock()
-        bad.health.side_effect = ngp.NgpError("Ingen kontakt med servern")
+        self.assertEqual(dialog.ngp_env.currentData(), "ver")
+        self.assertEqual((dialog.delivery["ver"].base.text(), dialog.delivery["ver"].token.text()), ("https://min.server/api", ""))
+
+    def test_checking_a_tab_shows_the_answer_in_the_tab_and_on_its_label(self):
+        dialog = self.dialog()
+        self.pick(dialog.delivery["prod"].auth, "abc1234")
+        good, bad = mock.Mock(), mock.Mock()
+        good.check.return_value = ngp.Health(True, "Aktiv: tjänsten är UP och inloggningen fungerar.")
+        bad.check.return_value = ngp.Health(False, "Ingen kontakt med servern")
+        with mock.patch.object(dialog, "_client", return_value=good) as client:
+            dialog.delivery["prod"].check.click()
+        self.assertEqual(client.call_args[0][0].environment, "prod", "kontrollen gäller flikens miljö")
+        self.assertIn("Aktiv", dialog.delivery["prod"].status.text())
+        self.assertIn("#1b7f3b", dialog.delivery["prod"].status.text())
+        self.assertIn("Inte kontrollerad", dialog.delivery["ver"].status.text(), "den andra fliken är orörd")
         with mock.patch.object(dialog, "_client", return_value=bad):
-            self.assertFalse(dialog.test_connection())
-        self.assertIn("Ingen kontakt", dialog.ngp_result.text())
+            dialog.delivery["prod"].check.click()
+        self.assertIn("Ingen kontakt", dialog.delivery["prod"].status.text())
+        self.assertFalse(dialog.delivery["prod"].health.ok)
+
+    def test_check_all_skips_connections_without_a_key(self):
+        dialog = self.dialog()
+        self.pick(dialog.delivery["ver"].auth, "abc1234")
+        asked = []
+
+        class Fake:
+            def __init__(self, config):
+                asked.append(config.environment)
+
+            def check(self):
+                return ngp.Health(True, "Aktiv")
+
+        dialog._client = Fake
+        dialog.check_all_button.click()
+        self.assertEqual(asked, ["ver"], "bara Verifiering har en nyckel")
 
 
 class DeliveryDialogTests(unittest.TestCase):

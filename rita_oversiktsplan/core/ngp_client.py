@@ -280,6 +280,13 @@ def _explain(response: Response, action: str) -> NgpError:
 
 
 # -- klienten -------------------------------------------------------------------------------
+@dataclass(frozen=True)
+class Health:
+    """Hur en anslutning mår: ``ok`` är True (aktiv) eller False (fel), ``text`` förklarar vad som sågs."""
+    ok: bool
+    text: str
+
+
 class NgpClient:
     def __init__(self, config: NgpConfig, transport: Optional[Transport] = None,
                  sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic):
@@ -332,6 +339,27 @@ class NgpClient:
         return response
 
     # -- API:ets anrop ----------------------------------------------------------------------
+    def check(self) -> Health:
+        """Är anslutningen till leverans-API:et aktiv? Loggar in och ber tjänsten om hälsan. Ger aldrig något undantag: ett fel
+        är ett svar (``Health``) med förklaring."""
+        problems = self.config.problems()
+        if problems:
+            return Health(False, " ".join(problems))
+        try:
+            self.token()
+            response = self._call("GET", "/health", "Hälsokontrollen misslyckades", strict=False)
+        except NgpError as exc:
+            return Health(False, str(exc))
+        if response.status in (401, 403):
+            return Health(False, "Inloggningen fungerar, men nyckeln har inte behörighet till leverans-API:et. Leverans "
+                                 "kräver producentbehörighet: en konsumentnyckel räcker inte.")
+        if response.status not in (200, 503):
+            return Health(False, str(_explain(response, "Hälsokontrollen misslyckades")))
+        status = str((response.json() or {}).get("status", "UNKNOWN"))
+        if response.status == 503 or status.upper() == "DOWN":
+            return Health(False, f"Tjänsten svarar men rapporterar att den är {status}.")
+        return Health(True, f"Aktiv: tjänsten är {status} och inloggningen fungerar.")
+
     def health(self) -> str:
         """Tjänstens hälsostatus (UP, DOWN …). Kräver ingen inloggning."""
         response = self._transport("GET", self._url("/health"), {"Accept": "application/json"}, None, "")
