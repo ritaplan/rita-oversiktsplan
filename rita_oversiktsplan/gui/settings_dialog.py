@@ -12,6 +12,7 @@ from qgis.PyQt.QtWidgets import (QApplication, QComboBox, QDialog, QDialogButton
 
 from ..core import ngp_client as ngp
 from ..core import settings
+from .richtext import esc
 
 GREEN, RED, GREY = "#1b7f3b", "#b3261e", "#7a7a7a"
 ORDER = ("prod", "ver")  # flikarna för leverans, i den ordning de visas
@@ -101,7 +102,7 @@ class _DeliveryTab(QWidget):
             self.status.setText(f"<span style='color:{GREY}'>● {NOT_CHECKED}</span>")
         else:
             colour = GREEN if health.ok else RED
-            self.status.setText(f"<span style='color:{colour}'>● {health.text}</span>")
+            self.status.setText(f"<span style='color:{colour}'>● {esc(health.text)}</span>")
 
 
 class SettingsDialog(QDialog):

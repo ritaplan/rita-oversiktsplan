@@ -11,7 +11,7 @@ samma planer.
 | Kräver | Ingenting. | En PostgreSQL-databas med PostGIS och en sparad anslutning i QGIS. |
 | Redigering | Direkt i filen. | Checka ut, redigera lokalt, checka in. |
 
-> **PostGIS-stödet** är bara testat mot en låtsasdatabas. Prova först på en testplan i ett testschema.
+> **PostGIS-stödet** är i huvudsak testat mot en låtsasdatabas. Prova först på en testplan i ett testschema.
 
 ## Skapa en plan i PostGIS
 
@@ -25,6 +25,12 @@ samma planer.
 
 Alla planer i samma schema ligger i samma tabeller och delar koordinatsystem. En dold kolumn `plan` skiljer dem åt.
 QGIS-projektet sparas i mappen du väljer.
+
+## Rättigheter i databasen
+
+Databasen avgör vad du får göra. I ett schema som redan har pluginets tabeller räcker det att kunna läsa och skriva. Hur
+databasen sätts upp, vilka rättigheter som krävs och vad felmeddelandena betyder står i
+[Sätta upp en databas](databas.md), för den som ansvarar för databasen.
 
 ## Öppna en plan
 

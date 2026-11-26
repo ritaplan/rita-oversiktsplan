@@ -17,7 +17,7 @@ from qgis_app import get_app  # noqa: E402
 get_app()
 
 from qgis.core import (Qgis, QgsExpression, QgsExpressionContext, QgsFeature, QgsGeometry, QgsProject,  # noqa: E402
-                       QgsRuleBasedRenderer, QgsSldExportContext)
+                       QgsRuleBasedRenderer, QgsSldExportContext, QgsVectorLayerSimpleLabeling)
 
 from rita_oversiktsplan import classFactory  # noqa: E402
 from rita_oversiktsplan.core import geopackage, model, project, sld, styles, symbology  # noqa: E402
@@ -300,6 +300,57 @@ class FixedLabelTests(PlanCase):
         for extent in ((-500, -500, 3000, 4500), (500, -500, 9500, 4500), (-500, 1000, 4500, 4500), (6000, 500, 8500, 2500)):
             for name, position in self.label_positions(layer, extent).items():
                 self.assertEqual(position, whole[name], f"{name} flyttade sig i utsnittet {extent}")
+
+
+class MultiPartLabelTests(PlanCase):
+    """Innehåll i flera skilda delar får namnet på varje del."""
+
+    def named_at(self, table, wkt, name, **values):
+        from qgis.core import QgsMapRendererParallelJob, QgsMapSettings, QgsRectangle
+        from qgis.PyQt.QtCore import QEventLoop, QSize, QTimer
+        layer = self.layers[table]
+        layer.startEditing()
+        feature = QgsFeature(layer.fields())
+        feature.setGeometry(QgsGeometry.fromWkt(wkt))
+        feature["namn"] = name
+        for field, value in values.items():
+            feature[field] = value
+        layer.addFeature(feature)
+        self.assertTrue(layer.commitChanges(), layer.commitErrors())
+        settings = QgsMapSettings()
+        settings.setLayers([layer])
+        settings.setDestinationCrs(layer.crs())
+        settings.setExtent(QgsRectangle(-500, -500, 20500, 20500))
+        settings.setOutputSize(QSize(1000, 1000))
+        settings.setOutputDpi(96)
+        job = QgsMapRendererParallelJob(settings)
+        loop = QEventLoop()
+        job.finished.connect(loop.quit)
+        QTimer.singleShot(30000, loop.quit)
+        job.start()
+        loop.exec()
+        self.assertFalse(job.isActive(), "renderingen blev inte klar")
+        results = job.takeLabelingResults()
+        # ett namn längs en kant eller linje ges som en etikett per tecken: räkna på vilken sida om mitten de ligger
+        return {"vänster" if label.labelRect.center().x() < 10000 else "höger" for label in results.allLabels()}
+
+    def show_at_every_scale(self, table):
+        layer = self.layers[table]
+        settings = layer.labeling().settings()
+        settings.scaleVisibility = False
+        layer.setLabeling(QgsVectorLayerSimpleLabeling(settings))
+
+    def test_both_parts_of_an_area_get_the_name(self):
+        two = "MultiPolygon(((0 0, 7000 0, 7000 7000, 0 7000, 0 0)),((12000 12000, 19000 12000, 19000 19000, 12000 19000, 12000 12000)))"
+        for table in (MVA, "innehall_op_klimatrelateradrisk_polygon"):  # namnet mitt i ytan och längs kanten
+            self.show_at_every_scale(table)
+            self.assertEqual(self.named_at(table, two, "Vänern"), {"vänster", "höger"}, table)
+
+    def test_both_parts_of_a_line_get_the_name(self):
+        two = "MultiLineString((0 0, 7000 0),(12000 12000, 19000 12000))"
+        table = "innehall_op_markochvattenanvandning_line"
+        self.show_at_every_scale(table)
+        self.assertEqual(self.named_at(table, two, "Vänern"), {"vänster", "höger"})
 
 
 class RiksintressenMapTests(PlanCase):

@@ -23,7 +23,8 @@ Handboken går igenom arbetet steg för steg, i den ordning du normalt gör det.
 8. [Leverera planen](handbok/leverera.md) – kontrollen, JSON-filen och leveransen till NGP
 9. [Arkivpaket](handbok/arkivpaket.md) – förbered planen för långtidsbevarande
 10. [Lagring och databaser](handbok/lagring.md) – GeoPackage, PostGIS och utcheckning
-11. [Under huven](handbok/teknik.md) – datamodellen, databasen, exporten och leveransen tekniskt
+11. [Sätta upp en databas](handbok/databas.md) – för databasansvariga: schema, rättigheter och användare
+12. [Under huven](handbok/teknik.md) – datamodellen, databasen, exporten och leveransen tekniskt
 
 ## Arbetsgången i korthet
 

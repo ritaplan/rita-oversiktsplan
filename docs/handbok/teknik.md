@@ -151,12 +151,14 @@ schema "oversiktsplaner"
 ### Inloggning och behörighet
 
 Pluginet använder en av **QGIS sparade PostgreSQL-anslutningar**, och inloggningen sköts av QGIS. Databasen måste ha
-tillägget PostGIS. Användaren behöver kunna skapa tabeller i schemat första gången, och sedan läsa, skriva och ta bort
-rader. Rätt att skapa nya scheman i databasen behövs bara om schemat inte finns: har du fått ett eget schema av
-kommunen (rätten CREATE på schemat) räcker det. Pluginet frågar databasen om rättigheterna innan något skapas och
-förklarar vad som saknas. Ett schema från en äldre version (schema 3 eller 4) uppgraderas när en plan i det öppnas första gången, vilket
-kräver rätt att ändra tabellerna. Från schema 4 till 5 flyttas datan till Boverkets databasmodell 0.4 för alla planer
-i schemat, se [Datamodell](../datamodell.md).
+tillägget PostGIS. Vilka rättigheter som krävs står i [Lagring](lagring.md#rättigheter-i-databasen). Pluginet läser ur
+systemkatalogen vad som redan finns i schemat och **skapar bara det som saknas**: PostgreSQL kräver ägarskap av tabellen
+för `CREATE INDEX` och `ALTER TABLE`, även med `IF NOT EXISTS`. I ett schema som har tabellerna räcker det därför att
+läsa och skriva. Pluginet frågar om rättigheterna innan något skapas och förklarar vad som saknas.
+
+Ett schema från en äldre version (schema 3 eller 4) uppgraderas när en plan i det öppnas första gången, vilket kräver
+ägarskap av tabellerna. Från schema 4 till 5 flyttas datan till Boverkets databasmodell 0.4 för alla planer i schemat,
+se [Datamodell](../datamodell.md).
 
 ## Utcheckning och incheckning
 

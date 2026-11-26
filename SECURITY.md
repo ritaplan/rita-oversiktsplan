@@ -12,9 +12,9 @@ Så hanterar pluginet det som kan vara känsligt:
 - **Nätverk:** pluginet kontaktar bara tjänster när du själv väljer det: Lantmäteriets API vid *Leverera till NGP*,
   Boverkets karttjänst vid *Hämta riksintressen* och SCB:s karttjänst när en ny plan skapas med kommunens yta. Adresser
   till Lantmäteriets API måste börja med `https://`. Det finns ingen telemetri.
-- **Databasen:** värden i SQL skrivs med citering, och schemanamn och planers id får bara innehålla a–z, siffror och
-  understreck. Pluginet tar bara bort ett schema som det själv började skapa i samma försök (om det misslyckas), och
-  ett annat användares lås bryts bara efter två frågor.
+- **Databasen:** värden i SQL skrivs med citering, och schemanamn och planers id som pluginet skapar får bara innehålla
+  a–z, siffror och understreck. Pluginet tar bara bort ett schema som det själv började skapa i samma försök (om det
+  misslyckas). Planer tas bort först efter en bekräftelse, och en annan användares lås bryts bara efter en fråga.
 - **Word-dokument:** originalet skrivs aldrig över; bokmärkena läggs i en kopia.
 - **Webbversionen (HTML):** all text är kodad, och bara länkar till webbadresser, e-post och avsnitt i samma sida blir
   klickbara (inte till exempel `javascript:` eller filer på datorn).

@@ -13,6 +13,7 @@ from qgis.PyQt.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QD
 
 from ..core import topografi
 from ..core.topografi import Key
+from .richtext import plain
 
 SETTINGS_KEY = "rita_oversiktsplan/topografi_omklassning"
 SKIP_TEXT = "– tas inte med –"
@@ -84,7 +85,7 @@ class TopografiDialog(QDialog):
         form.addRow("", self.clip)
         form.addRow("", self.replace)
 
-        self.message = QLabel()
+        self.message = plain(QLabel())
         self.message.setWordWrap(True)
         self.run_button = QPushButton("Skapa markanvändning")
         self.run_button.setEnabled(False)

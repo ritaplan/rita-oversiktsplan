@@ -62,6 +62,10 @@ class ImportPg:
             return [[s] for s in self.schemas]
         if "information_schema.schemata" in sql:
             return [[s] for s in self.schemas]
+        if sql.startswith("SELECT c.relname"):  # vad som redan finns i schemat: låtsasdatabasen säger inget
+            return []
+        if "pg_namespace WHERE" in sql:  # schema_exists
+            return [[1]] if re.search(r"nspname = '([^']*)'", sql).group(1) in self.schemas else []
         if sql.startswith('SELECT "value" FROM') and "rita_oversiktsplan_schema" in sql:
             return [[str(self.epsg)]] if self.epsg else []
         if sql.startswith("SELECT 1 FROM"):

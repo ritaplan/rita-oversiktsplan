@@ -39,6 +39,9 @@ En översiktsplan som påbörjas 1 januari 2027 eller senare ska kunna tillgäng
   genomskinliga överlägg. Inga mönster, så att symbolerna fungerar i webbkartor (SLD för GeoServer).
 - **Kopplingar:** vilket innehåll som berör annat innehåll (klicka i kartan), riksintressets id och vilket innehåll
   antagandebeslutet gäller.
+- **Hämtar underlag:** befintlig mark- och vattenanvändning ur Lantmäteriets Topografi 10 eller Marktäcke (filer du
+  laddat ner) och riksintressen ur Boverkets karttjänst.
+- **Ändring av översiktsplanen** som ett eget ärende, med egen planhändelse och eget beslut.
 - **Kontrollerar planen** mot Lantmäteriets specifikation för översiktsplan och visar det som saknas.
 - **Levererar till NGP** via Lantmäteriets Uppdatering-API, med valideringsrapporten i en dialog, eller sparar planen
   som JSON-fil.
@@ -49,6 +52,8 @@ En översiktsplan som påbörjas 1 januari 2027 eller senare ska kunna tillgäng
   långtidsbevarande (PREMIS), och en kontroll av att paketet inte ändrats.
 - **Lagrar planen** i en lokal GeoPackage eller i en PostGIS-databas där flera kan arbeta, med **utcheckning och
   incheckning** som i Rita Detaljplan.
+- **Databashanteraren** visar planerna i databasen: öppna, importera, exportera, kopiera, ta bort och **skrivskydda**
+  planer.
 
 ## Installera
 

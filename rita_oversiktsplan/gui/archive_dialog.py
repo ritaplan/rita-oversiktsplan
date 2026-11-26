@@ -19,6 +19,7 @@ from ..core import archive, beslut, documents, editing, export_lm, geopackage, m
 from ..core.content import decision_feature, plain, plan_feature
 from ..core.project import plan_storage
 from .about_dialog import metadata
+from .richtext import plain as plain_widget
 
 DOCUMENT_FILTER = "Dokument (*.pdf *.docx *.odt);;Alla filer (*)"
 EDITING_TEXT = ("Planen redigeras just nu. Avsluta redigeringen (disketten) först, annars kommer inte det du ritat sedan "
@@ -148,7 +149,7 @@ class ArchiveDialog(QDialog):
                        "PDF/A och kontrollerade med en PDF/A-validerare.")
         intro.setWordWrap(True)
         meta = plan_metadata(group)
-        self.plan_label = QLabel(f"Plan: {meta.get('namn') or 'utan titel'}")
+        self.plan_label = plain_widget(QLabel(f"Plan: {meta.get('namn') or 'utan titel'}"))
 
         self.folder = QLineEdit(str(Path(QgsProject.instance().homePath() or Path.home())))
         self.folder.textChanged.connect(self._update)
@@ -209,7 +210,7 @@ class ArchiveDialog(QDialog):
         performer_row.addWidget(QLabel("Utförd av:"))
         performer_row.addWidget(self.performer, 1)
 
-        self.hint = QLabel("")
+        self.hint = plain_widget(QLabel(""))
         self.hint.setWordWrap(True)
         self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)

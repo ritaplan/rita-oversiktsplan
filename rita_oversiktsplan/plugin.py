@@ -40,6 +40,7 @@ from .gui.import_dialog import ImportDialog
 from .gui.messages import push
 from .gui.new_plan_dialog import DATABASE, NewPlanDialog
 from .gui.plan_info_dialog import PlanInfoDialog
+from .gui.richtext import plain as plain_widget
 from .gui.database_manager_dialog import DatabaseManagerDialog
 from .gui.select_tool import SelectTool
 from .gui.settings_dialog import SettingsDialog
@@ -749,6 +750,7 @@ class OversiktsplanPlugin:
         box.setWindowTitle("Kontrollera arkivpaket")
         box.setIcon(QMessageBox.Icon.Information if report.clean else QMessageBox.Icon.Warning)
         box.setText("Arkivpaketet är oförändrat." if report.clean else "Arkivpaketet skiljer sig från hur det skapades.")
+        plain_widget(box)
         box.setInformativeText(report.text())
         box.exec()
         return report

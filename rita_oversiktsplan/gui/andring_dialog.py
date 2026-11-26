@@ -12,6 +12,7 @@ from qgis.PyQt.QtWidgets import (QCheckBox, QComboBox, QDateEdit, QDialog, QDial
 
 from ..core import andring
 from .plan_info_dialog import OptionalDate
+from .richtext import as_text, esc, plain
 
 NONE = "– ingen än –"
 START_NOTE = ("En ändring är ett eget planärende för en del av översiktsplanen, med egen planhändelse och eget "
@@ -55,7 +56,7 @@ class AndringDialog(QDialog):
         self.pages = QStackedWidget()
         self.pages.addWidget(self._start_page())
         self.pages.addWidget(self._ongoing_page())
-        self.message = QLabel()
+        self.message = plain(QLabel())
         self.message.setWordWrap(True)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.button(QDialogButtonBox.StandardButton.Close).setText("Stäng")
@@ -105,7 +106,7 @@ class AndringDialog(QDialog):
 
     def _ongoing_page(self) -> QWidget:
         self.title = QLabel()
-        self.counts = QLabel()
+        self.counts = plain(QLabel())
         self.counts.setWordWrap(True)
         self.event = self._event_combo()
         self.event_date = OptionalDate("Datum", None)
@@ -176,7 +177,7 @@ class AndringDialog(QDialog):
         if change is None:
             return
         started = change.paborjat.isoformat() if change.paborjat else "okänt datum"
-        self.title.setText(f"<b>Pågående ändring: {change.namn}</b> (påbörjad {started})")
+        self.title.setText(f"<b>Pågående ändring: {esc(change.namn)}</b> (påbörjad {started})")
         self.event.setCurrentIndex(max(self.event.findData(change.planhandelse), 0))
         self._set_date(self.event_date, change.planhandelse_datum)
         self.diarienummer.setText(change.diarienummer)
@@ -198,7 +199,7 @@ class AndringDialog(QDialog):
         self.refresh()
 
     def _ask(self, title: str, text: str) -> bool:  # byts ut i tester
-        return QMessageBox.question(self, title, text) == QMessageBox.StandardButton.Yes
+        return QMessageBox.question(self, title, as_text(text)) == QMessageBox.StandardButton.Yes
 
     def _run(self, action) -> Optional[object]:
         try:

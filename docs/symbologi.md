@@ -173,7 +173,8 @@ Utvecklingsinriktningen är gjord för att läsas i hela kommunen, i skala 1:100
 ## Namn och skalor
 
 Innehållets **namn** visas i kartan med mörk text och vit kant. Utvecklingsinriktningens namn syns alltid, övrigas
-från 1:100 000. Fyll i namnet i *Tilldela innehåll*, till exempel en områdesbeteckning som "B4".
+från 1:100 000. Fyll i namnet i *Tilldela innehåll*, till exempel en områdesbeteckning som "B4". Har innehållet flera
+skilda delar skrivs namnet på varje del där det får plats; namn som skulle krocka med varandra utelämnas.
 
 **Allt syns i alla skalor.** Punkter och linjer (utom utvecklingsinriktningen, som har sitt eget schema) blir i
 stället mindre i tre steg när man zoomar ut, som bården på ytorna, så att de inte tar över kartan:

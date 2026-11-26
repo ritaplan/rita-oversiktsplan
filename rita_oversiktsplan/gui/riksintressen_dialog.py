@@ -11,6 +11,7 @@ from qgis.PyQt.QtWidgets import (QApplication, QCheckBox, QDialog, QDialogButton
                                  QPushButton, QRadioButton, QVBoxLayout)
 
 from ..core import riksintressen
+from .richtext import plain
 
 INTRO = ("Hämtar riksintressena enligt 3 och 4 kap. miljöbalken ur Boverkets samlade karttjänst och lägger in dem som "
          "underlag i gruppen Riksintressen enligt 3 och 4 kap. MB, med myndighetens id som riksintressets id och dagens "
@@ -72,7 +73,7 @@ class RiksintressenDialog(QDialog):
         self.positions = QCheckBox("Lägg också in dem som kommunens ställningstagande")
         self.positions.setToolTip(POSITIONS_TIP)
 
-        self.message = QLabel()
+        self.message = plain(QLabel())
         self.message.setWordWrap(True)
         self.fetch_button = QPushButton("Hämta")
         self.fetch_button.clicked.connect(self.fetch)

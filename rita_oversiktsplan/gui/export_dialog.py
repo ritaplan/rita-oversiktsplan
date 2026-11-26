@@ -17,6 +17,7 @@ from ..core import export_lm
 from ..core.ngp_client import NgpConfig
 from .choice_card import CARD_STYLE, ICONS, ChoiceCard, muted
 from .delivery_dialog import confirmation_text
+from .richtext import plain
 
 MARKS = {export_lm.FEL: "✘", export_lm.VARNING: "▲"}
 COLORS = {export_lm.FEL: QColor(179, 38, 30), export_lm.VARNING: QColor(176, 110, 0)}
@@ -121,7 +122,7 @@ class ExportDialog(QDialog):
         self.upload_info = QLabel()
         self.upload_info.setWordWrap(True)
         self.upload_info.setTextFormat(Qt.TextFormat.RichText)
-        self.upload_problems = QLabel()
+        self.upload_problems = plain(QLabel())
         self.upload_problems.setWordWrap(True)
         self.upload_problems.setStyleSheet("color: #b3261e;")
         self.settings_button = QPushButton("Inställningar…")
@@ -157,7 +158,7 @@ class ExportDialog(QDialog):
             radio.toggled.connect(self._update)
         self.understand.toggled.connect(self._update)
 
-        self.result = QLabel()
+        self.result = plain(QLabel())
         self.result.setWordWrap(True)
         self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("Stäng")

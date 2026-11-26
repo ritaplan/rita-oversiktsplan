@@ -10,6 +10,7 @@ from qgis.PyQt.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox
 
 from ..core import model, opkatalog, styles
 from ..core.content import Assignment
+from .richtext import plain
 
 NONE = "– ingen –"
 GEOMETRY_WORDS = {**{suffix: word for suffix, _, word in model.GEOMETRIES}, model.NO_GEOMETRY: "utan geometri"}
@@ -65,7 +66,7 @@ class AssignDialog(QDialog):
             box.clicked.connect(lambda *_: setattr(self, "_arrows_touched", True))
         self.complement.currentIndexChanged.connect(self._default_arrows)
         self.suffix = suffix
-        self.description = QLabel()
+        self.description = plain(QLabel())
         self.description.setWordWrap(True)
         self.description.setEnabled(False)  # dämpad färg
 

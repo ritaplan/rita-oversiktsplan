@@ -113,6 +113,16 @@ def is_valid_plan_id(name: str) -> bool:
     return bool(_IDENTIFIER_RE.match(name or ""))
 
 
+_NOT_IN_FILE_NAME = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def file_name(text: str) -> str:
+    """Namn ur databasen eller QGIS (schema, plan-id, anslutning) som del av ett filnamn: tecken som byter mapp eller inte
+    får stå i ett filnamn blir understreck. Pluginet skapar bara scheman och plan-id med a–z, siffror och understreck, men
+    den som kan skriva i databasen kan lägga in andra."""
+    return _NOT_IN_FILE_NAME.sub("_", str(text)).strip(" .") or "plan"
+
+
 def quote(name: str) -> str:
     return '"' + name.replace('"', '""') + '"'
 
@@ -121,38 +131,60 @@ def literal(value) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
-def ensure_schema_sql(schema: str, epsg: int = model.EPSG, create_schema: bool = True) -> list[str]:
-    """SQL som skapar alla tabeller i schemat, om de inte redan finns (en ny plan i ett befintligt schema lägger bara
-    till sina rader). Med ``create_schema`` skapas också schemat. Det ska bara göras när schemat saknas:
+def _wanted(existing: Optional[dict[str, bool]], table: str, index: Optional[str] = None) -> bool:
+    """Om tabellen, eller dess index ``index``, ska skapas. ``existing`` är det som redan finns i schemat (namn -> om
+    användaren får ändra det, se ``existing_relations``). Bara det som saknas skapas, eftersom PostgreSQL kräver att man
+    äger tabellen för att skapa index (även med ``IF NOT EXISTS``). Ett index som saknas på en tabell som någon annan
+    äger lämnas därför."""
+    existing = existing or {}
+    if index is None:
+        return table not in existing
+    return index not in existing and existing.get(table, True)
+
+
+def ensure_schema_sql(schema: str, epsg: int = model.EPSG, create_schema: bool = True,
+                      existing: Optional[dict[str, bool]] = None,
+                      existing_columns: Optional[set[tuple[str, str]]] = None) -> list[str]:
+    """SQL som skapar alla tabeller i schemat, om de inte redan finns. Det som redan finns (``existing`` och
+    ``existing_columns``) rörs inte, så i ett schema som har allt blir listan tom och en ny plan kräver bara rätt att
+    läsa och skriva. Med ``create_schema`` skapas också schemat. Det ska bara göras när schemat saknas:
     PostgreSQL kräver rätt att skapa scheman i databasen även för ``CREATE SCHEMA IF NOT EXISTS`` på ett schema som
     finns, och många kommuner ger användarna rätt bara i ett eget schema."""
     statements = [f"CREATE SCHEMA IF NOT EXISTS {quote(schema)}"] if create_schema else []
-    statements.append(f'CREATE TABLE IF NOT EXISTS {quote(schema)}.{quote(SCHEMA_TABLE)} ("key" text PRIMARY KEY, '
-                      '"value" text)')
+    if _wanted(existing, SCHEMA_TABLE):
+        statements.append(f'CREATE TABLE IF NOT EXISTS {quote(schema)}.{quote(SCHEMA_TABLE)} '
+                          '("key" text PRIMARY KEY, "value" text)')
     for table in tables():
         name = f"{quote(schema)}.{quote(db_name(table.name))}"
         columns = ['"fid" serial PRIMARY KEY', '"plan" text NOT NULL']
         if table.geometry:
             columns.append(f'"geom" geometry({table.geometry}, {int(epsg)})')
         columns += [f"{quote(column)} {_SQL_TYPES[kind]}" for column, kind in table.columns]
-        statements.append(f"CREATE TABLE IF NOT EXISTS {name} ({', '.join(columns)})")
-        statements.append(f"CREATE INDEX IF NOT EXISTS {quote(index_name(table.name, 'plan'))} ON {name} "
-                          '("plan")')
-        if table.geometry:
-            statements.append(f"CREATE INDEX IF NOT EXISTS {quote(index_name(table.name, 'geom'))} ON {name} "
-                              'USING gist ("geom")')
-    statements.append(f"CREATE UNIQUE INDEX IF NOT EXISTS {quote(index_name(model.META_TABLE, 'plan_key'))} ON "
-                      f'{quote(schema)}.{quote(model.META_TABLE)} ("plan", "key")')
-    return statements + added_columns_sql(schema)
+        stored = db_name(table.name)
+        if _wanted(existing, stored):
+            statements.append(f"CREATE TABLE IF NOT EXISTS {name} ({', '.join(columns)})")
+        plan_index, geom_index = index_name(table.name, "plan"), index_name(table.name, "geom")
+        if _wanted(existing, stored, plan_index):
+            statements.append(f'CREATE INDEX IF NOT EXISTS {quote(plan_index)} ON {name} ("plan")')
+        if table.geometry and _wanted(existing, stored, geom_index):
+            statements.append(f'CREATE INDEX IF NOT EXISTS {quote(geom_index)} ON {name} USING gist ("geom")')
+    key_index = index_name(model.META_TABLE, "plan_key")
+    if _wanted(existing, db_name(model.META_TABLE), key_index):
+        statements.append(f"CREATE UNIQUE INDEX IF NOT EXISTS {quote(key_index)} ON "
+                          f'{quote(schema)}.{quote(model.META_TABLE)} ("plan", "key")')
+    return statements + added_columns_sql(schema, existing_columns)
 
 
-def added_columns_sql(schema: str) -> list[str]:
+def added_columns_sql(schema: str, existing_columns: Optional[set[tuple[str, str]]] = None) -> list[str]:
     """Kolumner som kommit till i senare schemaversioner, för scheman som skapats tidigare (``CREATE TABLE IF NOT
-    EXISTS`` lägger inte till kolumner i en befintlig tabell)."""
+    EXISTS`` lägger inte till kolumner i en befintlig tabell). Kolumner i ``existing_columns`` (tabell, kolumn) finns
+    redan och tas inte med: bara den som äger tabellen får köra ``ALTER TABLE``, även när kolumnen finns."""
     statements = []
     for table, columns in model.ADDED_COLUMNS.items():
         kinds = {f.name: f.type for f in model.layer(table).fields}
         for column in columns:
+            if existing_columns and (db_name(table), column) in existing_columns:
+                continue
             statements.append(f"ALTER TABLE {quote(schema)}.{quote(db_name(table))} ADD COLUMN IF NOT EXISTS "
                               f"{quote(column)} {_SQL_TYPES[kinds[column]]}")
     return statements
@@ -503,11 +535,46 @@ def schema_exists(connection, schema: str) -> bool:
     return bool(_execute(connection, f"SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = {literal(schema)}"))
 
 
+def existing_relations(connection, schema: str) -> dict[str, bool]:
+    """Tabeller, index och sekvenser som redan finns i schemat: namn -> om användaren har ägarens rätt till dem (är
+    ägaren, ingår i den ägande rollen eller är administratör)."""
+    rows = _execute(connection, "SELECT c.relname, pg_has_role(c.relowner, 'USAGE') FROM pg_catalog.pg_class c "
+                                "JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace "
+                                f"WHERE n.nspname = {literal(schema)}")
+    return {row[0]: str(row[1]).lower() in ("true", "t", "1") for row in rows}
+
+
+def existing_columns(connection, schema: str) -> set[tuple[str, str]]:
+    """(tabell, kolumn) för kolumnerna i schemats tabeller."""
+    rows = _execute(connection, "SELECT c.relname, a.attname FROM pg_catalog.pg_attribute a "
+                                "JOIN pg_catalog.pg_class c ON c.oid = a.attrelid "
+                                "JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace "
+                                f"WHERE n.nspname = {literal(schema)} AND a.attnum > 0 AND NOT a.attisdropped")
+    return {(row[0], row[1]) for row in rows}
+
+
 def may_create(connection, schema: Optional[str] = None) -> Optional[bool]:
     """Om användaren får skapa tabeller i ``schema`` (som ska finnas), eller utan schema: skapa nya scheman i
     databasen. None när databasen inte svarar på frågan (då försöker pluginet ändå och visar databasens fel)."""
-    sql = (f"SELECT has_schema_privilege({literal(schema)}, 'CREATE')" if schema
-           else "SELECT has_database_privilege(current_database(), 'CREATE')")
+    return _yes_or_no(connection, f"SELECT has_schema_privilege({literal(schema)}, 'CREATE')" if schema
+                      else "SELECT has_database_privilege(current_database(), 'CREATE')")
+
+
+def may_write(connection, schema: str) -> Optional[bool]:
+    """Om användaren får läsa och lägga till rader i ett schema som pluginet redan har tabeller i (prövat på
+    metadatatabellen och dess sekvens, som ger nya rader sitt nummer). None när databasen inte svarar på frågan."""
+    meta = db_name(model.META_TABLE)
+    return _yes_or_no(connection,
+                      "SELECT has_schema_privilege(n.oid, 'USAGE') AND has_table_privilege(c.oid, 'SELECT') AND "
+                      "has_table_privilege(c.oid, 'INSERT') AND has_sequence_privilege(s.oid, 'USAGE, UPDATE') "
+                      "FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace "
+                      "JOIN pg_catalog.pg_class s ON s.relnamespace = n.oid "
+                      f"AND s.relname = {literal(meta + '_fid_seq')} "
+                      f"WHERE n.nspname = {literal(schema)} AND c.relname = {literal(meta)}")
+
+
+def _yes_or_no(connection, sql: str) -> Optional[bool]:
+    """Svaret på en ja/nej-fråga till databasen, eller None om den inte kan svara."""
     try:
         rows = _execute(connection, sql)
     except PostgisError:
@@ -547,6 +614,11 @@ def schema_epsg(connection, schema: str) -> Optional[int]:
     return int(rows[0][0]) if rows and str(rows[0][0]).isdigit() else None
 
 
+def _needs_owner(schema: str) -> str:
+    return (f"Schemat {schema} saknar något som pluginet behöver, och det gick inte att lägga till. Den som äger "
+            "tabellerna i schemat (eller en databasadministratör) behöver skapa en plan i det en gång.")
+
+
 def create_postgis_plan(connection_name: str, schema: str, plan_id: str, plan: geopackage.NewPlan,
                         connection=None) -> PostgisStorage:
     """Lägger in en ny plan i ett schema i databasen. Schemat och tabellerna skapas om de inte finns. Planen byggs
@@ -584,7 +656,16 @@ def create_postgis_plan_from_file(connection_name: str, schema: str, plan_id: st
     schema_was_there = existed or schema_exists(target.connection, schema)  # då rör vi aldrig schemat i övrigt
     if existed and plan_exists(target.connection, schema, plan_id):
         raise PostgisError(f"Det finns redan en plan med id {plan_id} i schemat {schema}.")
-    if schema_was_there and may_create(target.connection, schema) is False:
+    relations = existing_relations(target.connection, schema) if schema_was_there else {}
+    if db_name(model.META_TABLE) in relations and may_write(target.connection, schema) is False:
+        raise PostgisError(f"Du har inte rätt att lägga till planer i schemat {schema}. Be den som sköter databasen om "
+                           "SELECT, INSERT, UPDATE och DELETE på tabellerna och USAGE på sekvenserna.")
+    columns = existing_columns(target.connection, schema) if relations else None
+    statements = ensure_schema_sql(schema, epsg, create_schema=not schema_was_there, existing=relations,
+                                   existing_columns=columns)
+    if schema_was_there and statements and may_create(target.connection, schema) is False:
+        if db_name(model.META_TABLE) in relations:  # schemat har redan planer: något saknas i det
+            raise PostgisError(_needs_owner(schema))
         raise PostgisError(f"Du har inte rätt att skapa tabeller i schemat {schema}. Välj ett schema där du har den "
                            "rätten, eller be den som sköter databasen om den (CREATE på schemat).")
     if not schema_was_there and may_create(target.connection) is False:
@@ -592,8 +673,13 @@ def create_postgis_plan_from_file(connection_name: str, schema: str, plan_id: st
                            "schema som redan finns och som du har rätt att skapa tabeller i, eller be den som sköter "
                            "databasen om ett.")
     try:
-        for statement in ensure_schema_sql(schema, epsg, create_schema=not schema_was_there):
-            target.sql(statement)
+        try:
+            for statement in statements:
+                target.sql(statement)
+        except PostgisError as exc:
+            if not schema_was_there:
+                raise
+            raise PostgisError(f"{_needs_owner(schema)} {exc}") from exc
         if not existed:
             target.sql(f"INSERT INTO {target.table(SCHEMA_TABLE)} (\"key\", \"value\") VALUES "
                        f"('schema_version', {literal(model.SCHEMA_VERSION)}), ('epsg', {literal(epsg)}) "

@@ -52,6 +52,9 @@ class FakePg:
         self.refuse_upgrade = False  # som en användare utan rätt att ändra tabellerna
         self.may_create_schemas = True  # rätten CREATE på databasen
         self.may_create_tables = True  # rätten CREATE på scheman som finns
+        self.may_write_rows = True  # rätten att läsa och lägga till rader i ett schema med planer
+        self.relations = {}  # tabell eller index -> om användaren får ändra den, som systemkatalogen svarar
+        self.columns = []  # (tabell, kolumn) som finns
 
     def uri(self):
         return "dbname='planer' host=localhost port=5432 user='eric' sslmode=disable"
@@ -64,7 +67,13 @@ class FakePg:
             return [["3.4"]]
         if "information_schema." in sql:
             return [[s] for s in self.schemas]
-        if "pg_namespace" in sql:  # schema_exists
+        if sql.startswith("SELECT c.relname, pg_has_role"):  # existing_relations
+            return [[name, owned] for name, owned in self.relations.items()]
+        if sql.startswith("SELECT c.relname, a.attname"):  # existing_columns
+            return [list(pair) for pair in self.columns]
+        if sql.startswith("SELECT has_schema_privilege(n.oid"):  # may_write
+            return [[self.may_write_rows]]
+        if "pg_namespace WHERE" in sql:  # schema_exists
             return [[1]] if re.search(r"nspname = '([^']*)'", sql).group(1) in self.schemas else []
         if sql.startswith("SELECT has_database_privilege"):
             return [[self.may_create_schemas]]
@@ -341,6 +350,51 @@ class NewDatabasePlanTests(unittest.TestCase):
         with self.assertRaisesRegex(storage.PostgisError, "rätt att skapa tabeller i schemat lukas"):
             storage.create_postgis_plan("planer", "lukas", "op_2040", PLAN, self.conn)
         self.assertFalse(any(sql.startswith(("CREATE", "DROP")) for sql in self.conn.sql))
+
+    def full_schema(self, owned: bool, may_create_tables: bool = False):
+        """Ett schema som en annan användare redan skapat, med alla tabeller, index och kolumner."""
+        statements = storage.ensure_schema_sql("oversiktsplan", create_schema=False)
+        names = [re.search(r'(?:TABLE|INDEX) IF NOT EXISTS (?:"oversiktsplan"\.)?"([^"]+)"', s).group(1)
+                 for s in statements if s.startswith("CREATE")]
+        meta = storage.db_name(model.META_TABLE)
+        self.conn.relations = {name: owned for name in [*names, f"{meta}_fid_seq"]}
+        self.conn.columns = [(storage.db_name(t), c) for t, cs in model.ADDED_COLUMNS.items() for c in cs]
+        self.conn.schemas = ["oversiktsplan"]
+        self.conn.may_create_tables = may_create_tables
+
+    def create_second(self):
+        storage.create_postgis_plan("planer", "oversiktsplan", "op_annan", PLAN, self.conn)
+
+    def ddl(self):
+        return [s for s in self.conn.sql if s.startswith(("CREATE", "ALTER"))]
+
+    def test_a_plan_in_a_complete_schema_needs_only_the_right_to_write(self):
+        self.full_schema(owned=False)
+        self.create_second()
+        self.assertEqual(self.ddl(), [], "bara ägaren får köra dem, även med IF NOT EXISTS")
+        self.assertIn('INSERT INTO "oversiktsplan"."oversiktsplan"', self.conn.sql[-1])
+
+    def test_only_a_missing_column_is_added_and_never_an_index_on_someone_elses_table(self):
+        self.full_schema(owned=False, may_create_tables=True)
+        self.conn.relations.pop(storage.index_name(model.OVERSIKTSPLAN.name, "plan"))
+        missing = self.conn.columns.pop()
+        self.create_second()
+        self.assertEqual(len(self.ddl()), 1, self.ddl())
+        self.assertIn(f'ADD COLUMN IF NOT EXISTS "{missing[1]}"', self.ddl()[0])
+
+    def test_something_missing_that_the_user_may_not_add_is_explained(self):
+        self.full_schema(owned=False)
+        self.conn.columns.pop()
+        with self.assertRaisesRegex(storage.PostgisError, "äger tabellerna"):
+            self.create_second()
+        self.assertEqual(self.ddl(), [])
+
+    def test_without_the_right_to_write_in_a_schema_with_plans_it_is_explained(self):
+        self.full_schema(owned=False)
+        self.conn.may_write_rows = False
+        with self.assertRaisesRegex(storage.PostgisError, "rätt att lägga till planer"):
+            self.create_second()
+        self.assertEqual(self.ddl(), [])
 
     def test_an_upgrade_never_tries_to_create_the_schema(self):
         self.assertNotIn("CREATE SCHEMA", storage.upgrade_schema_sql("lukas", 3006))

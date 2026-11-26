@@ -13,7 +13,8 @@ under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues).
   utvecklingsinriktning). Med fler än fem–sex etapper blir tonerna svåra att skilja åt. Etappens text i fältet är
   pluginets format, `namn (period)`; Lantmäteriets format har bara fritext.
 - **Bården på överläggens ytor i GeoServer är inte provad.** Den är en kantlinje med förskjutning (`PerpendicularOffset` i SLD); i QGIS hamnar den alltid innanför kanten, men GeoServer kan förskjuta den utåt beroende på åt vilket håll ytans kant är ritad.
-- **Nya symboler når inte sparade projekt.** Symbolerna sätts när planen läggs till i kartan. Ett projekt som sparats med en äldre version behåller de gamla; öppna planen i ett nytt projekt för att få de nya.
+- **Nya symboler och texter når inte sparade projekt.** De sätts när planen läggs till i kartan. Ett projekt som sparats med en äldre version behåller de gamla; öppna planen i ett nytt projekt för att få de nya.
+- **Namn på varje del i GeoServer.** QGIS skriver inte med det i stilfilen (SLD), så i GeoServer kan en yta i flera delar få namnet på bara en av dem. Inte provat.
 - **Pilspetsarna i GeoServer är inte provade.** Stilfilerna från *Spara stilar för GeoServer (SLD)…* använder GeoServers funktioner `endPoint`/`endAngle`; vridningen är beräknad, inte provad. Etiketternas placering i GeoServer kan skilja sig från QGIS.
 - **Kartbilden är inte färdig.** Arbete pågår med hur planen visas i kartan: symbologin (färger, kantlinjer och punktsymboler per innehållstyp) och presentationen i övrigt kommer att ändras. Se [Symbologi](symbologi.md).
 - **Kontroll mot specifikationen.** Exporten kontrollerar Lantmäteriets regler (OP-JSON-… och ÖP-X…) så som pluginet
@@ -65,9 +66,9 @@ under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues).
 - **Varningen för mark- och vattenanvändning utan text** är pluginets egen kontroll, inte ett krav ordagrant ur
   föreskrifterna.
 - **Innehåll utan geometri** syns inte i kartan; ändra eller ta bort det i gruppens attributtabell.
-- **PostGIS.** Att skapa och öppna planer i en databas och att checka ut och checka in är bara testat mot en
-  låtsasdatabas. SQL:en har inte körts mot en riktig PostgreSQL med PostGIS: prova först på en testplan i ett
-  testschema. Alla planer i ett schema delar tabeller och koordinatsystem. Ett schema från 0.1.0–0.1.2
+- **PostGIS.** De automatiska testerna körs mot en låtsasdatabas. Mot en riktig PostgreSQL med PostGIS är bara enstaka
+  delar prövade, av användare, samt behörigheterna för delade scheman (PostgreSQL 18, roller utan egen inloggning med
+  `SET ROLE`): prova först på en testplan i ett testschema. Alla planer i ett schema delar tabeller och koordinatsystem. Ett schema från 0.1.0–0.1.2
   (schema 3) uppgraderas när en plan i det öppnas första gången, vilket kräver rätt att ändra tabellerna; äldre
   scheman än så kan inte uppgraderas. Skapa bokmärken i planhandling sparar inte kopplingar i en
   plan som inte är utcheckad.
@@ -97,6 +98,7 @@ under [Issues](https://github.com/ritaplan/rita-oversiktsplan/issues).
 
 ## Inte provat
 
-- Hela pluginet har bara körts i automatiska tester, **inte i en riktig QGIS med en riktig plan**.
+- Pluginet har automatiska tester och är prövat i QGIS med demoplaner, men **inte i ett skarpt planarbete** från början
+  till slut.
 - Testat med QGIS 4.2.2 på Windows. Andra versioner och Linux/macOS är inte provade.
 - Filen är inte provad i ArcGIS eller i Boverkets egna verktyg.

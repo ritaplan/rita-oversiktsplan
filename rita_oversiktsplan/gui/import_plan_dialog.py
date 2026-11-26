@@ -11,6 +11,7 @@ from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, 
 
 from ..core import storage, transfer
 from .database_target import DatabaseTarget
+from .richtext import plain
 
 ICONS = Path(__file__).resolve().parent.parent / "icons"
 
@@ -42,7 +43,7 @@ class ImportPlanDialog(QDialog):
         self.plan_id.setPlaceholderText("plan-id, t.ex. op_2040")
         self.plan_id.setToolTip("Planens identifierare inom schemat (måste vara unik där). Gemener a–z, siffror och "
                                 "understreck.")
-        self.info = QLabel()
+        self.info = plain(QLabel())
         self.info.setWordWrap(True)
 
         form = QFormLayout()

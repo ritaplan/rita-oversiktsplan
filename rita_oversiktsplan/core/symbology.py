@@ -296,6 +296,7 @@ def apply_labels(layer: QgsVectorLayer, category: model.Category, stages=()) -> 
     else:
         settings.fieldName = NAME_FIELD
     settings.setFormat(text)
+    settings.labelPerPart = True  # innehåll i flera skilda delar får namnet på varje del där det får plats
     geometry = layer.geometryType()
     if geometry == QgsWkbTypes.GeometryType.PolygonGeometry and group is not None and group.names == "perimeter":
         settings.placement = Qgis.LabelPlacement.PerimeterCurved  # längs kanten, i bården

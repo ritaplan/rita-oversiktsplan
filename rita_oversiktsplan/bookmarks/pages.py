@@ -17,7 +17,7 @@ from qgis.PyQt.QtWidgets import (QAbstractItemView, QButtonGroup, QCheckBox, QCo
 from . import session as ss
 from . import theme
 from .widgets import (Card, Facts, MapView, ObjectChip, ParagraphText, Pill, TypeChip, box, button, dot_icon, frame,
-                      label, restyle, scrolled)
+                      label, restyle, scrolled, tip_text)
 
 ROLE = Qt.ItemDataRole.UserRole
 
@@ -360,7 +360,8 @@ class SectionsPage(QWidget):
             item = QListWidgetItem(dot_icon(theme.status_color(status)),
                                    ("   " * (section.level - 1)) + section.heading)
             item.setData(ROLE, section.index)
-            item.setToolTip(" › ".join(section.path) + f"\n{session.types[section.index]} · {ss.STATUS_TEXT[status]}")
+            item.setToolTip(tip_text(" › ".join(section.path)
+                                     + f"\n{session.types[section.index]} · {ss.STATUS_TEXT[status]}"))
             item.setSizeHint(QSize(0, 30))
             self.outline.addItem(item)
             if section.index == self.selected:
@@ -639,8 +640,8 @@ class LinkPage(QWidget):
             item = QListWidgetItem(dot_icon(c["accent"] if count else c["line"]),
                                    ("   " * (section.level - 1)) + section.heading + (f"   · {count}" if count else ""))
             item.setData(ROLE, section.index)
-            item.setToolTip(" › ".join(section.path) + f"\n{session.types[section.index]}"
-                            + (f"\nKopplat till {count} objekt" if count else "\nInte kopplat"))
+            item.setToolTip(tip_text(" › ".join(section.path) + f"\n{session.types[section.index]}"
+                                     + (f"\nKopplat till {count} objekt" if count else "\nInte kopplat")))
             item.setSizeHint(QSize(0, 30))
             self.outline.addItem(item)
             if section.index == self.selected:
@@ -711,8 +712,8 @@ class LinkPage(QWidget):
             item.setCheckState(0, Qt.CheckState.Checked if identity in linked else Qt.CheckState.Unchecked)
             sections = session.sections_for(identity)
             item.setText(1, str(len(sections)) if sections else "")
-            item.setToolTip(0, "\n".join(session.sections[i].heading for i in sections) or "Inte kopplat till något "
-                                                                                           "avsnitt")
+            item.setToolTip(0, tip_text("\n".join(session.sections[i].heading for i in sections)
+                                        or "Inte kopplat till något avsnitt"))
             item.setDisabled(self.selected is None)
         self._loading = False
 
@@ -954,7 +955,7 @@ class SavePage(QWidget):
         for r, row in enumerate(rows):
             for column, value in enumerate(row):
                 item = QTableWidgetItem(value)
-                item.setToolTip(value)
+                item.setToolTip(tip_text(value))
                 self.table.setItem(r, column, item)
         tagged = session.tagged()
         links = sum(len(session.links[s.index]) for s in tagged)

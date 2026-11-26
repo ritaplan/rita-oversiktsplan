@@ -2,6 +2,40 @@
 
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/), versionsnumren [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [0.1.27] – flera användare i samma databas, namn på varje del och säkerhetsrättningar
+
+### Databas
+
+- **Flera användare kan dela ett schema.** Förut försökte pluginet skapa index och lägga till kolumner varje gång en plan
+  lades till, vilket bara ägaren av tabellerna får göra: andra användare kunde inte skapa, importera eller kopiera planer
+  i schemat. Nu skapas bara det som saknas, så i ett schema som har tabellerna räcker det att läsa och skriva. Rätt att
+  skapa tabeller behövs inte.
+- Handboken beskriver vilka rättigheter som krävs och hur databasansvarig sätter upp ett schema åt användare som inte får
+  skapa något. Provat mot PostgreSQL 18 med en ägare och en användare med läs- och skrivrätt.
+- Fil för fil: `core/storage.py` (`existing_relations`, `existing_columns`, `ensure_schema_sql`, `may_write`).
+
+### Texter i kartan
+
+- **Namnet skrivs på varje del av ett innehåll i flera delar.** Förut fick bara en av delarna namnet. Det gäller ytor och
+  linjer, där namnet får plats. Ett projekt som sparats tidigare får ändringen när planen läggs till i kartan på nytt. Fil
+  för fil: `core/symbology.py` (`apply_labels`).
+
+### Säkerhet
+
+- **Namn ur databasen kan inte längre styra var filer hamnar.** Ett plan-id eller schemanamn med till exempel `..\`
+  kunde få en export eller säkerhetskopia att skrivas utanför den valda mappen. Kräver att någon redan kan skriva i
+  databasen. Fil för fil: `core/storage.py` (`file_name`), `core/transfer.py`.
+- **Text ur databasen och filer visas som den är.** Skälet till ett skrivskydd, användarnamn och meddelanden kunde tolkas
+  som formaterad text, så att en bildfil som texten pekade på lästes in. Fil för fil: `gui/richtext.py`,
+  `gui/messages.py` och dialogerna, `bookmarks/`. Samma rättning som i Rita Detaljplan.
+
+### Dokumentation
+
+- Säkerhetsbeskrivningen är uppdaterad till den här versionen, med databashanteraren och det rättade lösenordsfelet från
+  0.1.24 (spara om äldre projektfiler och byt lösenord).
+- Kända begränsningar säger inte längre att pluginet aldrig körts i QGIS, och README tar upp underlagen, ändringen av
+  planen och databashanteraren.
+
 ## [0.1.26] – ny inställningsdialog för anslutningen till NGP
 
 - **Inställning anslutning NGP: en flik per miljö och en kontroll som visar om anslutningen är aktiv.** Dialogen heter nu

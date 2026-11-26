@@ -30,8 +30,8 @@ Vill du ändra pilspetsarna på en linje kryssar du i **Pilspets där linjen slu
 
 ## Texter i kartan
 
-**Namnet** du ger innehållet i *Tilldela innehåll* visas i kartan. Knappen **Dölj texter** släcker namnen i alla öppna
-planer så länge den är intryckt.
+**Namnet** du ger innehållet i *Tilldela innehåll* visas i kartan. Har innehållet flera skilda delar skrivs namnet på
+varje del där det får plats. Knappen **Dölj texter** släcker namnen i alla öppna planer så länge den är intryckt.
 
 Punkter och linjer syns i alla skalor och blir mindre i steg när du zoomar ut.
 
